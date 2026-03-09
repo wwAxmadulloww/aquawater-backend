@@ -15,7 +15,11 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/aquawa
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://aquawater-two.vercel.app'
+    ],
     credentials: true,
 }));
 app.use(express.json());
