@@ -1,0 +1,4 @@
+PORT=5000
+MONGODB_URI=mongodb+srv://Axmadullo:Axmadullo2006@cluster0.6w9v7az.mongodb.net/aquawater
+JWT_SECRET=aquawater_uzbekistan_secret_2024_change_me
+NODE_ENV=development
