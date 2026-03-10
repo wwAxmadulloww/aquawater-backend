@@ -3,7 +3,7 @@ import Order from '../models/Order';
 import User from '../models/User';
 import Product from '../models/Product';
 import { auth, AuthRequest } from '../middleware/auth';
-import { adminOnly, adminOrSuper } from '../middleware/role';
+import { adminOnly, adminOrSuper, superAdminOnly } from '../middleware/role';
 
 const router = Router();
 
@@ -137,6 +137,37 @@ router.patch('/users/:id/role', auth, adminOrSuper, async (req: AuthRequest, res
         console.log(`[AUDIT] Role change: User ${targetId} role changed from ${targetUser.role} to ${role} by ${actor.role} ${actor._id}`);
 
         res.json(user);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// DELETE /api/admin/users/:id
+router.delete('/users/:id', auth, superAdminOnly, async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const targetId = req.params.id;
+        const targetUser = await User.findById(targetId);
+
+        if (!targetUser) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+
+        // Safety: Cannot delete the last super_admin
+        if (targetUser.role === 'super_admin') {
+            const superAdminCount = await User.countDocuments({ role: 'super_admin' });
+            if (superAdminCount <= 1) {
+                res.status(400).json({ message: 'Cannot delete the last Super Admin' });
+                return;
+            }
+        }
+
+        await User.findByIdAndDelete(targetId);
+
+        console.log(`[AUDIT] User DELETED: User ${targetId} (${targetUser.phone}) deleted by super_admin ${req.user?._id}`);
+
+        res.json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
