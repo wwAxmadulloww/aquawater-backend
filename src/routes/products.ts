@@ -69,8 +69,8 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 // But wait, the prompt says "admin bularga rol berganda... ishchi ozi qosha olishi kerak".
 // Let's create a custom middleware or just check in the route.
 export const adminOrWorker = (req: AuthRequest, res: Response, next: import('express').NextFunction): void => {
-    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'worker')) {
-        res.status(403).json({ message: 'Admin or Worker access required' });
+    if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'worker' && req.user.role !== 'super_admin')) {
+        res.status(403).json({ message: 'Admin, Super Admin or Worker access required' });
         return;
     }
     next();
