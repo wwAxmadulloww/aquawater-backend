@@ -14,9 +14,22 @@ const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/aquawater';
 
 // Middleware
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://aquawater-two.vercel.app',
+    'https://aquawater-uz.vercel.app'
+];
+
 app.use(cors({
-    origin: true,
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
+    optionsSuccessStatus: 200
 }));
 app.use(express.json());
 
