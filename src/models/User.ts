@@ -13,7 +13,7 @@ export interface IUser extends Document {
     name: string;
     phone: string;
     passwordHash: string;
-    role: 'customer' | 'admin' | 'worker' | 'courier';
+    role: 'customer' | 'admin' | 'worker' | 'courier' | 'super_admin';
     preferredLanguage: 'uz' | 'ru' | 'en';
     addresses: IAddress[];
     otpMock?: string;
@@ -34,7 +34,7 @@ const UserSchema = new Schema<IUser>(
         name: { type: String, required: true },
         phone: { type: String, required: true, unique: true },
         passwordHash: { type: String, required: true },
-        role: { type: String, enum: ['customer', 'admin', 'worker', 'courier'], default: 'customer' },
+        role: { type: String, enum: ['customer', 'admin', 'worker', 'courier', 'super_admin'], default: 'customer' },
         preferredLanguage: { type: String, enum: ['uz', 'ru', 'en'], default: 'uz' },
         addresses: [AddressSchema],
         otpMock: { type: String },

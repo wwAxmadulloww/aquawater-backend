@@ -3,7 +3,7 @@ import Order from '../models/Order';
 import User from '../models/User';
 import Product from '../models/Product';
 import { auth, AuthRequest } from '../middleware/auth';
-import { adminOnly } from '../middleware/role';
+import { adminOnly, adminOrSuper } from '../middleware/role';
 
 const router = Router();
 
@@ -85,12 +85,43 @@ router.get('/users', auth, adminOnly, async (_req: AuthRequest, res: Response): 
 });
 
 // PATCH /api/admin/users/:id/role
-router.patch('/users/:id/role', auth, adminOnly, async (req: AuthRequest, res: Response): Promise<void> => {
+router.patch('/users/:id/role', auth, adminOrSuper, async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { role, workerType } = req.body;
-        if (!['customer', 'admin', 'worker', 'courier'].includes(role)) {
+        const targetId = req.params.id;
+        const actor = req.user!;
+
+        if (!['customer', 'admin', 'worker', 'courier', 'super_admin'].includes(role)) {
             res.status(400).json({ message: 'Invalid role' });
             return;
+        }
+
+        const targetUser = await User.findById(targetId);
+        if (!targetUser) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+
+        // HIERARCHY LOGIC
+        // 1. Admin cannot promote to admin or super_admin
+        if (actor.role === 'admin' && (role === 'admin' || role === 'super_admin')) {
+            res.status(403).json({ message: 'Admins cannot create other admins or super admins' });
+            return;
+        }
+
+        // 2. Admin cannot manage existing admin or super_admin
+        if (actor.role === 'admin' && (targetUser.role === 'admin' || targetUser.role === 'super_admin')) {
+            res.status(403).json({ message: 'Admins cannot modify other admins or super admins' });
+            return;
+        }
+
+        // 3. Prevent demoting the last super_admin (safety check)
+        if (targetUser.role === 'super_admin' && role !== 'super_admin') {
+            const superAdminCount = await User.countDocuments({ role: 'super_admin' });
+            if (superAdminCount <= 1) {
+                res.status(400).json({ message: 'Cannot demote the last Super Admin' });
+                return;
+            }
         }
 
         const updateData: any = { role };
@@ -100,13 +131,14 @@ router.patch('/users/:id/role', auth, adminOnly, async (req: AuthRequest, res: R
             updateData.$unset = { workerType: 1 };
         }
 
-        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-passwordHash');
-        if (!user) {
-            res.status(404).json({ message: 'User not found' });
-            return;
-        }
+        const user = await User.findByIdAndUpdate(targetId, updateData, { new: true }).select('-passwordHash');
+
+        // Audit log
+        console.log(`[AUDIT] Role change: User ${targetId} role changed from ${targetUser.role} to ${role} by ${actor.role} ${actor._id}`);
+
         res.json(user);
-    } catch {
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });

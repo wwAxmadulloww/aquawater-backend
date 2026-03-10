@@ -121,21 +121,54 @@ router.get('/:id', auth, async (req: AuthRequest, res: Response): Promise<void> 
     }
 });
 
-// PATCH /api/orders/:id/status (admin)
-router.patch('/:id/status', auth, adminOnly, async (req: AuthRequest, res: Response): Promise<void> => {
+// PATCH /api/orders/:id/status
+router.patch('/:id/status', auth, async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { status } = req.body;
-        if (!['pending', 'accepted', 'delivered'].includes(status)) {
+        const validStatuses = ['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled'];
+
+        if (!validStatuses.includes(status)) {
             res.status(400).json({ message: 'Invalid status' });
             return;
         }
-        const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+
+        const order = await Order.findById(req.params.id);
         if (!order) {
             res.status(404).json({ message: 'Order not found' });
             return;
         }
+
+        const isAdmin = req.user!.role === 'admin' || req.user!.role === 'super_admin';
+        const isCourier = req.user!.role === 'courier';
+        const isAssignedCourier = order.courierId?.toString() === req.user!._id.toString();
+
+        // 1. Admin/SuperAdmin can change any status
+        if (isAdmin) {
+            order.status = status;
+        }
+        // 2. Courier can ONLY change status to 'delivered' or 'in_transit' for their own orders
+        else if (isCourier && isAssignedCourier) {
+            if (status === 'delivered' || status === 'in_transit') {
+                // Couriers can only mark as delivered if it was assigned/in_transit
+                if (status === 'delivered' && !['assigned', 'in_transit'].includes(order.status)) {
+                    res.status(400).json({ message: 'Order must be assigned or in transit to be marked as delivered' });
+                    return;
+                }
+                order.status = status;
+            } else {
+                res.status(403).json({ message: 'Couriers can only update to in_transit or delivered' });
+                return;
+            }
+        }
+        else {
+            res.status(403).json({ message: 'Permission denied' });
+            return;
+        }
+
+        await order.save();
         res.json(order);
-    } catch {
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 });
