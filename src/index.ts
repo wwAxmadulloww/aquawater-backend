@@ -6,6 +6,7 @@ import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
 import orderRoutes from './routes/orders';
 import adminRoutes from './routes/admin';
+import branchRoutes from './routes/branches';
 
 dotenv.config();
 
@@ -38,9 +39,19 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/branches', branchRoutes);
 
 app.get('/api/health', (_req, res) => {
     res.json({ status: 'OK', message: 'AquaWater API is running' });
+});
+
+// Global error handler
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error('Unhandled Error:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal Server Error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
 });
 
 // Connect to MongoDB and start server

@@ -5,13 +5,26 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import User from '../models/User';
 import { auth, AuthRequest } from '../middleware/auth';
+import { OtpService } from '../services/OtpService';
 
 const router = Router();
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100, // Increased for stability
+    max: 100,
     message: 'Too many requests, please try again later.',
+});
+
+const otpLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 5, // 5 attempts
+    message: 'Too many verification attempts, please try again in 5 minutes.',
+});
+
+const resendLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 1, // 1 resend per minute
+    message: 'Please wait 1 minute before requesting another code.',
 });
 
 const phoneRegex = /^\+998\d{9}$/;
@@ -25,6 +38,15 @@ const registerSchema = z.object({
 const loginSchema = z.object({
     phone: z.string().regex(phoneRegex, 'Invalid phone format'),
     password: z.string().min(1),
+});
+
+const verifyOtpSchema = z.object({
+    phone: z.string().regex(phoneRegex, 'Invalid phone format'),
+    code: z.string().length(6),
+});
+
+const resendOtpSchema = z.object({
+    phone: z.string().regex(phoneRegex, 'Invalid phone format'),
 });
 
 // POST /api/auth/register
@@ -43,14 +65,113 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
             return;
         }
 
+        const otp = OtpService.generateOtp();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
         const passwordHash = await bcrypt.hash(password, 12);
-        const user = await User.create({ name, phone, passwordHash });
+        await User.create({
+            name,
+            phone,
+            passwordHash,
+            otp,
+            otpExpires,
+            isPhoneVerified: false
+        });
+
+        await OtpService.sendOtp(phone, otp);
+
+        res.status(201).json({
+            message: 'Registration successful. Please verify your phone number.',
+            phone
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// POST /api/auth/verify-otp
+router.post('/verify-otp', otpLimiter, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const parsed = verifyOtpSchema.safeParse(req.body);
+        if (!parsed.success) {
+            res.status(400).json({ errors: parsed.error.errors });
+            return;
+        }
+
+        const { phone, code } = parsed.data;
+        const isValid = await OtpService.verifyOtp(phone, code);
+
+        if (!isValid) {
+            res.status(400).json({ message: 'Invalid or expired OTP code' });
+            return;
+        }
+
+        const user = await User.findOneAndUpdate(
+            { phone },
+            {
+                isPhoneVerified: true,
+                $unset: { otp: 1, otpExpires: 1 }
+            },
+            { new: true }
+        );
+
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-        res.status(201).json({
+        res.json({
             token,
-            user: { id: user._id, name: user.name, phone: user.phone, role: user.role, workerType: user.workerType },
+            user: {
+                id: user._id,
+                name: user.name,
+                phone: user.phone,
+                role: user.role,
+                isPhoneVerified: user.isPhoneVerified,
+                workerType: user.workerType
+            },
         });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// POST /api/auth/resend-otp
+router.post('/resend-otp', resendLimiter, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const parsed = resendOtpSchema.safeParse(req.body);
+        if (!parsed.success) {
+            res.status(400).json({ errors: parsed.error.errors });
+            return;
+        }
+
+        const { phone } = parsed.data;
+        const user = await User.findOne({ phone });
+
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+
+        if (user.isPhoneVerified) {
+            res.status(400).json({ message: 'Phone already verified' });
+            return;
+        }
+
+        const otp = OtpService.generateOtp();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+        user.otp = otp;
+        user.otpExpires = otpExpires;
+        user.lastOtpResend = new Date();
+        await user.save();
+
+        await OtpService.sendOtp(phone, otp);
+
+        res.json({ message: 'OTP code resent successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -73,6 +194,15 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
             return;
         }
 
+        if (!user.isPhoneVerified) {
+            res.status(403).json({
+                message: 'Phone number not verified',
+                requiresVerification: true,
+                phone: user.phone
+            });
+            return;
+        }
+
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) {
             res.status(401).json({ message: 'Invalid credentials' });
@@ -87,6 +217,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
                 name: user.name,
                 phone: user.phone,
                 role: user.role,
+                isPhoneVerified: user.isPhoneVerified,
                 preferredLanguage: user.preferredLanguage,
                 workerType: user.workerType
             },

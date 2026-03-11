@@ -16,6 +16,10 @@ export interface IUser extends Document {
     role: 'customer' | 'admin' | 'worker' | 'courier' | 'super_admin';
     preferredLanguage: 'uz' | 'ru' | 'en';
     addresses: IAddress[];
+    isPhoneVerified: boolean;
+    otp?: string;
+    otpExpires?: Date;
+    lastOtpResend?: Date;
     otpMock?: string;
     workerType?: string;
 }
@@ -37,6 +41,10 @@ const UserSchema = new Schema<IUser>(
         role: { type: String, enum: ['customer', 'admin', 'worker', 'courier', 'super_admin'], default: 'customer' },
         preferredLanguage: { type: String, enum: ['uz', 'ru', 'en'], default: 'uz' },
         addresses: [AddressSchema],
+        isPhoneVerified: { type: Boolean, default: false },
+        otp: { type: String },
+        otpExpires: { type: Date },
+        lastOtpResend: { type: Date },
         otpMock: { type: String },
         workerType: { type: String },
     },
