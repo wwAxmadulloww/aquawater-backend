@@ -9,151 +9,83 @@ import { OtpService } from '../services/OtpService';
 
 const router = Router();
 
+// Rate limiters for production security
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: 'Too many requests, please try again later.',
+    message: { message: 'Juda ko\'p urinishlar, iltimos keyinroq qayta urinib ko\'ring.' },
 });
 
-const otpLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 5, // 5 attempts
-    message: 'Too many verification attempts, please try again in 5 minutes.',
-});
-
-const resendLimiter = rateLimit({
+const otpSendLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 1, // 1 resend per minute
-    message: 'Please wait 1 minute before requesting another code.',
+    max: 1, // 1 OTP per minute per IP
+    message: { message: 'Iltimos, keyingi kodni olish uchun 1 daqiqa kuting.' },
+    skipSuccessfulRequests: false,
+});
+
+const otpVerifyLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 10, // 10 attempts
+    message: { message: 'Juda ko\'p xato kod kiritildi, iltimos 5 daqiqa kuting.' },
 });
 
 const phoneRegex = /^\+998\d{9}$/;
 
-const registerInitiateSchema = z.object({
-    name: z.string().min(2).max(50),
-    phone: z.string().regex(phoneRegex, 'Invalid Uzbek phone number format (+998XXXXXXXXX)'),
-});
-
-const loginSchema = z.object({
-    phone: z.string().regex(phoneRegex, 'Invalid phone format'),
-    password: z.string().min(1),
+// Schemas
+const sendOtpSchema = z.object({
+    phone: z.string().regex(phoneRegex, 'Telefon raqami noto\'g\'ri formatda (+998XXXXXXXXX)'),
 });
 
 const verifyOtpSchema = z.object({
-    phone: z.string().regex(phoneRegex, 'Invalid phone format'),
-    code: z.string().length(6),
+    phone: z.string().regex(phoneRegex, 'Telefon raqami noto\'g\'ri'),
+    code: z.string().min(4).max(6),
 });
 
-const registerCompleteSchema = z.object({
-    phone: z.string().regex(phoneRegex, 'Invalid phone format'),
-    password: z.string().min(6),
+const registerSchema = z.object({
+    phone: z.string().regex(phoneRegex, 'Telefon raqami noto\'g\'ri'),
+    name: z.string().min(2, 'Ism kamida 2 ta belgidan iborat bo\'lishi kerak').max(50),
+    password: z.string().min(6, 'Parol kamida 6 ta belgidan iborat bo\'lishi kerak'),
 });
 
-const resendOtpSchema = z.object({
-    phone: z.string().regex(phoneRegex, 'Invalid phone format'),
+const loginSchema = z.object({
+    phone: z.string().regex(phoneRegex, 'Telefon raqami noto\'g\'ri'),
+    password: z.string().min(1, 'Parol kiritilishi shart'),
 });
 
-// POST /api/auth/register/initiate
-router.post('/register/initiate', authLimiter, async (req: Request, res: Response): Promise<void> => {
+// 1. SEND OTP
+router.post('/send-otp', otpSendLimiter, async (req: Request, res: Response): Promise<void> => {
     try {
-        const parsed = registerInitiateSchema.safeParse(req.body);
+        const parsed = sendOtpSchema.safeParse(req.body);
         if (!parsed.success) {
             res.status(400).json({ errors: parsed.error.errors });
             return;
         }
 
-        const { name, phone } = parsed.data;
-        const existing = await User.findOne({ phone });
+        const { phone } = parsed.data;
 
-        if (existing && existing.passwordHash) {
-            res.status(409).json({ message: 'Phone number already registered' });
+        // Optional: Check if user already exists and has a password
+        const existingUser = await User.findOne({ phone });
+        if (existingUser && existingUser.passwordHash) {
+            // If user exists, this might be a login OTP or just a conflict
+            // The user requested this flow for registration. 
+            // We'll allow sending OTP but registration will fail if user exists.
+        }
+
+        const result = await OtpService.sendOtp(phone);
+        if (!result.success) {
+            res.status(400).json({ message: result.message, cooldown: result.cooldown });
             return;
         }
 
-        const otp = OtpService.generateOtp();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-        if (existing) {
-            // Update existing pending user
-            existing.name = name;
-            existing.otp = otp;
-            existing.otpExpires = otpExpires;
-            existing.isPhoneVerified = false;
-            await existing.save();
-        } else {
-            // Create new pending user
-            await User.create({
-                name,
-                phone,
-                otp,
-                otpExpires,
-                isPhoneVerified: false
-            });
-        }
-
-        await OtpService.sendOtp(phone, otp);
-
-        res.status(200).json({
-            message: 'OTP sent. Please verify your phone number.',
-            phone
-        });
+        res.status(200).json({ message: result.message, phone });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('[Auth] send-otp error:', err);
+        res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
     }
 });
 
-// POST /api/auth/register/complete
-router.post('/register/complete', authLimiter, async (req: Request, res: Response): Promise<void> => {
-    try {
-        const parsed = registerCompleteSchema.safeParse(req.body);
-        if (!parsed.success) {
-            res.status(400).json({ errors: parsed.error.errors });
-            return;
-        }
-
-        const { phone, password } = parsed.data;
-        const user = await User.findOne({ phone });
-
-        if (!user) {
-            res.status(404).json({ message: 'User not found' });
-            return;
-        }
-
-        if (!user.isPhoneVerified) {
-            res.status(403).json({ message: 'Phone number not verified' });
-            return;
-        }
-
-        if (user.passwordHash) {
-            res.status(400).json({ message: 'Registration already complete' });
-            return;
-        }
-
-        user.passwordHash = await bcrypt.hash(password, 12);
-        await user.save();
-
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-
-        res.status(201).json({
-            message: 'Registration complete',
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                phone: user.phone,
-                role: user.role,
-                isPhoneVerified: user.isPhoneVerified
-            }
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// POST /api/auth/verify-otp
-router.post('/verify-otp', otpLimiter, async (req: Request, res: Response): Promise<void> => {
+// 2. VERIFY OTP
+router.post('/verify-otp', otpVerifyLimiter, async (req: Request, res: Response): Promise<void> => {
     try {
         const parsed = verifyOtpSchema.safeParse(req.body);
         if (!parsed.success) {
@@ -162,94 +94,105 @@ router.post('/verify-otp', otpLimiter, async (req: Request, res: Response): Prom
         }
 
         const { phone, code } = parsed.data;
-        const isValid = await OtpService.verifyOtp(phone, code);
+        const result = await OtpService.verifyOtp(phone, code);
 
-        if (!isValid) {
-            res.status(400).json({ message: 'Invalid or expired OTP code' });
+        if (!result.success) {
+            res.status(400).json({ message: result.message });
             return;
         }
 
-        const user = await User.findOneAndUpdate(
-            { phone },
-            {
-                isPhoneVerified: true,
-                $unset: { otp: 1, otpExpires: 1 }
-            },
-            { new: true }
-        );
-
-        if (!user) {
-            res.status(404).json({ message: 'User not found' });
-            return;
-        }
-
-        if (user.passwordHash) {
+        // If user already exists, we can return a login token here (Login-via-OTP flow)
+        const user = await User.findOne({ phone });
+        if (user && user.passwordHash) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
             res.json({
-                message: 'Phone verified successfully',
+                message: 'Muvaffaqiyatli kirildi',
                 token,
                 user: {
                     id: user._id,
                     name: user.name,
                     phone: user.phone,
                     role: user.role,
-                    isPhoneVerified: user.isPhoneVerified,
-                    preferredLanguage: user.preferredLanguage,
-                    workerType: user.workerType
+                    isPhoneVerified: true
                 }
             });
-        } else {
-            res.json({
-                message: 'Phone verified successfully',
-                phone: user.phone
-            });
+            return;
         }
+
+        res.json({ message: result.message, phone });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('[Auth] verify-otp error:', err);
+        res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
     }
 });
 
-// POST /api/auth/resend-otp
-router.post('/resend-otp', resendLimiter, async (req: Request, res: Response): Promise<void> => {
+// 3. COMPLETE REGISTRATION
+router.post('/register', authLimiter, async (req: Request, res: Response): Promise<void> => {
     try {
-        const parsed = resendOtpSchema.safeParse(req.body);
+        const parsed = registerSchema.safeParse(req.body);
         if (!parsed.success) {
             res.status(400).json({ errors: parsed.error.errors });
             return;
         }
 
-        const { phone } = parsed.data;
-        const user = await User.findOne({ phone });
+        const { phone, name, password } = parsed.data;
 
-        if (!user) {
-            res.status(404).json({ message: 'User not found' });
+        // CHECK IF VERIFIED
+        const isVerified = await OtpService.isVerified(phone);
+        if (!isVerified) {
+            res.status(403).json({ message: 'Telefon raqami tasdiqlanmagan yoki tasdiqlash muddati tugagan' });
             return;
         }
 
-        if (user.isPhoneVerified) {
-            res.status(400).json({ message: 'Phone already verified' });
+        // CHECK IF ALREADY EXISTS
+        const existing = await User.findOne({ phone });
+        if (existing && existing.passwordHash) {
+            res.status(409).json({ message: 'Bu telefon raqami allaqachon ro\'yxatdan o\'tgan' });
             return;
         }
 
-        const otp = OtpService.generateOtp();
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+        let user;
+        const passwordHash = await bcrypt.hash(password, 12);
 
-        user.otp = otp;
-        user.otpExpires = otpExpires;
-        user.lastOtpResend = new Date();
-        await user.save();
+        if (existing) {
+            // Update existing pending user
+            existing.name = name;
+            existing.passwordHash = passwordHash;
+            existing.isPhoneVerified = true;
+            user = await existing.save();
+        } else {
+            // Create new user
+            user = await User.create({
+                phone,
+                name,
+                passwordHash,
+                isPhoneVerified: true,
+                role: 'customer'
+            });
+        }
 
-        await OtpService.sendOtp(phone, otp);
+        // MARK OTP AS USED
+        await OtpService.markAsUsed(phone);
 
-        res.json({ message: 'OTP code resent successfully' });
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+
+        res.status(201).json({
+            message: 'Ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                phone: user.phone,
+                role: user.role
+            }
+        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('[Auth] register error:', err);
+        res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
     }
 });
 
-// POST /api/auth/login
+// LOGIN (Regular)
 router.post('/login', authLimiter, async (req: Request, res: Response): Promise<void> => {
     try {
         const parsed = loginSchema.safeParse(req.body);
@@ -260,23 +203,15 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
 
         const { phone, password } = parsed.data;
         const user = await User.findOne({ phone });
-        if (!user) {
-            res.status(401).json({ message: 'Invalid credentials' });
-            return;
-        }
 
-        if (!user.isPhoneVerified) {
-            res.status(403).json({
-                message: 'Phone number not verified',
-                requiresVerification: true,
-                phone: user.phone
-            });
+        if (!user || !user.passwordHash) {
+            res.status(401).json({ message: 'Telefon raqami yoki parol noto\'g\'ri' });
             return;
         }
 
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) {
-            res.status(401).json({ message: 'Invalid credentials' });
+            res.status(401).json({ message: 'Telefon raqami yoki parol noto\'g\'ri' });
             return;
         }
 
@@ -288,34 +223,31 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
                 name: user.name,
                 phone: user.phone,
                 role: user.role,
-                isPhoneVerified: user.isPhoneVerified,
-                preferredLanguage: user.preferredLanguage,
-                workerType: user.workerType
+                preferredLanguage: user.preferredLanguage
             },
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('[Auth] login error:', err);
+        res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
     }
 });
 
-// GET /api/auth/me
+// ME & LANGUAGE
 router.get('/me', auth, async (req: AuthRequest, res: Response): Promise<void> => {
     res.json(req.user);
 });
 
-// PATCH /api/auth/language
 router.patch('/language', auth, async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const { language } = req.body;
         if (!['uz', 'ru', 'en'].includes(language)) {
-            res.status(400).json({ message: 'Invalid language' });
+            res.status(400).json({ message: 'Noto\'g\'ri til' });
             return;
         }
         await User.findByIdAndUpdate(req.user!._id, { preferredLanguage: language });
-        res.json({ message: 'Language updated' });
+        res.json({ message: 'Til yangilandi' });
     } catch {
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
     }
 });
 

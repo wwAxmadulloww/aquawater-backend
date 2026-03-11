@@ -17,10 +17,6 @@ export interface IUser extends Document {
     preferredLanguage: 'uz' | 'ru' | 'en';
     addresses: IAddress[];
     isPhoneVerified: boolean;
-    otp?: string;
-    otpExpires?: Date;
-    lastOtpResend?: Date;
-    otpMock?: string;
     workerType?: string;
 }
 
@@ -35,17 +31,13 @@ const AddressSchema = new Schema<IAddress>({
 
 const UserSchema = new Schema<IUser>(
     {
-        name: { type: String, required: true },
+        name: { type: String, required: false }, // Made optional for phone-first registration
         phone: { type: String, required: true, unique: true },
         passwordHash: { type: String, required: false }, // Made optional for multi-step registration
         role: { type: String, enum: ['customer', 'admin', 'worker', 'courier', 'super_admin'], default: 'customer' },
         preferredLanguage: { type: String, enum: ['uz', 'ru', 'en'], default: 'uz' },
         addresses: [AddressSchema],
         isPhoneVerified: { type: Boolean, default: false },
-        otp: { type: String },
-        otpExpires: { type: Date },
-        lastOtpResend: { type: Date },
-        otpMock: { type: String },
         workerType: { type: String },
     },
     { timestamps: true }
