@@ -183,10 +183,27 @@ router.post('/verify-otp', otpLimiter, async (req: Request, res: Response): Prom
             return;
         }
 
-        res.json({
-            message: 'Phone verified successfully',
-            phone: user.phone
-        });
+        if (user.passwordHash) {
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+            res.json({
+                message: 'Phone verified successfully',
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    phone: user.phone,
+                    role: user.role,
+                    isPhoneVerified: user.isPhoneVerified,
+                    preferredLanguage: user.preferredLanguage,
+                    workerType: user.workerType
+                }
+            });
+        } else {
+            res.json({
+                message: 'Phone verified successfully',
+                phone: user.phone
+            });
+        }
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
