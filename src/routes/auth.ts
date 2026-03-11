@@ -29,10 +29,9 @@ const resendLimiter = rateLimit({
 
 const phoneRegex = /^\+998\d{9}$/;
 
-const registerSchema = z.object({
+const registerInitiateSchema = z.object({
     name: z.string().min(2).max(50),
     phone: z.string().regex(phoneRegex, 'Invalid Uzbek phone number format (+998XXXXXXXXX)'),
-    password: z.string().min(6),
 });
 
 const loginSchema = z.object({
@@ -45,22 +44,28 @@ const verifyOtpSchema = z.object({
     code: z.string().length(6),
 });
 
+const registerCompleteSchema = z.object({
+    phone: z.string().regex(phoneRegex, 'Invalid phone format'),
+    password: z.string().min(6),
+});
+
 const resendOtpSchema = z.object({
     phone: z.string().regex(phoneRegex, 'Invalid phone format'),
 });
 
-// POST /api/auth/register
-router.post('/register', authLimiter, async (req: Request, res: Response): Promise<void> => {
+// POST /api/auth/register/initiate
+router.post('/register/initiate', authLimiter, async (req: Request, res: Response): Promise<void> => {
     try {
-        const parsed = registerSchema.safeParse(req.body);
+        const parsed = registerInitiateSchema.safeParse(req.body);
         if (!parsed.success) {
             res.status(400).json({ errors: parsed.error.errors });
             return;
         }
 
-        const { name, phone, password } = parsed.data;
+        const { name, phone } = parsed.data;
         const existing = await User.findOne({ phone });
-        if (existing) {
+
+        if (existing && existing.passwordHash) {
             res.status(409).json({ message: 'Phone number already registered' });
             return;
         }
@@ -68,21 +73,78 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
         const otp = OtpService.generateOtp();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-        const passwordHash = await bcrypt.hash(password, 12);
-        await User.create({
-            name,
-            phone,
-            passwordHash,
-            otp,
-            otpExpires,
-            isPhoneVerified: false
-        });
+        if (existing) {
+            // Update existing pending user
+            existing.name = name;
+            existing.otp = otp;
+            existing.otpExpires = otpExpires;
+            existing.isPhoneVerified = false;
+            await existing.save();
+        } else {
+            // Create new pending user
+            await User.create({
+                name,
+                phone,
+                otp,
+                otpExpires,
+                isPhoneVerified: false
+            });
+        }
 
         await OtpService.sendOtp(phone, otp);
 
-        res.status(201).json({
-            message: 'Registration successful. Please verify your phone number.',
+        res.status(200).json({
+            message: 'OTP sent. Please verify your phone number.',
             phone
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// POST /api/auth/register/complete
+router.post('/register/complete', authLimiter, async (req: Request, res: Response): Promise<void> => {
+    try {
+        const parsed = registerCompleteSchema.safeParse(req.body);
+        if (!parsed.success) {
+            res.status(400).json({ errors: parsed.error.errors });
+            return;
+        }
+
+        const { phone, password } = parsed.data;
+        const user = await User.findOne({ phone });
+
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+
+        if (!user.isPhoneVerified) {
+            res.status(403).json({ message: 'Phone number not verified' });
+            return;
+        }
+
+        if (user.passwordHash) {
+            res.status(400).json({ message: 'Registration already complete' });
+            return;
+        }
+
+        user.passwordHash = await bcrypt.hash(password, 12);
+        await user.save();
+
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+
+        res.status(201).json({
+            message: 'Registration complete',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                phone: user.phone,
+                role: user.role,
+                isPhoneVerified: user.isPhoneVerified
+            }
         });
     } catch (err) {
         console.error(err);
@@ -121,17 +183,9 @@ router.post('/verify-otp', otpLimiter, async (req: Request, res: Response): Prom
             return;
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
         res.json({
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                phone: user.phone,
-                role: user.role,
-                isPhoneVerified: user.isPhoneVerified,
-                workerType: user.workerType
-            },
+            message: 'Phone verified successfully',
+            phone: user.phone
         });
     } catch (err) {
         console.error(err);

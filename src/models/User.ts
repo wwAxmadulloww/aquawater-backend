@@ -37,7 +37,7 @@ const UserSchema = new Schema<IUser>(
     {
         name: { type: String, required: true },
         phone: { type: String, required: true, unique: true },
-        passwordHash: { type: String, required: true },
+        passwordHash: { type: String, required: false }, // Made optional for multi-step registration
         role: { type: String, enum: ['customer', 'admin', 'worker', 'courier', 'super_admin'], default: 'customer' },
         preferredLanguage: { type: String, enum: ['uz', 'ru', 'en'], default: 'uz' },
         addresses: [AddressSchema],
