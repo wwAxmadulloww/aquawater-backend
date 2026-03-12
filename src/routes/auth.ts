@@ -63,21 +63,17 @@ router.post('/send-otp', otpSendLimiter, async (req: Request, res: Response): Pr
 
         const { phone } = parsed.data;
 
-        // Optional: Check if user already exists and has a password
+        // Skip OTP sending for now as per user request
+        /*
         const existingUser = await User.findOne({ phone });
-        if (existingUser && existingUser.passwordHash) {
-            // If user exists, this might be a login OTP or just a conflict
-            // The user requested this flow for registration. 
-            // We'll allow sending OTP but registration will fail if user exists.
-        }
-
         const result = await OtpService.sendOtp(phone);
         if (!result.success) {
             res.status(400).json({ message: result.message, cooldown: result.cooldown });
             return;
         }
+        */
 
-        res.status(200).json({ message: result.message, phone });
+        res.status(200).json({ message: 'Tasdiqlash kodi yuborildi (Simulyatsiya)', phone });
     } catch (err) {
         console.error('[Auth] send-otp error:', err);
         res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
@@ -137,12 +133,14 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
 
         const { phone, name, password } = parsed.data;
 
-        // CHECK IF VERIFIED
+        // CHECK IF VERIFIED (Commented out for now)
+        /*
         const isVerified = await OtpService.isVerified(phone);
         if (!isVerified) {
             res.status(403).json({ message: 'Telefon raqami tasdiqlanmagan yoki tasdiqlash muddati tugagan' });
             return;
         }
+        */
 
         // CHECK IF ALREADY EXISTS
         const existing = await User.findOne({ phone });
@@ -171,8 +169,8 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
             });
         }
 
-        // MARK OTP AS USED
-        await OtpService.markAsUsed(phone);
+        // MARK OTP AS USED (Commented out)
+        // await OtpService.markAsUsed(phone);
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
 
