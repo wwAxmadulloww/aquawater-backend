@@ -113,7 +113,9 @@ export class TelegramBotService {
 
         this.isPolling = true;
         console.log('🤖 [TelegramBotService] Rich Interactive Bot Polling started...');
-        this.pollUpdates();
+        setTimeout(() => {
+            this.pollUpdates().catch(err => console.error('[TelegramBotService] Unhandled poll error:', err));
+        }, 1000);
     }
 
     private static async pollUpdates() {
@@ -125,9 +127,9 @@ export class TelegramBotService {
                 const response = await axios.get(`https://api.telegram.org/bot${token}/getUpdates`, {
                     params: {
                         offset: this.lastUpdateId + 1,
-                        timeout: 30,
+                        timeout: 5,
                     },
-                    timeout: 35000,
+                    timeout: 8000,
                 });
 
                 const updates = response.data?.result || [];
@@ -139,7 +141,7 @@ export class TelegramBotService {
                 if (err.code !== 'ECONNABORTED') {
                     console.error('[TelegramBotService] Polling error:', err.message);
                 }
-                await new Promise((resolve) => setTimeout(resolve, 5000));
+                await new Promise((resolve) => setTimeout(resolve, 3000));
             }
         }
     }
