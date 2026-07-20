@@ -54,6 +54,8 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
     });
 });
 
+import { TelegramBotService } from './services/TelegramBotService';
+
 // Connect to MongoDB and start server
 mongoose
     .connect(MONGODB_URI)
@@ -61,6 +63,7 @@ mongoose
         console.log('✅ MongoDB connected');
         app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
+            TelegramBotService.startPolling();
         });
     })
     .catch((err) => {
