@@ -69,7 +69,6 @@ app.listen(PORT, '0.0.0.0', () => {
         })
         .then(() => {
             console.log('✅ MongoDB Atlas connected successfully');
-            TelegramBotService.startPolling();
         })
         .catch((err) => {
             console.error('❌ MongoDB connection error:', err.message);
