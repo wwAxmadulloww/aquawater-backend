@@ -12,24 +12,22 @@ import { TelegramBotService } from './services/TelegramBotService';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Axmadullo:Axmadullo2006@cluster0.6w9v7az.mongodb.net/aquawater?retryWrites=true&w=majority';
 
 // CORS configuration for live production and local dev
 app.use(cors({
-    origin: (origin, callback) => {
-        // Allow all origins in production or check whitelist
-        if (!origin || origin.includes('vercel.app') || origin.includes('localhost') || origin.includes('onrender.com')) {
-            callback(null, true);
-        } else {
-            callback(null, true); // Permissive for production APIs
-        }
-    },
+    origin: '*',
     credentials: true,
     optionsSuccessStatus: 200
 }));
 
 app.use(express.json());
+
+// Root endpoint for Render health checks
+app.get('/', (_req, res) => {
+    res.send('AquaWater Backend API is Live');
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -55,11 +53,11 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
     });
 });
 
-// 1. Start HTTP Server immediately so Render health check passes instantly
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+// Start listening on 0.0.0.0 explicitly for Render Cloud
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on 0.0.0.0:${PORT}`);
     
-    // 2. Connect to MongoDB Atlas
+    // Connect to MongoDB Atlas
     mongoose
         .connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 5000
