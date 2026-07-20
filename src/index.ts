@@ -15,6 +15,9 @@ const app = express();
 // Trust proxy for Render / Vercel / Cloudflare load balancers
 app.set('trust proxy', 1);
 
+// Disable infinite query buffering so requests never hang if DB is connecting/disconnected
+mongoose.set('bufferCommands', false);
+
 const PORT = Number(process.env.PORT) || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Axmadullo:Axmadullo2006@cluster0.6w9v7az.mongodb.net/aquawater?retryWrites=true&w=majority';
 
