@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import Order from '../models/Order';
 import User from '../models/User';
 import Product from '../models/Product';
@@ -6,12 +7,26 @@ import { AuthRequest } from '../middleware/auth';
 
 export const getStats = async (_req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const totalOrders = await Order.countDocuments();
-        const deliveredOrders = await Order.countDocuments({ status: 'delivered' });
-        const pendingOrders = await Order.countDocuments({ status: 'pending' });
-        const acceptedOrders = await Order.countDocuments({ status: 'accepted' });
-        const totalCustomers = await User.countDocuments({ role: 'customer' });
-        const totalProducts = await Product.countDocuments();
+        // Run the independent counts concurrently rather than in six round trips.
+        const [
+            totalOrders,
+            deliveredOrders,
+            pendingOrders,
+            // 'accepted' is not in the Order status enum, so this always returned 0.
+            // The equivalent real status is 'confirmed'.
+            acceptedOrders,
+            cancelledOrders,
+            totalCustomers,
+            totalProducts,
+        ] = await Promise.all([
+            Order.countDocuments(),
+            Order.countDocuments({ status: 'delivered' }),
+            Order.countDocuments({ status: 'pending' }),
+            Order.countDocuments({ status: 'confirmed' }),
+            Order.countDocuments({ status: 'cancelled' }),
+            User.countDocuments({ role: 'customer' }),
+            Product.countDocuments(),
+        ]);
 
         const revenueResult = await Order.aggregate([
             { $match: { status: 'delivered' } },
@@ -57,6 +72,8 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
             deliveredOrders,
             pendingOrders,
             acceptedOrders,
+            confirmedOrders: acceptedOrders,
+            cancelledOrders,
             totalCustomers,
             totalProducts,
             totalRevenue,
@@ -85,6 +102,16 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
 
         if (!['customer', 'admin', 'worker', 'courier', 'super_admin'].includes(role)) {
             res.status(400).json({ message: 'Invalid role' });
+            return;
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(targetId)) {
+            res.status(400).json({ message: 'Invalid user id' });
+            return;
+        }
+
+        if (String(targetId) === String(actor._id) && role !== actor.role) {
+            res.status(400).json({ message: 'You cannot change your own role' });
             return;
         }
 
@@ -133,6 +160,17 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
 export const deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const targetId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(targetId)) {
+            res.status(400).json({ message: 'Invalid user id' });
+            return;
+        }
+
+        if (String(targetId) === String(req.user?._id)) {
+            res.status(400).json({ message: 'You cannot delete your own account' });
+            return;
+        }
+
         const targetUser = await User.findById(targetId);
 
         if (!targetUser) {

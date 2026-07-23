@@ -5,8 +5,19 @@ import { z } from 'zod';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { OtpService } from '../services/OtpService';
+import { getJwtSecret } from '../config/jwt';
 
 const phoneRegex = /^\+998\d{9}$/;
+
+/**
+ * When enabled, /register refuses phones that have not passed /send-otp +
+ * /verify-otp. Off by default because the current web UI registers with
+ * phone + password directly and has no OTP step.
+ */
+const requirePhoneVerification = (): boolean => process.env.REQUIRE_PHONE_VERIFICATION === 'true';
+
+const signToken = (userId: unknown): string =>
+    jwt.sign({ id: String(userId) }, getJwtSecret(), { expiresIn: '7d' });
 
 export const sendOtpSchema = z.object({
     phone: z.string().regex(phoneRegex, 'Telefon raqami noto\'g\'ri formatda (+998XXXXXXXXX)'),
@@ -37,7 +48,17 @@ export const sendOtp = async (req: Request, res: Response): Promise<void> => {
         }
 
         const { phone } = parsed.data;
-        res.status(200).json({ message: 'Tasdiqlash kodi yuborildi (Simulyatsiya)', phone });
+
+        // Previously this returned a fake success without generating anything,
+        // so /verify-otp could never find a code and always failed.
+        const result = await OtpService.sendOtp(phone);
+
+        if (!result.success) {
+            res.status(429).json({ message: result.message, cooldown: result.cooldown });
+            return;
+        }
+
+        res.status(200).json({ message: result.message, phone });
     } catch (err) {
         console.error('[Auth] send-otp error:', err);
         res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
@@ -62,7 +83,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
 
         const user = await User.findOne({ phone });
         if (user && user.passwordHash) {
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+            const token = signToken(user._id);
             res.json({
                 message: 'Muvaffaqiyatli kirildi',
                 token,
@@ -101,6 +122,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        if (requirePhoneVerification() && !(await OtpService.isVerified(phone))) {
+            res.status(403).json({ message: 'Avval telefon raqamingizni SMS kod orqali tasdiqlang' });
+            return;
+        }
+
         let user;
         const passwordHash = await bcrypt.hash(password, 12);
 
@@ -119,7 +145,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+        // One-shot: the verification cannot be replayed for another account.
+        await OtpService.markAsUsed(phone);
+
+        const token = signToken(user._id);
 
         res.status(201).json({
             message: 'Ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi',
@@ -161,7 +190,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+        const token = signToken(user._id);
         res.json({
             token,
             user: {

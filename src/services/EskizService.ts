@@ -21,7 +21,7 @@ export class EskizService {
             const response = await axios.post(`${this.API_URL}/auth/login`, {
                 email,
                 password
-            });
+            }, { timeout: 15000 });
 
             if (response.data && response.data.data && response.data.data.token) {
                 this.token = response.data.data.token;
@@ -49,7 +49,7 @@ export class EskizService {
     /**
      * Sends an SMS message to a phone number
      */
-    public static async sendSms(phone: string, message: string): Promise<boolean> {
+    public static async sendSms(phone: string, message: string, isRetry = false): Promise<boolean> {
         // Format phone: remove + if present, Eskiz expects 998XXXXXXXXX
         const formattedPhone = phone.replace('+', '');
 
@@ -73,7 +73,8 @@ export class EskizService {
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
-                    }
+                    },
+                    timeout: 15000
                 }
             );
 
@@ -85,10 +86,12 @@ export class EskizService {
             console.error('[Eskiz] Failed to send SMS:', response.data);
             return false;
         } catch (error: any) {
-            // If token expired, clear it and retry once
-            if (error.response?.status === 401) {
+            // If the token expired, clear it and retry exactly once. Without the
+            // guard, permanently bad credentials recurse forever and hang the process.
+            if (error.response?.status === 401 && !isRetry) {
                 this.token = null;
-                return await this.sendSms(phone, message);
+                this.tokenExpiry = null;
+                return await this.sendSms(phone, message, true);
             }
 
             console.error('[Eskiz] Error sending SMS:', error.response?.data || error.message);

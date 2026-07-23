@@ -8,6 +8,15 @@ dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/aquawater';
 
+// This script deletes every user and product. Running it against the production
+// Atlas cluster by accident wipes real customers and order history.
+if (process.env.ALLOW_DESTRUCTIVE_SEED !== 'true') {
+    console.error('❌ Refusing to run: this seed DELETES all users and products.');
+    console.error('   Set ALLOW_DESTRUCTIVE_SEED=true in .env if that is what you want.');
+    console.error(`   Target database: ${MONGODB_URI.replace(/\/\/[^@]*@/, '//***@')}`);
+    process.exit(1);
+}
+
 const products = [
     {
         name: '19L Suv idishi',
@@ -74,6 +83,7 @@ async function seed() {
             passwordHash: adminPassword,
             role: 'admin',
             preferredLanguage: 'uz',
+            isPhoneVerified: true,
         });
         console.log('👤 Admin created:', admin.phone);
 
@@ -85,6 +95,7 @@ async function seed() {
             passwordHash: customerPassword,
             role: 'customer',
             preferredLanguage: 'uz',
+            isPhoneVerified: true,
         });
         console.log('👤 Customer created:', customer.phone);
 

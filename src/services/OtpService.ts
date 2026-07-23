@@ -83,9 +83,10 @@ export class OtpService {
             return { success: false, message: "Tasdiqlash kodi topilmadi." };
         }
 
-        if (verification.verified && !verification.used) {
-            return { success: true, message: "Telefon raqami allaqachon tasdiqlangan." };
-        }
+        // NOTE: there is deliberately no "already verified, accept anything" shortcut
+        // here. /verify-otp issues a JWT on success, so short-circuiting before the
+        // code comparison let anyone log in as a previously-verified phone number
+        // by submitting an arbitrary code.
 
         if (new Date() > verification.expiresAt) {
             return { success: false, message: "Tasdiqlash kodining amal qilish muddati tugagan." };
@@ -95,9 +96,9 @@ export class OtpService {
             return { success: false, message: "Urinishlar soni oshib ketdi. Yangi kod so'rang." };
         }
 
-        // Universal development code
-        const isDev = process.env.NODE_ENV === 'development';
-        const isMatch = await bcrypt.compare(code, verification.code) || (isDev && code === '123456');
+        // Universal development code — never accepted outside local development.
+        const isDev = process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_OTP === 'true';
+        const isMatch = (isDev && code === '123456') || await bcrypt.compare(code, verification.code);
 
         if (!isMatch) {
             verification.attempts += 1;

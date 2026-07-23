@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/User';
+import { getJwtSecret } from '../config/jwt';
 
 export interface AuthRequest extends Request {
     user?: IUser;
@@ -14,7 +15,7 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction):
             return;
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { id: string };
+        const decoded = jwt.verify(token, getJwtSecret()) as { id: string };
         const user = await User.findById(decoded.id).select('-passwordHash');
         if (!user) {
             res.status(401).json({ message: 'User not found' });

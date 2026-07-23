@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { z } from 'zod';
 import Product from '../models/Product';
 import { AuthRequest } from '../middleware/auth';
@@ -38,6 +39,11 @@ export const getProducts = async (req: Request, res: Response): Promise<void> =>
 
 export const getProductById = async (req: Request, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid product id' });
+            return;
+        }
+
         const product = await Product.findById(req.params.id);
         if (!product) {
             res.status(404).json({ message: 'Product not found' });
@@ -69,15 +75,25 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
         }
 
         const product = await Product.create(data);
-        await GoogleSheetsService.syncProduct(product);
+
+        // Best-effort mirror; a Sheets outage must not fail product creation.
+        void GoogleSheetsService.syncProduct(product)
+            .catch((err) => console.error('[Product] Sheets sync failed:', err?.message || err));
+
         res.status(201).json(product);
-    } catch {
+    } catch (err) {
+        console.error('[Product] createProduct error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
 export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid id' });
+            return;
+        }
+
         const parsed = productSchema.partial().safeParse(req.body);
         if (!parsed.success) {
             res.status(400).json({ errors: parsed.error.errors });
@@ -96,6 +112,11 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
 
 export const deleteProduct = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid id' });
+            return;
+        }
+
         const product = await Product.findByIdAndDelete(req.params.id);
         if (!product) {
             res.status(404).json({ message: 'Product not found' });
@@ -122,6 +143,11 @@ export const getAdminProducts = async (req: AuthRequest, res: Response): Promise
 
 export const approveProduct = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid id' });
+            return;
+        }
+
         const { status } = req.body;
         if (!['approved', 'rejected'].includes(status)) {
             res.status(400).json({ message: 'Invalid status' });

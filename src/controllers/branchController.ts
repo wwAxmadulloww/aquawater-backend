@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { z } from 'zod';
 import Branch from '../models/Branch';
 import { AuthRequest } from '../middleware/auth';
@@ -35,6 +36,11 @@ export const getAdminBranches = async (_req: AuthRequest, res: Response): Promis
 
 export const getBranchById = async (req: Request, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid id' });
+            return;
+        }
+
         const branch = await Branch.findById(req.params.id);
         if (!branch) {
             res.status(404).json({ message: 'Branch not found' });
@@ -63,6 +69,11 @@ export const createBranch = async (req: AuthRequest, res: Response): Promise<voi
 
 export const updateBranch = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid id' });
+            return;
+        }
+
         const parsed = branchSchema.partial().safeParse(req.body);
         if (!parsed.success) {
             res.status(400).json({ errors: parsed.error.errors });
@@ -82,6 +93,11 @@ export const updateBranch = async (req: AuthRequest, res: Response): Promise<voi
 
 export const deleteBranch = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid id' });
+            return;
+        }
+
         const branch = await Branch.findByIdAndDelete(req.params.id);
         if (!branch) {
             res.status(404).json({ message: 'Branch not found' });

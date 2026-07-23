@@ -7,6 +7,19 @@ import { AuthRequest } from '../middleware/auth';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 import { TelegramBotService } from '../services/TelegramBotService';
 
+/**
+ * Google Sheets and Telegram are best-effort side channels. Awaiting them inline
+ * made the customer wait on two third-party round trips before their order was
+ * confirmed, and an outage at either one surfaced as a failed checkout.
+ */
+function dispatchOrderSideEffects(order: any, phone: string, name: string): void {
+    void GoogleSheetsService.syncOrder(order, phone, name)
+        .catch((err) => console.error('[Order] Sheets sync failed:', err?.message || err));
+
+    void TelegramBotService.sendOrderNotification(order, phone, name)
+        .catch((err) => console.error('[Order] Telegram notification failed:', err?.message || err));
+}
+
 export const orderSchema = z.object({
     items: z.array(z.object({
         productId: z.string(),
@@ -64,8 +77,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
             status: 'pending',
         });
 
-        await GoogleSheetsService.syncOrder(order, req.user?.phone || '', req.user?.name || '');
-        await TelegramBotService.sendOrderNotification(order, req.user?.phone || '', req.user?.name || '');
+        dispatchOrderSideEffects(order, req.user?.phone || '', req.user?.name || '');
 
         res.status(201).json(order);
     } catch (err) {
@@ -103,18 +115,34 @@ export const getOrders = async (req: AuthRequest, res: Response): Promise<void> 
 
 export const getOrderById = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid order id' });
+            return;
+        }
+
         const order = await Order.findById(req.params.id).populate('userId', 'name phone');
         if (!order) {
             res.status(404).json({ message: 'Order not found' });
             return;
         }
-        const isOwner = order.userId.toString() === req.user!._id.toString();
-        if (!isOwner && req.user!.role !== 'admin' && req.user!.role !== 'super_admin') {
+
+        // `userId` is populated into a document here, so `.toString()` yields
+        // "[object Object]" and never matched — every customer got 403 on their
+        // own order. Read the populated document's _id instead.
+        const ownerId = (order.userId as any)?._id ?? order.userId;
+        const isOwner = String(ownerId) === String(req.user!._id);
+
+        const isStaff = ['admin', 'super_admin'].includes(req.user!.role)
+            || (req.user!.role === 'courier' && String(order.courierId ?? '') === String(req.user!._id))
+            || (req.user!.role === 'worker' && String(order.workerId ?? '') === String(req.user!._id));
+
+        if (!isOwner && !isStaff) {
             res.status(403).json({ message: 'Access denied' });
             return;
         }
         res.json(order);
-    } catch {
+    } catch (err) {
+        console.error('[Order] getOrderById error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -126,6 +154,11 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
 
         if (!validStatuses.includes(status)) {
             res.status(400).json({ message: 'Invalid status' });
+            return;
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid order id' });
             return;
         }
 
@@ -147,6 +180,10 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
                     res.status(400).json({ message: 'Order must be assigned or in transit to be marked as delivered' });
                     return;
                 }
+                if (status === 'in_transit' && !['confirmed', 'assigned'].includes(order.status)) {
+                    res.status(400).json({ message: 'Order must be confirmed or assigned before it can be in transit' });
+                    return;
+                }
                 order.status = status;
             } else {
                 res.status(403).json({ message: 'Couriers can only update to in_transit or delivered' });
@@ -158,15 +195,25 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
         }
 
         await order.save();
+
+        // Keep the Telegram group in sync with dashboard-driven changes.
+        void TelegramBotService.sendStatusUpdateNotification(order, req.user?.name || req.user!.role)
+            .catch((err) => console.error('[Order] Telegram status notification failed:', err?.message || err));
+
         res.json(order);
     } catch (err) {
-        console.error(err);
+        console.error('[Order] updateOrderStatus error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
 export const deleteOrder = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid order id' });
+            return;
+        }
+
         const order = await Order.findByIdAndDelete(req.params.id);
         if (!order) {
             res.status(404).json({ message: 'Order not found' });
@@ -180,10 +227,31 @@ export const deleteOrder = async (req: AuthRequest, res: Response): Promise<void
 
 export const assignOrder = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid order id' });
+            return;
+        }
+
         const { courierId, workerId } = req.body;
         const update: Record<string, unknown> = {};
-        if (courierId !== undefined) update.courierId = courierId || null;
-        if (workerId !== undefined) update.workerId = workerId || null;
+
+        // A malformed id previously threw a CastError and surfaced as a generic 500.
+        for (const [field, value] of [['courierId', courierId], ['workerId', workerId]] as const) {
+            if (value === undefined) continue;
+            if (value && !mongoose.Types.ObjectId.isValid(value)) {
+                res.status(400).json({ message: `Invalid ${field}` });
+                return;
+            }
+            update[field] = value || null;
+        }
+
+        if (Object.keys(update).length === 0) {
+            res.status(400).json({ message: 'Nothing to assign' });
+            return;
+        }
+
+        // Assigning someone makes the order actionable for them.
+        if (update.courierId) update.status = 'assigned';
 
         const order = await Order.findByIdAndUpdate(req.params.id, update, { new: true });
         if (!order) {
@@ -191,7 +259,8 @@ export const assignOrder = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
         res.json(order);
-    } catch {
+    } catch (err) {
+        console.error('[Order] assignOrder error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
