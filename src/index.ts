@@ -24,14 +24,34 @@ const PORT = Number(process.env.PORT) || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI is not set. Copy .env.example to .env and fill it in.');
-    process.exit(1);
+// Vercel functions re-evaluate this module on every cold start. `process.exit()`
+// kills the whole invocation and Vercel reports it as FUNCTION_INVOCATION_FAILED
+// for every request until the next cold start crashes again — a permanent outage
+// from a single missing env var. Fail-fast-on-boot is only safe for a standalone
+// process (Render/VPS) that hasn't accepted any traffic yet.
+const IS_SERVERLESS = process.env.VERCEL === '1';
+
+if (!IS_SERVERLESS) {
+    if (!MONGODB_URI) {
+        console.error('❌ MONGODB_URI is not set. Copy .env.example to .env and fill it in.');
+        process.exit(1);
+    }
+
+    if (IS_PRODUCTION && !process.env.JWT_SECRET) {
+        console.error('❌ JWT_SECRET must be set in production. Refusing to start with a default secret.');
+        process.exit(1);
+    }
 }
 
-if (IS_PRODUCTION && !process.env.JWT_SECRET) {
-    console.error('❌ JWT_SECRET must be set in production. Refusing to start with a default secret.');
-    process.exit(1);
+// On serverless, the same conditions degrade gracefully instead of crashing:
+// a missing MONGODB_URI leaves mongoose disconnected, which the /api readiness
+// gate below turns into a 503; a missing JWT_SECRET surfaces as a 500 only on
+// the specific request that tries to sign or verify a token (see config/jwt.ts).
+if (IS_SERVERLESS && !MONGODB_URI) {
+    console.error('❌ MONGODB_URI is not set — all /api routes will return 503.');
+}
+if (IS_SERVERLESS && IS_PRODUCTION && !process.env.JWT_SECRET) {
+    console.error('❌ JWT_SECRET is not set — auth routes will fail until it is configured.');
 }
 
 // Explicit allow-list. `origin: '*'` together with `credentials: true` is invalid
@@ -129,9 +149,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 });
 
 // Start Express HTTP Server for standalone Node environments (Render, VPS)
-const isServerless = process.env.VERCEL === '1';
-
-if (!isServerless) {
+if (!IS_SERVERLESS) {
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Server running on 0.0.0.0:${PORT}`);
 
