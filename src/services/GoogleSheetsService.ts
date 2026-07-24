@@ -1,4 +1,11 @@
-import { google } from 'googleapis';
+// Importing the `google` barrel pulls in type declarations for all ~330
+// Google APIs (tens of MB of .d.ts), which made `tsc` — both locally and on
+// Vercel's build machine — take many minutes to type-check this file alone,
+// once repeatedly stalling the whole deploy. Import only the Sheets client;
+// `auth` here is the same googleapis-common AuthPlus the narrow client
+// expects, so this avoids the JWT/OAuth2Client type mismatch that a
+// standalone `google-auth-library` import produces against it.
+import { sheets as sheetsApi, auth as googleAuth } from 'googleapis/build/src/apis/sheets';
 
 export interface SheetProductRow {
     id: string;
@@ -35,7 +42,7 @@ export class GoogleSheetsService {
             return null;
         }
 
-        return new google.auth.JWT({
+        return new googleAuth.JWT({
             email: clientEmail,
             key: privateKey,
             scopes: ['https://www.googleapis.com/auth/spreadsheets'],
@@ -65,7 +72,7 @@ export class GoogleSheetsService {
                 return false;
             }
 
-            const sheets = google.sheets({ version: 'v4', auth });
+            const sheets = sheetsApi({ version: 'v4', auth });
             await sheets.spreadsheets.values.append({
                 spreadsheetId,
                 range: `${sheetName}!A:Z`,
@@ -95,7 +102,7 @@ export class GoogleSheetsService {
                 return null;
             }
 
-            const sheets = google.sheets({ version: 'v4', auth });
+            const sheets = sheetsApi({ version: 'v4', auth });
             const response = await sheets.spreadsheets.values.get({
                 spreadsheetId,
                 range: `${sheetName}!A:Z`,
