@@ -7,10 +7,52 @@ export function normalizeLang(value: unknown): BotLang {
 }
 
 /**
+ * Explicit shape for one language's copy. Without this, TypeScript infers a
+ * distinct string-literal type per language from the object literals below,
+ * and t()'s return type (pinned to TEXTS['uz']) rejects 'ru'/'en' whose
+ * literal wording naturally differs — string here is what's actually needed.
+ */
+interface BotTexts {
+    chooseLanguage: string;
+    languageSet: string;
+    welcome: (name: string) => string;
+    mainMenu: string;
+    btnProducts: string;
+    btnMyOrders: string;
+    btnBranches: string;
+    btnSupport: string;
+    btnOrder: string;
+    btnLanguage: string;
+    btnSharePhone: string;
+    btnBack: string;
+    productsTitle: string;
+    productsEmpty: string;
+    productsFooter: string;
+    branchesTitle: string;
+    branchesEmpty: string;
+    ordersTitle: string;
+    ordersEmpty: string;
+    ordersNeedPhone: string;
+    ordersNotRegistered: (phone: string) => string;
+    phoneLinked: (name: string) => string;
+    phoneInvalid: string;
+    supportText: (site: string) => string;
+    orderCta: string;
+    openSite: string;
+    openProducts: string;
+    openOrders: string;
+    contactOperator: string;
+    unknown: string;
+    error: string;
+    dbUnavailable: string;
+    statusChanged: (id: string, status: string) => string;
+}
+
+/**
  * Bot copy, kept separate from handler logic so wording can change without
  * touching control flow. Mirrors the languages the web app already supports.
  */
-const TEXTS = {
+const TEXTS: Record<BotLang, BotTexts> = {
     uz: {
         chooseLanguage: '🌐 <b>Tilni tanlang</b> / Выберите язык / Choose language',
         languageSet: '✅ Til o\'zgartirildi.',
@@ -145,9 +187,9 @@ const TEXTS = {
 
         statusChanged: (id: string, status: string) => `🔔 <b>Order #${id}</b>\n\nStatus: ${status}`,
     },
-} as const;
+};
 
-export function t(lang: BotLang): typeof TEXTS['uz'] {
+export function t(lang: BotLang): BotTexts {
     return TEXTS[lang] ?? TEXTS.uz;
 }
 

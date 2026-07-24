@@ -69,11 +69,15 @@ app.use(cors({
 
 app.use(express.json({ limit: '1mb' }));
 
-// Connect MongoDB Atlas in background
-mongoose
-    .connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 })
-    .then(() => console.log('✅ MongoDB Atlas connected successfully'))
-    .catch((err) => console.error('❌ MongoDB connection error:', err.message));
+// Connect MongoDB Atlas in background. Guarded so a missing URI on serverless
+// (already logged above) degrades to "never connects" instead of mongoose
+// throwing on a non-string argument.
+if (MONGODB_URI) {
+    mongoose
+        .connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 })
+        .then(() => console.log('✅ MongoDB Atlas connected successfully'))
+        .catch((err) => console.error('❌ MongoDB connection error:', err.message));
+}
 
 mongoose.connection.on('disconnected', () => console.warn('⚠️  MongoDB disconnected'));
 mongoose.connection.on('reconnected', () => console.log('✅ MongoDB reconnected'));
