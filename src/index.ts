@@ -9,6 +9,7 @@ import adminRoutes from './routes/admin';
 import branchRoutes from './routes/branches';
 import telegramRoutes from './routes/telegram';
 import { TelegramBotService } from './services/TelegramBotService';
+import { waitForDb } from './config/db';
 
 dotenv.config();
 
@@ -96,26 +97,6 @@ app.get('/api/health', (_req, res) => {
         telegramBot: TelegramBotService.isConfigured() ? 'configured' : 'not_configured',
         uptime: Math.round(process.uptime()),
     });
-});
-
-/**
- * Waits for the initial connection to settle, so a request arriving during a
- * cold start is not rejected while the driver is still connecting.
- */
-const waitForDb = (timeoutMs: number): Promise<boolean> => new Promise((resolve) => {
-    if (mongoose.connection.readyState === 1) return resolve(true);
-
-    const timer = setTimeout(() => {
-        mongoose.connection.off('connected', onConnected);
-        resolve(false);
-    }, timeoutMs);
-
-    function onConnected() {
-        clearTimeout(timer);
-        resolve(true);
-    }
-
-    mongoose.connection.once('connected', onConnected);
 });
 
 /**

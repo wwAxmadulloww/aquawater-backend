@@ -71,7 +71,9 @@ export class TelegramClient {
         this.token = token;
         this.http = axios.create({
             baseURL: `https://api.telegram.org/bot${token}`,
-            timeout: 15000,
+            // Kept short so a send plus a cold-start database wait still fits
+            // inside one serverless invocation instead of being killed midway.
+            timeout: 8000,
         });
     }
 
