@@ -19,14 +19,17 @@ export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false)
 
     return (
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <header className="sticky top-0 z-50 border-b border-white/60 bg-foam/80 backdrop-blur-xl
+                           shadow-[inset_0_-1px_0_rgba(255,255,255,.7),0_1px_16px_-8px_rgba(5,42,56,.25)]">
             <div className="container-custom flex items-center h-16 gap-4">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 mr-4 flex-shrink-0">
-                    <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                        <Droplets className="w-5 h-5 text-white" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl
+                                    bg-gradient-to-b from-[#2ad0e8] to-[#0f7d94]
+                                    shadow-[inset_0_1px_0_rgba(255,255,255,.5),0_6px_14px_-6px_rgba(18,160,184,.9)]">
+                        <Droplets className="h-5 w-5 text-white" />
                     </div>
-                    <span className="font-bold text-primary-700 text-lg leading-tight hidden sm:block">AquaWater</span>
+                    <span className="hidden font-display text-lg font-semibold tracking-tight text-gray-900 sm:block">AquaWater</span>
                 </Link>
 
                 {/* Desktop nav */}
@@ -40,13 +43,13 @@ export default function Header() {
 
                 <div className="flex items-center gap-2 ml-auto">
                     {/* Language switcher */}
-                    <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+                    <div className="flex items-center gap-0.5 rounded-2xl bg-gray-100/80 p-1 shadow-[inset_0_1px_3px_rgba(5,42,56,.10)]">
                         {LANGS.map(l => (
                             <button
                                 key={l.code}
                                 onClick={() => setLang(l.code)}
-                                className={`px-2 py-1 rounded-md text-xs font-medium transition-all ${lang === l.code
-                                    ? 'bg-white text-primary-700 shadow-sm'
+                                className={`rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${lang === l.code
+                                    ? 'bg-white text-primary-700 shadow-[0_1px_3px_rgba(5,42,56,.18)]'
                                     : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
@@ -59,7 +62,9 @@ export default function Header() {
                     <Link to="/cart" className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
                         <ShoppingCart className="w-5 h-5" />
                         {totalItems > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full
+                                             bg-sun text-[11px] font-extrabold text-abyss
+                                             shadow-[0_2px_8px_-2px_rgba(255,169,77,.9)]">
                                 {totalItems > 9 ? '9+' : totalItems}
                             </span>
                         )}
@@ -90,7 +95,7 @@ export default function Header() {
 
             {/* Mobile menu */}
             {menuOpen && (
-                <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 flex flex-col gap-2">
+                <div className="flex flex-col gap-1 border-t border-white/60 bg-foam/95 px-4 py-3 backdrop-blur-xl md:hidden">
                     <MobileNav to="/products" onClick={() => setMenuOpen(false)}>{t('nav.products')}</MobileNav>
                     {isAuthenticated && <MobileNav to="/orders" onClick={() => setMenuOpen(false)}>{t('nav.orders')}</MobileNav>}
                     {isAdmin && <MobileNav to="/admin" onClick={() => setMenuOpen(false)}>{t('nav.admin')}</MobileNav>}

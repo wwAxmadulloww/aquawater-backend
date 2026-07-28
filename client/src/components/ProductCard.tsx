@@ -30,9 +30,9 @@ export default function ProductCard({ product }: { product: Product }) {
     return (
         <Link
             to={`/products/${product._id}`}
-            className="group block bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            className="card-3d group block overflow-hidden"
         >
-            <div className="relative aspect-square overflow-hidden bg-gray-50">
+            <div className="relative aspect-square overflow-hidden bg-gradient-to-b from-primary-50/60 to-white">
                 <img
                     src={product.imageUrl}
                     alt={product.name}
@@ -40,14 +40,14 @@ export default function ProductCard({ product }: { product: Product }) {
                     loading="lazy"
                 />
                 {!product.inStock && (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
-                        <span className="bg-gray-900 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                    <div className="absolute inset-0 bg-foam/70 backdrop-blur-[2px] flex items-center justify-center">
+                        <span className="bg-abyss text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
                             Sotuvda yo'q
                         </span>
                     </div>
                 )}
                 {product.category === 'water' && (
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-primary-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-primary-100 uppercase shadow-sm">
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-primary-700 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-white/70 uppercase shadow-[inset_0_1px_0_rgba(255,255,255,.9),0_2px_8px_-2px_rgba(5,42,56,.2)]">
                         Asosiy
                     </div>
                 )}
@@ -67,7 +67,7 @@ export default function ProductCard({ product }: { product: Product }) {
                 <div className="flex items-center justify-between mt-auto">
                     <div>
                         <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Narxi</p>
-                        <p className="text-lg font-bold text-gray-900">
+                        <p className="text-lg font-bold text-gray-900 tabular">
                             {formatPrice(product.price)}
                         </p>
                     </div>
@@ -75,7 +75,7 @@ export default function ProductCard({ product }: { product: Product }) {
                     <button
                         onClick={handleAdd}
                         disabled={!product.inStock}
-                        className={`p-3 rounded-2xl transition-all duration-200 ${product.inStock
+                        className={`p-3.5 rounded-2xl transition-all duration-200 ${product.inStock
                                 ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-200 active:scale-90'
                                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             }`}

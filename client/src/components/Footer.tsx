@@ -8,19 +8,21 @@ const regions = ['Toshkent', 'Samarqand', 'Buxoro', 'Andijon', 'Namangan', 'Farg
 export default function Footer() {
     const { t } = useLanguage()
     return (
-        <footer className="bg-[#0a0f18] text-gray-400 pt-20 pb-10 relative overflow-hidden">
+        <footer className="deep caustics pt-20 pb-10 text-white/60">
             {/* Subtle light effect */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-primary-500/20 to-transparent" />
+            <div className="waterline absolute inset-x-0 top-0" />
 
             <div className="container-custom relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
                     {/* Brand & Mission */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg shadow-primary-900/20">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl
+                                            bg-gradient-to-b from-[#2ad0e8] to-[#0f7d94]
+                                            shadow-[inset_0_1px_0_rgba(255,255,255,.5),0_8px_18px_-8px_rgba(18,160,184,.9)]">
                                 <Droplets className="w-6 h-6 text-white" />
                             </div>
-                            <span className="font-bold text-white text-2xl tracking-tight">AquaWater</span>
+                            <span className="font-display text-2xl font-semibold tracking-tight text-white">AquaWater</span>
                         </div>
                         <p className="text-sm leading-relaxed max-w-xs transition-colors hover:text-gray-300">
                             Bizning maqsadimiz — har bir xonadonga toza, mineral va sifatli ichimlik suvini eng zamonaviy texnologiyalar orqali tezda yetkazib berish.

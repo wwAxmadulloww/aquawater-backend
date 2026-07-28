@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="AquaWater">
+  <!--
+    A droplet holding deep water, lit from the upper left the same way the
+    site's cards are. The old index.html pointed at /vite.svg, which was never
+    in the project, so the tab has been showing a blank icon.
+  -->
+  <defs>
+    <linearGradient id="body" x1="8" y1="3" x2="24" y2="29" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#58e8d2" />
+      <stop offset="0.45" stop-color="#12a0b8" />
+      <stop offset="1" stop-color="#052a38" />
+    </linearGradient>
+  </defs>
+
+  <path
+    d="M16 2.5c5.6 6.4 9 10.9 9 15.1A9 9 0 0 1 7 17.6C7 13.4 10.4 8.9 16 2.5Z"
+    fill="url(#body)"
+  />
+
+  <!-- Specular highlight: the same lit leading edge the cards carry. -->
+  <path
+    d="M12.6 10.4c-1.6 2.1-2.5 3.9-2.5 5.6a5.6 5.6 0 0 0 1.5 3.8c-2-3.3-1.4-6.5 1-9.4Z"
+    fill="#ffffff"
+    opacity="0.55"
+  />
+</svg>

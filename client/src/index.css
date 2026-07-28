@@ -2,91 +2,288 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * {
-    box-sizing: border-box;
-  }
-  
-  html {
-    scroll-behavior: smooth;
-  }
+/*
+ * Depth here reads as water optics, not generic frosted glass: light enters a
+ * surface, bends, and concentrates. Three mechanics carry it — a two-part
+ * tinted shadow, a specular top edge on every raised surface, and a caustic
+ * light field behind the darkest sections. Everything else stays quiet so
+ * those read as deliberate.
+ */
 
-  body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
-  }
+@layer base {
+    * {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply bg-foam text-gray-900 font-sans antialiased;
+        /* A faint vertical gradient reads as depth in a tank rather than a flat page. */
+        background-image: linear-gradient(180deg, #f4fafb 0%, #eaf4f6 100%);
+        background-attachment: fixed;
+    }
+
+    h1, h2, h3 {
+        @apply font-display font-semibold tracking-tight;
+    }
+
+    h4, h5, h6 {
+        @apply font-sans font-bold;
+    }
+
+    /* Keyboard focus stays obvious on every interactive surface. */
+    :focus-visible {
+        outline: 2px solid theme('colors.glacier');
+        outline-offset: 2px;
+        border-radius: 6px;
+    }
+
+    ::selection {
+        background: theme('colors.caustic');
+        color: theme('colors.abyss');
+    }
 }
 
 @layer components {
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 active:scale-95;
-  }
-  
-  .btn-secondary {
-    @apply btn bg-primary-50 text-primary-700 hover:bg-primary-100 focus:ring-primary-400;
-  }
-  
-  .btn-ghost {
-    @apply btn bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-300;
-  }
-  
-  .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
-  }
-  
-  .input {
-    @apply w-full px-3 py-2.5 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200;
-  }
-  
-  .card {
-    @apply bg-white rounded-2xl shadow-card border border-gray-100;
-  }
-  
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-  
-  .badge-pending {
-    @apply badge bg-yellow-100 text-yellow-800;
-  }
-  
-  .badge-accepted {
-    @apply badge bg-blue-100 text-blue-800;
-  }
-  
-  .badge-delivered {
-    @apply badge bg-green-100 text-green-800;
-  }
-  
-  .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
+    .btn {
+        @apply relative inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl
+               font-semibold tracking-tight transition-all duration-200
+               focus:outline-none disabled:opacity-45 disabled:cursor-not-allowed;
+    }
+
+    /*
+     * The primary button is the one control that behaves like a solid object:
+     * a lit top edge, a coloured shadow beneath, and on click it presses into
+     * the page rather than merely changing tint.
+     */
+    .btn-primary {
+        @apply btn text-white;
+        background-image: linear-gradient(180deg, #17b0c9 0%, #12a0b8 45%, #0f8ba1 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.35),
+            0 1px 2px rgba(5, 42, 56, 0.20),
+            0 10px 22px -8px rgba(18, 160, 184, 0.65);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        @apply -translate-y-0.5;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.45),
+            0 2px 4px rgba(5, 42, 56, 0.20),
+            0 18px 32px -10px rgba(18, 160, 184, 0.75);
+    }
+
+    .btn-primary:active:not(:disabled) {
+        @apply translate-y-0;
+        box-shadow:
+            inset 0 2px 4px rgba(5, 42, 56, 0.35),
+            0 1px 2px rgba(5, 42, 56, 0.20);
+    }
+
+    .btn-secondary {
+        @apply btn bg-white/80 text-primary-800 border border-primary-100 backdrop-blur-sm;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px -2px rgba(5, 42, 56, 0.12);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        @apply bg-white -translate-y-0.5 border-primary-200;
+    }
+
+    .btn-ghost {
+        @apply btn bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+    }
+
+    .btn-danger {
+        @apply btn text-white;
+        background-image: linear-gradient(180deg, #f2565a 0%, #dc2f35 100%);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.28),
+            0 10px 22px -10px rgba(220, 47, 53, 0.7);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+        @apply -translate-y-0.5;
+    }
+
+    /* Inputs sit below the surface — an inset shadow, not a raised border. */
+    .input {
+        @apply w-full px-4 py-3 rounded-2xl bg-white/90 text-gray-900 placeholder-gray-400
+               border border-gray-200 transition-all duration-200;
+        box-shadow: inset 0 2px 4px rgba(5, 42, 56, 0.05);
+    }
+
+    .input:focus {
+        @apply outline-none border-primary-300 bg-white;
+        box-shadow:
+            inset 0 2px 4px rgba(5, 42, 56, 0.04),
+            0 0 0 4px rgba(18, 160, 184, 0.15);
+    }
+
+    /*
+     * Cards read as panes of glass over the page: a lit top edge where light
+     * catches the leading surface, and a tinted shadow beneath.
+     */
+    .card {
+        @apply relative rounded-3xl bg-white/85 border border-white/70 backdrop-blur-xl;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            0 1px 2px rgba(5, 42, 56, 0.06),
+            0 12px 32px -12px rgba(5, 42, 56, 0.18);
+    }
+
+    /*
+     * Objects you could pick up. Tilts away from the pointer and catches a
+     * specular sweep — the one place this design spends its boldness.
+     */
+    .card-3d {
+        @apply card transition-transform duration-300 ease-out;
+        transform-style: preserve-3d;
+        will-change: transform;
+    }
+
+    .card-3d:hover {
+        transform: perspective(900px) rotateX(3deg) rotateY(-3deg) translateY(-6px) scale(1.015);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.95),
+            0 2px 6px rgba(5, 42, 56, 0.10),
+            0 28px 50px -16px rgba(18, 160, 184, 0.38);
+    }
+
+    /* The specular sweep: a diagonal highlight crossing the face on hover. */
+    .card-3d::after {
+        content: '';
+        @apply pointer-events-none absolute inset-0 rounded-3xl opacity-0;
+        background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+        transition: opacity .45s ease, transform .7s ease;
+        transform: translateX(-30%);
+    }
+
+    .card-3d:hover::after {
+        @apply opacity-100;
+        transform: translateX(30%);
+    }
+
+    .badge {
+        @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-tight;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .badge-pending {
+        @apply badge bg-sun/20 text-[#9a5606];
+    }
+
+    .badge-accepted {
+        @apply badge bg-primary-100 text-primary-800;
+    }
+
+    .badge-delivered {
+        @apply badge bg-caustic/25 text-[#0b6d5f];
+    }
+
+    .container-custom {
+        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    }
+
+    /*
+     * Deep water. Behind the hero and the footer, so the page gains a floor and
+     * a ceiling — you are looking into the tank, not at another card.
+     */
+    .deep {
+        @apply relative overflow-hidden text-white;
+        background-image:
+            radial-gradient(120% 80% at 50% -10%, #0a4c5f 0%, #052a38 55%, #03181f 100%);
+    }
+
+    /*
+     * Caustics — the rippling light water throws. Two blurred fields drifting
+     * at different rates, so the pattern never visibly loops. Pure CSS, so it
+     * costs nothing on the wire.
+     */
+    .caustics::before,
+    .caustics::after {
+        content: '';
+        @apply pointer-events-none absolute;
+        inset: -25%;
+        background-repeat: no-repeat;
+        filter: blur(42px);
+        opacity: .5;
+    }
+
+    .caustics::before {
+        background-image:
+            radial-gradient(38% 26% at 22% 30%, rgba(88, 232, 210, 0.55), transparent 70%),
+            radial-gradient(30% 22% at 72% 22%, rgba(18, 160, 184, 0.50), transparent 70%),
+            radial-gradient(34% 24% at 55% 74%, rgba(88, 232, 210, 0.35), transparent 70%);
+        animation: drift 18s ease-in-out infinite;
+    }
+
+    .caustics::after {
+        background-image:
+            radial-gradient(28% 20% at 80% 62%, rgba(118, 213, 226, 0.45), transparent 70%),
+            radial-gradient(24% 18% at 30% 78%, rgba(18, 160, 184, 0.40), transparent 70%);
+        animation: driftSlow 26s ease-in-out infinite;
+    }
+
+    /* The meniscus: where one section's water meets the next. */
+    .waterline {
+        @apply relative h-px w-full;
+        background-image: linear-gradient(90deg, transparent, rgba(88, 232, 210, 0.55), transparent);
+    }
+
+    /* An eyebrow that reads as a measurement mark rather than decoration. */
+    .eyebrow {
+        @apply inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-600;
+    }
 }
 
 @layer utilities {
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-water-dark bg-clip-text text-transparent;
-  }
+    .text-gradient {
+        background-image: linear-gradient(120deg, #12a0b8 0%, #58e8d2 100%);
+        @apply bg-clip-text text-transparent;
+    }
+
+    /* Numerals in tables and totals should line up column to column. */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
 }
 
-/* Smooth scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+    width: 10px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+    background: #e8f1f3;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+    background: #b0c8ce;
+    border-radius: 999px;
+    border: 3px solid #e8f1f3;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+    background: #7c9ba4;
+}
+
+/*
+ * Motion is atmosphere, never information — anyone who asks for less gets a
+ * still page with every state still legible.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .card-3d:hover {
+        transform: none;
+    }
 }

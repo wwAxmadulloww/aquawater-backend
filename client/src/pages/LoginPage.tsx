@@ -80,34 +80,34 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 selection:bg-primary-100 font-sans">
-            <div className="w-full max-w-md">
+        <div className="deep caustics flex min-h-screen items-center justify-center p-4 font-sans">
+            <div className="relative z-10 w-full max-w-md animate-rise">
                 {/* Brand Logo */}
                 <div className="text-center mb-10 group cursor-default">
-                    <div className="w-20 h-20 bg-gradient-to-tr from-primary-600 to-primary-400 rounded-[2.5rem] flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-primary-200 rotation-slow border-4 border-white">
+                    <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[2rem]
+                                    bg-gradient-to-b from-[#2ad0e8] to-[#0f7d94]
+                                    shadow-[inset_0_2px_0_rgba(255,255,255,.45),0_18px_38px_-14px_rgba(18,160,184,.95)]">
                         <Droplets className="w-10 h-10 text-white drop-shadow-lg" />
                     </div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">AquaWater</h1>
-                    <p className="text-slate-400 text-xs font-black uppercase tracking-[0.3em] mt-2">Uzbekistan</p>
+                    <h1 className="font-display text-3xl font-semibold tracking-tight text-white">AquaWater</h1>
+                    <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.3em] text-caustic/80">Uzbekistan</p>
                 </div>
 
                 {/* Main Auth Container */}
-                <div className="bg-white rounded-[40px] shadow-[0_30px_100px_rgba(0,0,0,0.08)] border border-slate-100/50 p-8 md:p-10 relative overflow-hidden">
+                <div className="card relative overflow-hidden p-8 md:p-10">
                     {/* Decorative Elements */}
-                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary-50 rounded-full blur-3xl opacity-50" />
-                    <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-primary-100 rounded-full blur-3xl opacity-30" />
 
                     {/* Mode Selector */}
-                    <div className="flex bg-slate-50 p-1.5 rounded-[22px] mb-10 relative z-10 transition-all">
+                    <div className="relative z-10 mb-10 flex rounded-2xl bg-gray-100/80 p-1.5 shadow-[inset_0_1px_3px_rgba(5,42,56,.10)]">
                         <button
                             onClick={() => setMode('login')}
-                            className={`flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded-[18px] transition-all duration-300 ${mode === 'login' ? 'bg-white text-primary-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded-[18px] transition-all duration-300 ${mode === 'login' ? 'bg-white text-primary-700 shadow-[0_2px_8px_-2px_rgba(5,42,56,.25)]' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Kirish
                         </button>
                         <button
                             onClick={() => setMode('register')}
-                            className={`flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded-[18px] transition-all duration-300 ${mode === 'register' ? 'bg-white text-primary-600 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                            className={`flex-1 py-3.5 text-[11px] font-black uppercase tracking-widest rounded-[18px] transition-all duration-300 ${mode === 'register' ? 'bg-white text-primary-700 shadow-[0_2px_8px_-2px_rgba(5,42,56,.25)]' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Ro'yxatdan o'tish
                         </button>
@@ -116,14 +116,14 @@ export default function LoginPage() {
                     <form onSubmit={handleSubmit} className="relative z-10 space-y-6">
                         {mode === 'register' && (
                             <div className="space-y-2 animate-in fade-in duration-500">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ism va familiya</label>
+                                <label className="ml-1 text-[10px] font-bold uppercase tracking-widest text-gray-500">Ism va familiya</label>
                                 <div className="relative group">
-                                    <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
+                                    <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
                                     <input
                                         type="text"
                                         value={name}
                                         onChange={e => setName(e.target.value)}
-                                        className="w-full pl-14 pr-5 py-4.5 bg-slate-50 border-2 border-slate-50 rounded-[20px] focus:bg-white focus:border-primary-500/20 focus:ring-8 focus:ring-primary-500/5 transition-all font-bold text-slate-900 outline-none"
+                                        className="input !pl-14 font-semibold"
                                         placeholder="Ismingizni kiriting"
                                         required
                                     />
@@ -132,14 +132,14 @@ export default function LoginPage() {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Telefon raqam</label>
+                            <label className="ml-1 text-[10px] font-bold uppercase tracking-widest text-gray-500">Telefon raqam</label>
                             <div className="relative group">
-                                <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
+                                <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
                                 <input
                                     type="tel"
                                     value={phone}
                                     onChange={e => handlePhoneChange(e.target.value)}
-                                    className="w-full pl-14 pr-5 py-4.5 bg-slate-50 border-2 border-slate-50 rounded-[20px] focus:bg-white focus:border-primary-500/20 focus:ring-8 focus:ring-primary-500/5 transition-all font-bold text-slate-900 outline-none"
+                                    className="input !pl-14 font-semibold"
                                     placeholder="+998 XX XXX XX XX"
                                     required
                                 />
@@ -147,21 +147,21 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Parol</label>
+                            <label className="ml-1 text-[10px] font-bold uppercase tracking-widest text-gray-500">Parol</label>
                             <div className="relative group">
-                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
+                                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
                                 <input
                                     type={showPass ? 'text' : 'password'}
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="w-full pl-14 pr-14 py-4.5 bg-slate-50 border-2 border-slate-50 rounded-[20px] focus:bg-white focus:border-primary-500/20 focus:ring-8 focus:ring-primary-500/5 transition-all font-bold text-slate-900 outline-none"
+                                    className="input !pl-14 !pr-14 font-semibold"
                                     placeholder="••••••••"
                                     required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPass(!showPass)}
-                                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-primary-600 transition-colors"
+                                    className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 transition-colors"
                                 >
                                     {showPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
@@ -170,14 +170,14 @@ export default function LoginPage() {
 
                         {mode === 'register' && (
                             <div className="space-y-2 animate-in fade-in duration-500 text-center">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Parolni tasdiqlang</label>
+                                <label className="ml-1 text-[10px] font-bold uppercase tracking-widest text-gray-500">Parolni tasdiqlang</label>
                                 <div className="relative group">
-                                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-primary-500 transition-colors" />
+                                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-600 transition-colors" />
                                     <input
                                         type={showPass ? 'text' : 'password'}
                                         value={confirmPassword}
                                         onChange={e => setConfirmPassword(e.target.value)}
-                                        className="w-full pl-14 pr-14 py-4.5 bg-slate-50 border-2 border-slate-50 rounded-[20px] focus:bg-white focus:border-primary-500/20 focus:ring-8 focus:ring-primary-500/5 transition-all font-bold text-slate-900 outline-none"
+                                        className="input !pl-14 !pr-14 font-semibold"
                                         placeholder="••••••••"
                                         required
                                     />
@@ -198,7 +198,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={mutation.isPending}
-                            className="w-full py-5 rounded-[24px] font-black uppercase tracking-[0.2em] text-sm shadow-2xl transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 group mt-8 bg-slate-900 text-white shadow-slate-900/10"
+                            className="btn-primary group mt-8 w-full py-5 text-sm uppercase tracking-[0.18em]"
                         >
                             {mutation.isPending ? (
                                 <RefreshCw className="w-6 h-6 animate-spin" />
@@ -212,22 +212,11 @@ export default function LoginPage() {
                     </form>
                 </div>
 
-                <p className="text-center mt-12 text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] drop-shadow-sm">
+                <p className="mt-12 text-center text-[10px] font-bold uppercase tracking-[0.35em] text-white/35">
                     © {new Date().getFullYear()} AquaWater Uzbekistan
                 </p>
             </div>
 
-            <style>{`
-                @keyframes rotation {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                .rotation-slow {
-                    animation: rotation 20s linear infinite;
-                }
-                .tracking-tighter { letter-spacing: -0.05em; }
-                input::placeholder { color: #cbd5e1; font-weight: 600; }
-            `}</style>
         </div>
     )
 }
