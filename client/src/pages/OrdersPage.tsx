@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Package, ChevronRight, Clock } from 'lucide-react'
+import { Package, Clock } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
 import { getOrders, formatPrice } from '../api/client'
 
@@ -68,7 +68,7 @@ export default function OrdersPage() {
                                 (s: number, i: any) => s + i.priceSnapshot * i.qty, 0
                             )
                             return (
-                                <Link key={order._id} to={`/orders/${order._id}`} className="card p-5 flex items-center justify-between gap-4 hover:shadow-soft transition-all group">
+                                <div key={order._id} className="card p-5 flex items-center justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-2">
                                             <span className={`badge ${STATUS_CLASSES[order.status]}`}>
@@ -91,8 +91,7 @@ export default function OrdersPage() {
                                         <p className="font-bold text-primary-700">{formatPrice(total)}</p>
                                         <p className="text-xs text-gray-400 capitalize">{order.paymentMethod}</p>
                                     </div>
-                                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-primary-600 transition-colors" />
-                                </Link>
+                                </div>
                             )
                         })}
                     </div>
