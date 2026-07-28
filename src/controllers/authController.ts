@@ -19,6 +19,26 @@ const requirePhoneVerification = (): boolean => process.env.REQUIRE_PHONE_VERIFI
 const signToken = (userId: unknown): string =>
     jwt.sign({ id: String(userId) }, getJwtSecret(), { expiresIn: '7d' });
 
+/**
+ * The user payload returned alongside a token.
+ *
+ * Kept in one place because login, register and verify-otp each built their
+ * own object and drifted: some omitted preferredLanguage, all omitted
+ * addresses. GET /auth/me returns the full document, so the client saw a
+ * different shape right after signing in than it did after a refresh.
+ */
+const publicUser = (user: any) => ({
+    _id: user._id,
+    id: user._id,
+    name: user.name,
+    phone: user.phone,
+    role: user.role,
+    workerType: user.workerType,
+    preferredLanguage: user.preferredLanguage ?? 'uz',
+    addresses: user.addresses ?? [],
+    isPhoneVerified: user.isPhoneVerified ?? true,
+});
+
 export const sendOtpSchema = z.object({
     phone: z.string().regex(phoneRegex, 'Telefon raqami noto\'g\'ri formatda (+998XXXXXXXXX)'),
 });
@@ -87,14 +107,7 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
             res.json({
                 message: 'Muvaffaqiyatli kirildi',
                 token,
-                user: {
-                    _id: user._id,
-                    id: user._id,
-                    name: user.name,
-                    phone: user.phone,
-                    role: user.role,
-                    isPhoneVerified: user.isPhoneVerified ?? true
-                }
+                user: publicUser(user)
             });
             return;
         }
@@ -153,14 +166,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         res.status(201).json({
             message: 'Ro\'yxatdan o\'tish muvaffaqiyatli yakunlandi',
             token,
-            user: {
-                _id: user._id,
-                id: user._id,
-                name: user.name,
-                phone: user.phone,
-                role: user.role,
-                isPhoneVerified: true
-            }
+            user: publicUser(user)
         });
     } catch (err) {
         console.error('[Auth] register error:', err);
@@ -193,15 +199,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const token = signToken(user._id);
         res.json({
             token,
-            user: {
-                _id: user._id,
-                id: user._id,
-                name: user.name,
-                phone: user.phone,
-                role: user.role,
-                isPhoneVerified: user.isPhoneVerified ?? true,
-                preferredLanguage: user.preferredLanguage
-            },
+            user: publicUser(user),
         });
     } catch (err) {
         console.error('[Auth] login error:', err);

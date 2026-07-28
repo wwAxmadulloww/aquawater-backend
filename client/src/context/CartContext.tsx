@@ -28,30 +28,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
         } catch { return [] }
     })
 
-    const save = (updated: CartItem[]) => {
-        setItems(updated)
-        localStorage.setItem('aq_cart', JSON.stringify(updated))
-    }
-
-    const addItem = (product: Omit<CartItem, 'qty'>) => {
+    /**
+     * Every mutation goes through the functional updater form. Reading `items`
+     * from the render scope instead meant two clicks landing before a re-render
+     * both worked from the same stale array, so the second silently undid the
+     * first — visible as a quantity that jumps back or an item that reappears
+     * after being removed.
+     */
+    const update = (fn: (prev: CartItem[]) => CartItem[]) => {
         setItems(prev => {
-            const existing = prev.find(i => i._id === product._id)
-            const updated = existing
-                ? prev.map(i => i._id === product._id ? { ...i, qty: i.qty + 1 } : i)
-                : [...prev, { ...product, qty: 1 }]
+            const updated = fn(prev)
             localStorage.setItem('aq_cart', JSON.stringify(updated))
             return updated
         })
     }
 
-    const removeItem = (id: string) => save(items.filter(i => i._id !== id))
+    const addItem = (product: Omit<CartItem, 'qty'>) => {
+        update(prev => {
+            const existing = prev.find(i => i._id === product._id)
+            return existing
+                ? prev.map(i => i._id === product._id ? { ...i, qty: i.qty + 1 } : i)
+                : [...prev, { ...product, qty: 1 }]
+        })
+    }
+
+    const removeItem = (id: string) => update(prev => prev.filter(i => i._id !== id))
 
     const updateQty = (id: string, qty: number) => {
         if (qty < 1) { removeItem(id); return }
-        save(items.map(i => i._id === id ? { ...i, qty } : i))
+        update(prev => prev.map(i => i._id === id ? { ...i, qty } : i))
     }
 
-    const clearCart = () => save([])
+    const clearCart = () => update(() => [])
 
     const totalItems = items.reduce((sum, i) => sum + i.qty, 0)
     const totalPrice = items.reduce((sum, i) => sum + i.price * i.qty, 0)

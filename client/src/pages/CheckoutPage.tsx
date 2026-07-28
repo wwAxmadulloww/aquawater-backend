@@ -13,8 +13,17 @@ const TIME_SLOTS = ['09:00–11:00', '11:00–13:00', '13:00–15:00', '15:00–
 
 type PayMethod = 'cash' | 'click' | 'payme'
 
+/**
+ * Today's date in the user's own timezone, as YYYY-MM-DD.
+ *
+ * toISOString() converts to UTC first. Uzbekistan is UTC+5, so between
+ * midnight and 05:00 local it returned *yesterday* — the delivery date
+ * defaulted to a day that had already passed, and `min` accepted it.
+ */
 function getTodayStr() {
-    return new Date().toISOString().split('T')[0]
+    const d = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 export default function CheckoutPage() {
@@ -95,6 +104,10 @@ export default function CheckoutPage() {
         e.preventDefault()
         if (!region || !city || !district || !street || !house) {
             toast.error('Barcha maydonlarni to\'ldiring')
+            return
+        }
+        if (date < getTodayStr()) {
+            toast.error('Yetkazib berish sanasi o\'tmishda bo\'lishi mumkin emas')
             return
         }
         mutation.mutate()

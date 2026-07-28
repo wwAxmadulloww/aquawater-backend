@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { User, Phone, Globe, LogOut, Save } from 'lucide-react'
@@ -11,7 +11,6 @@ export default function ProfilePage() {
     const { user, logout } = useAuth()
     const { t, lang, setLang } = useLanguage()
     const navigate = useNavigate()
-    const [name, setName] = useState(user?.name || '')
 
     const saveMutation = useMutation({
         mutationFn: () => api.patch('/auth/language', { language: lang }),
@@ -43,12 +42,7 @@ export default function ProfilePage() {
                                     <User className="w-4 h-4 inline mr-1.5 text-gray-400" />
                                     {t('profile.name')}
                                 </label>
-                                <input
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    className="input"
-                                    readOnly
-                                />
+                                <input value={user?.name || ''} className="input bg-gray-50" readOnly />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
