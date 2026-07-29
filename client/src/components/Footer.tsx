@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Droplets, Phone, Instagram, Send, Facebook, MapPin, Mail, Clock } from 'lucide-react'
+import { Droplets, Phone, Send, MapPin, Clock } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
 
 const regions = ['Toshkent', 'Samarqand', 'Buxoro', 'Andijon', 'Namangan', 'Farg\'ona']
@@ -23,13 +23,23 @@ export default function Footer() {
                         <p className="text-sm leading-relaxed max-w-xs transition-colors hover:text-gray-600">
                             Bizning maqsadimiz — har bir xonadonga toza, mineral va sifatli ichimlik suvini eng zamonaviy texnologiyalar orqali tezda yetkazib berish.
                         </p>
-                        <div className="flex gap-4">
-                            {[Instagram, Send, Facebook].map((Icon, i) => (
-                                <a key={i} href="#" className="btn-round transition-transform duration-300 hover:-translate-y-1">
-                                    <Icon className="w-5 h-5" />
-                                </a>
-                            ))}
-                        </div>
+                        {/*
+                          * Instagram and Facebook used to sit here on href="#",
+                          * which looks like a link, invites a click and does
+                          * nothing. Only the Telegram bot has an address that
+                          * actually exists, so it is the only one shown; the
+                          * others belong here the day those accounts do.
+                          */}
+                        <a
+                            href="https://t.me/aquawatersuz_bot"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-3 rounded-full border border-line px-4 py-2.5
+                                       text-xs text-gray-800 transition-colors hover:border-gray-500 hover:text-gray-950"
+                        >
+                            <Send className="h-4 w-4 text-accent" />
+                            Telegram bot
+                        </a>
                     </div>
 
                     {/* Quick Links */}

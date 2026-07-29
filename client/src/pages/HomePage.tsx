@@ -10,6 +10,8 @@ import { getProducts, api, formatPrice } from '../api/client'
 import ProductCard from '../components/ProductCard'
 import BranchMap from '../components/BranchMap'
 import WireDrop from '../components/WireDrop'
+import Reveal3D from '../components/Reveal3D'
+import { useViewportProgress } from '../hooks/useScrollMotion'
 
 /*
  * The page is one continuous black field. There is no light section and no
@@ -74,24 +76,11 @@ export default function HomePage() {
                  * the words.
                  */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <WireDrop className="h-[70%] w-[150%] max-w-[52rem] -translate-y-24 opacity-[.18] sm:h-[80%] sm:-translate-y-16 sm:opacity-30 md:h-[94%] md:w-auto md:translate-y-0 md:opacity-100" />
+                    <WireDrop className="h-[70%] w-[150%] max-w-[52rem] -translate-y-24 opacity-[.18] sm:h-[80%] sm:-translate-y-16 sm:opacity-30 md:h-[94%] md:w-auto md:aspect-[13/20] md:translate-y-0 md:opacity-100" />
                 </div>
 
                 <div className="container-custom relative flex min-h-[38rem] flex-col justify-end
                                 pb-14 pt-28 md:min-h-[46rem] md:pb-20 md:pt-36">
-
-                    {/* Vertical rail, as in the reference's left margin */}
-                    <ul className="absolute -left-2 top-1/2 hidden -translate-y-1/2 flex-col gap-3 2xl:flex">
-                        {CLAIMS.map(c => (
-                            <li
-                                key={c.title}
-                                className="btn-round cursor-default text-gray-700"
-                                title={`${c.title} — ${c.note}`}
-                            >
-                                {c.icon}
-                            </li>
-                        ))}
-                    </ul>
 
                     {/* Floating stat panels, as in the reference's right margin */}
                     <div className="absolute right-4 top-24 hidden w-52 flex-col gap-4 lg:flex xl:right-6 xl:w-56">
@@ -115,7 +104,7 @@ export default function HomePage() {
                         </div>
                     </div>
 
-                    <div className="relative max-w-3xl animate-rise 2xl:pl-20">
+                    <div className="relative max-w-3xl animate-rise">
                         <p className="eyebrow">
                             <Zap className="h-3 w-3 text-accent" />
                             Toshkent
@@ -150,8 +139,9 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Claims, spelled out — the icon rail above is decoration, not information */}
-            <section className="container-custom pb-16 md:pb-24 2xl:hidden">
+            {/* Claims */}
+            <section className="container-custom pb-16 md:pb-24">
+                <Reveal3D lean={16} depth={160}>
                 <ul className="grid gap-3 sm:grid-cols-3">
                     {CLAIMS.map(c => (
                         <li key={c.title} className="card flex items-center gap-3 p-4">
@@ -166,6 +156,7 @@ export default function HomePage() {
                         </li>
                     ))}
                 </ul>
+                </Reveal3D>
             </section>
 
             {/* ── Why this water ──────────────────────────────────────────── */}
@@ -176,6 +167,7 @@ export default function HomePage() {
                         Suvni tanlashda uchta narsa muhim
                     </h2>
 
+                    <Reveal3D lean={18} depth={200}>
                     <div className="grid gap-4 md:grid-cols-3">
                         {QUALITIES.map(q => (
                             <div key={q.title} className="card p-7">
@@ -188,8 +180,10 @@ export default function HomePage() {
                             </div>
                         ))}
                     </div>
+                    </Reveal3D>
 
-                    <ul className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <Reveal3D lean={12} depth={120} className="mt-4">
+                    <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
                         {TRUST.map(item => (
                             <li key={item.key} className="card flex items-center gap-3 p-4">
                                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center
@@ -200,6 +194,7 @@ export default function HomePage() {
                             </li>
                         ))}
                     </ul>
+                    </Reveal3D>
                 </div>
             </section>
 
@@ -217,11 +212,13 @@ export default function HomePage() {
                         </Link>
                     </div>
 
+                    <Reveal3D lean={20} depth={220}>
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         {productsLoading
                             ? [1, 2, 3].map(i => <div key={i} className="card aspect-[4/5] animate-pulse" />)
                             : featuredProducts.map((p: any) => <ProductCard key={p._id} product={p} />)}
                     </div>
+                    </Reveal3D>
                 </div>
             </section>
 
@@ -237,6 +234,7 @@ export default function HomePage() {
                      * Numbering is kept because these really are sequential — you
                      * cannot pay before choosing, or receive before ordering.
                      */}
+                    <Reveal3D lean={18} depth={200}>
                     <ol className="grid gap-4 md:grid-cols-3">
                         {HOW_STEPS.map((key, i) => (
                             <li key={key} className="card p-7">
@@ -248,6 +246,7 @@ export default function HomePage() {
                             </li>
                         ))}
                     </ol>
+                    </Reveal3D>
                 </div>
             </section>
 
@@ -258,13 +257,16 @@ export default function HomePage() {
                     <h2 className="mb-3 mt-3 text-3xl text-gray-950 md:text-5xl">Bizning filiallarimiz</h2>
                     <p className="mb-10 max-w-2xl text-gray-600">Sizga eng yaqin filialni xaritadan toping.</p>
 
+                    <Reveal3D lean={10} depth={140}>
                     <div className="card overflow-hidden p-2">
                         {branchesLoading
                             ? <div className="h-[420px] animate-pulse rounded-3xl bg-gray-200" />
                             : <BranchMap branches={branches || []} />}
                     </div>
+                    </Reveal3D>
 
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <Reveal3D lean={14} depth={150} className="mt-4">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {branches?.slice(0, 6).map((b: any) => (
                             <div key={b._id} className="card flex items-center gap-4 p-4">
                                 <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center
@@ -278,12 +280,14 @@ export default function HomePage() {
                             </div>
                         ))}
                     </div>
+                    </Reveal3D>
                 </div>
             </section>
 
             {/* ── Closing call to action ──────────────────────────────────── */}
             <section className="pb-24">
                 <div className="container-custom">
+                    <Reveal3D lean={14} depth={180}>
                     <div className="card flex flex-col items-start gap-8 p-8 md:flex-row md:items-center
                                     md:justify-between md:p-12">
                         <div>
@@ -298,6 +302,7 @@ export default function HomePage() {
                             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Link>
                     </div>
+                    </Reveal3D>
                 </div>
             </section>
         </div>
