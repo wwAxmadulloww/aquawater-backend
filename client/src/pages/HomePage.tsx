@@ -9,7 +9,6 @@ import { useLanguage } from '../i18n/LanguageContext'
 import { getProducts, api, formatPrice } from '../api/client'
 import ProductCard from '../components/ProductCard'
 import BranchMap from '../components/BranchMap'
-import WaterVessel from '../components/WaterVessel'
 
 /*
  * The upper page is carried by one photograph with frosted panels floating
@@ -22,8 +21,8 @@ const HERO_PHOTO =
 
 const HOW_STEPS = ['step1', 'step2', 'step3'] as const
 
-// Claims sit in the badge rail beside the bottle, the way a label's
-// certifications do — short, checkable, no adjectives.
+// Claims sit in a rail beside the headline, the way a label's certifications
+// do — short, checkable, no adjectives.
 const CLAIMS = [
     { icon: <Droplets className="h-5 w-5" />, title: 'Tozalangan', note: 'Ko\'p bosqichli filtr' },
     { icon: <Truck className="h-5 w-5" />, title: 'Yetkazamiz', note: 'Uy va ofisga' },
@@ -70,8 +69,8 @@ export default function HomePage() {
             <div className="stage" style={{ '--stage-image': HERO_PHOTO } as React.CSSProperties}>
 
                 {/* Hero */}
-                <section className="container-custom relative pt-14 pb-16 md:pt-24 md:pb-24">
-                    <div className="grid items-center gap-10 md:grid-cols-[1.1fr_auto_auto] md:gap-8 lg:gap-14">
+                <section className="container-custom relative pt-16 pb-20 md:pt-36 md:pb-36">
+                    <div className="grid items-center gap-10 md:grid-cols-[1.35fr_auto] md:gap-10 lg:gap-16">
                         <div className="animate-rise text-center md:text-left">
                             <p className="eyebrow !text-caustic justify-center md:justify-start">
                                 <span className="h-px w-6 bg-caustic/60" />
@@ -80,7 +79,7 @@ export default function HomePage() {
 
                             <h1 className="mt-4 whitespace-pre-line font-display text-[2.1rem] font-bold
                                            leading-[1.06] text-white drop-shadow-[0_2px_20px_rgba(3,24,31,.6)]
-                                           sm:text-5xl md:text-6xl lg:text-7xl">
+                                           sm:text-5xl md:text-6xl lg:text-[5rem]">
                                 {t('home.hero.title')}
                             </h1>
 
@@ -125,23 +124,21 @@ export default function HomePage() {
                             </dl>
                         </div>
 
-                        <div className="flex justify-center">
-                            <WaterVessel className="animate-rise h-56 w-32 drop-shadow-[0_30px_60px_rgba(3,24,31,.7)]
-                                                    sm:h-72 sm:w-40 md:h-[26rem] md:w-52 lg:h-[30rem] lg:w-60" />
-                        </div>
-
-                        {/* Badge rail — horizontal on phones, a vertical stack beside the bottle on desktop */}
-                        <ul className="flex justify-center gap-3 md:flex-col">
+                        {/* Claims, as one frosted panel — it carries its own contrast over
+                            the bright half of the photograph, where loose tiles could not. */}
+                        <ul className="glass animate-rise mx-auto w-full max-w-sm divide-y divide-white/10 px-6 md:w-72">
                             {CLAIMS.map(c => (
-                                <li key={c.title} className="pill w-28 md:w-32">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl
-                                                     bg-white/15 text-caustic">
+                                <li key={c.title} className="flex items-center gap-4 py-4">
+                                    <span className="flex h-11 w-11 shrink-0 items-center justify-center
+                                                     rounded-2xl bg-white/15 text-caustic">
                                         {c.icon}
                                     </span>
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-white">
-                                        {c.title}
+                                    <span className="min-w-0">
+                                        <span className="block text-sm font-bold tracking-tight text-white">
+                                            {c.title}
+                                        </span>
+                                        <span className="block text-xs leading-tight text-white/65">{c.note}</span>
                                     </span>
-                                    <span className="text-[10px] leading-tight text-white/60">{c.note}</span>
                                 </li>
                             ))}
                         </ul>

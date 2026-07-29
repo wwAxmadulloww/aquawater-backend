@@ -21,9 +21,12 @@
 
     body {
         @apply bg-foam text-gray-900 font-sans antialiased;
-        /* A faint vertical gradient reads as depth in a tank rather than a flat page. */
+        /* A faint vertical gradient reads as depth in a tank rather than a flat page.
+           Deliberately NOT background-attachment: fixed — a fixed background forces
+           the whole page to repaint on every scroll frame, and combined with the
+           frosted panels it made scrolling visibly hang. The gradient is subtle
+           enough that scrolling it with the page costs nothing to look at. */
         background-image: linear-gradient(180deg, #f4fafb 0%, #eaf4f6 100%);
-        background-attachment: fixed;
     }
 
     h1, h2, h3 {
@@ -84,7 +87,7 @@
     }
 
     .btn-secondary {
-        @apply btn bg-white/80 text-primary-800 border border-primary-100 backdrop-blur-sm;
+        @apply btn bg-white/80 text-primary-800 border border-primary-100;
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px -2px rgba(5, 42, 56, 0.12);
     }
 
@@ -127,7 +130,7 @@
      * catches the leading surface, and a tinted shadow beneath.
      */
     .card {
-        @apply relative rounded-3xl bg-white/85 border border-white/70 backdrop-blur-xl;
+        @apply relative rounded-3xl bg-white/85 border border-white/70;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, 0.9),
             0 1px 2px rgba(5, 42, 56, 0.06),

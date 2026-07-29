@@ -88,8 +88,11 @@ app.get('/', (_req, res) => {
     res.send('AquaWater Backend API is Live');
 });
 
-app.get('/api/health', (_req, res) => {
-    const isDbConnected = mongoose.connection.readyState === 1;
+app.get('/api/health', async (_req, res) => {
+    // Give a connecting container the same short grace the API gate gives it,
+    // so health does not report DEGRADED for a state that resolves in under a
+    // second and would otherwise page someone for nothing.
+    const isDbConnected = await waitForDb(3000);
     res.status(isDbConnected ? 200 : 503).json({
         status: isDbConnected ? 'OK' : 'DEGRADED',
         message: 'AquaWater API is running',
