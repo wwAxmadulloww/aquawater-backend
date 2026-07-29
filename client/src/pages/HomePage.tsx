@@ -74,7 +74,7 @@ export default function HomePage() {
                  * the words.
                  */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <WireDrop className="h-[86%] w-[130%] max-w-[52rem] -translate-y-6 opacity-35 sm:opacity-50 md:h-[94%] md:w-auto md:opacity-100" />
+                    <WireDrop className="h-[70%] w-[150%] max-w-[52rem] -translate-y-24 opacity-[.18] sm:h-[80%] sm:-translate-y-16 sm:opacity-30 md:h-[94%] md:w-auto md:translate-y-0 md:opacity-100" />
                 </div>
 
                 <div className="container-custom relative flex min-h-[38rem] flex-col justify-end
