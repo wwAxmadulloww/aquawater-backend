@@ -1,13 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 
 /*
- * The palette is sampled from water optics rather than a generic brand blue:
- * the near-black teal of deep water, the glaucous tint of a polycarbonate 19L
- * bottle, and the bright aqua where light concentrates into caustics.
+ * A monochrome dark system: near-black canvas, panels that separate from it by
+ * a hair of light rather than by colour, and one cold accent doing all the
+ * interactive work.
  *
- * `primary` and `gray` deliberately keep their Tailwind names, so every
- * existing primary-600 / gray-500 in the app inherits the new direction
- * without those files being touched — the admin panel included.
+ * The `gray` ramp is deliberately INVERTED — gray-50 is the darkest value and
+ * gray-950 the lightest. Every `text-gray-900` and `bg-gray-50` already in the
+ * app keeps meaning what it meant (strongest text, most recessed surface) and
+ * lands on the correct side of a dark theme without those files being touched.
+ * The admin, courier and worker panels follow from this alone.
+ *
+ * `primary` stays the accent ramp under its Tailwind name for the same reason.
  */
 export default {
     content: [
@@ -17,61 +21,85 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Water in volume — the action colour.
+                // The one cold accent. Water, at the only point the page raises
+                // its voice: prices, primary actions, active state.
                 primary: {
-                    50: '#ecfbfc',
-                    100: '#d3f4f7',
-                    200: '#ade8ef',
-                    300: '#76d5e2',
-                    400: '#38b9cd',
-                    500: '#1c9db3',
-                    600: '#12a0b8',
-                    700: '#0f7d94',
-                    800: '#116579',
-                    900: '#135566',
-                    950: '#052a38',
+                    50: '#062227',
+                    100: '#08333b',
+                    200: '#0a4550',
+                    300: '#0d5f6e',
+                    400: '#12879b',
+                    500: '#19b3cc',
+                    600: '#3ad2e8',
+                    700: '#6ce0f0',
+                    800: '#a3ecf7',
+                    900: '#cdf5fb',
+                    950: '#eafbfe',
                 },
-                // Neutrals carry a faint teal cast so nothing reads as dead grey.
+                // Inverted ramp — see the note above.
                 gray: {
-                    50: '#f4fafb',
-                    100: '#e8f1f3',
-                    200: '#d3e2e6',
-                    300: '#b0c8ce',
-                    400: '#7c9ba4',
-                    500: '#587c86',
-                    600: '#44636d',
-                    700: '#39515a',
-                    800: '#32454c',
-                    900: '#1e3138',
-                    950: '#0d1c22',
+                    50: '#0a0a0b',
+                    100: '#121214',
+                    200: '#1c1c1f',
+                    300: '#2a2a2e',
+                    400: '#3d3d43',
+                    500: '#6b6b73',
+                    600: '#8e8e96',
+                    700: '#adadb4',
+                    800: '#c9c9ce',
+                    900: '#ebebee',
+                    950: '#ffffff',
                 },
-                abyss: '#052a38',   // deep water seen from below
-                tank: '#0a4c5f',    // mid-depth
-                glacier: '#12a0b8', // clean water in volume
-                caustic: '#58e8d2', // where light concentrates
-                foam: '#f4fafb',    // water-washed surface
-                sun: '#ffa94d',     // the one warm note — sun through the bottle
+                ink: '#000000',        // the canvas
+                surface: '#111113',    // a panel lifted off it
+                surface2: '#1a1a1d',   // a panel on a panel
+                line: '#26262b',       // the hair of light that separates them
+                accent: '#3ad2e8',
+                sun: '#d7f24a',        // the single warm pop, used sparingly
+
+                // Retained so older utility usages keep resolving.
+                abyss: '#000000',
+                tank: '#111113',
+                glacier: '#3ad2e8',
+                caustic: '#3ad2e8',
+                foam: '#0a0a0b',
             },
             fontFamily: {
-                display: ['Unbounded', 'system-ui', 'sans-serif'],
-                sans: ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+                // One grotesk for everything. The reference gets its authority
+                // from scale and tracking, not from a second typeface.
+                display: ['Inter Tight', 'system-ui', 'sans-serif'],
+                sans: ['Inter Tight', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
             },
             boxShadow: {
                 /*
-                 * Two-part elevation: a tight contact shadow pinning the object to
-                 * the surface, plus a wide ambient one tinted with the water hue,
-                 * so things sit in an environment instead of floating on grey.
+                 * On black, elevation cannot be read from a darker shadow — there
+                 * is nothing darker. Panels separate by a lit top edge plus a
+                 * wide, very soft pool that darkens the canvas around them.
                  */
-                depth: '0 1px 2px rgba(5,42,56,0.10), 0 8px 24px -6px rgba(5,42,56,0.14)',
-                lift: '0 2px 4px rgba(5,42,56,0.10), 0 24px 48px -12px rgba(5,42,56,0.24)',
-                submerged: '0 1px 2px rgba(5,42,56,0.12), 0 18px 40px -10px rgba(18,160,184,0.30)',
+                depth: 'inset 0 1px 0 rgba(255,255,255,.06), 0 2px 8px rgba(0,0,0,.6)',
+                lift: 'inset 0 1px 0 rgba(255,255,255,.08), 0 24px 60px -20px rgba(0,0,0,.95)',
+                submerged: 'inset 0 1px 0 rgba(255,255,255,.06), 0 18px 44px -16px rgba(0,0,0,.9)',
                 // Kept so existing shadow-soft / shadow-card usages stay valid.
-                soft: '0 1px 2px rgba(5,42,56,0.08), 0 10px 24px -8px rgba(5,42,56,0.16)',
-                card: '0 1px 2px rgba(5,42,56,0.08), 0 4px 12px -4px rgba(5,42,56,0.10)',
+                soft: 'inset 0 1px 0 rgba(255,255,255,.05), 0 10px 30px -12px rgba(0,0,0,.85)',
+                card: 'inset 0 1px 0 rgba(255,255,255,.05), 0 6px 20px -8px rgba(0,0,0,.8)',
             },
             keyframes: {
-                // Caustics: two light fields drifting at different rates, the way
-                // rippling water never quite repeats.
+                rise: {
+                    '0%': { opacity: '0', transform: 'translateY(16px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                // The wireframe turns slowly, the way the reference's hero object
+                // does — enough to read as an object, never enough to distract.
+                turn: {
+                    '0%,100%': { transform: 'rotateY(-9deg) rotateX(2deg)' },
+                    '50%': { transform: 'rotateY(9deg) rotateX(-2deg)' },
+                },
+                scan: {
+                    '0%': { transform: 'translateY(-40%)', opacity: '0' },
+                    '35%': { opacity: '1' },
+                    '100%': { transform: 'translateY(340%)', opacity: '0' },
+                },
+                // Retained: some sections still reference the drift animations.
                 drift: {
                     '0%,100%': { transform: 'translate3d(-4%,-2%,0) scale(1.05)' },
                     '50%': { transform: 'translate3d(4%,3%,0) scale(1.15)' },
@@ -80,15 +108,13 @@ export default {
                     '0%,100%': { transform: 'translate3d(3%,2%,0) scale(1.12)' },
                     '50%': { transform: 'translate3d(-3%,-3%,0) scale(1.02)' },
                 },
-                rise: {
-                    '0%': { opacity: '0', transform: 'translateY(14px)' },
-                    '100%': { opacity: '1', transform: 'translateY(0)' },
-                },
             },
             animation: {
+                rise: 'rise .7s cubic-bezier(.2,.7,.3,1) both',
+                turn: 'turn 16s ease-in-out infinite',
+                scan: 'scan 6s ease-in-out infinite',
                 drift: 'drift 18s ease-in-out infinite',
                 'drift-slow': 'driftSlow 26s ease-in-out infinite',
-                rise: 'rise .6s cubic-bezier(.2,.7,.3,1) both',
             },
         },
     },

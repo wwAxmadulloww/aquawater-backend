@@ -78,13 +78,13 @@ export default function WorkerDashboard() {
             <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl mb-6 w-fit">
                 <button
                     onClick={() => setActiveTab('orders')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'orders' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'orders' ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Mening Buyurtmalarim
                 </button>
                 <button
                     onClick={() => setActiveTab('services')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'services' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'services' ? 'bg-surface text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                     Xizmatlarim
                 </button>
@@ -93,9 +93,9 @@ export default function WorkerDashboard() {
             {activeTab === 'orders' && (
                 <div className="space-y-4">
                     {loadingOrders ? (
-                        <div className="text-center py-12 text-gray-400">Yuklanmoqda...</div>
+                        <div className="text-center py-12 text-gray-600">Yuklanmoqda...</div>
                     ) : orders?.length === 0 ? (
-                        <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
+                        <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-600">
                             Sizga biriktirilgan buyurtmalar yo'q
                         </div>
                     ) : (
@@ -122,15 +122,15 @@ export default function WorkerDashboard() {
 
                                     <div className="space-y-3 mb-6">
                                         <div className="flex items-start gap-3 text-sm text-gray-600">
-                                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                            <MapPin className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
                                             <span>{order.addressSnapshot?.region}, {order.addressSnapshot?.city}, {order.addressSnapshot?.district}, {order.addressSnapshot?.street} {order.addressSnapshot?.house}</span>
                                         </div>
                                         <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                            <Calendar className="w-4 h-4 text-gray-600 flex-shrink-0" />
                                             <span>{order.deliveryDate} ({order.deliveryTimeSlot})</span>
                                         </div>
                                         <div className="flex items-center gap-3 text-sm text-gray-600">
-                                            <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                            <Phone className="w-4 h-4 text-gray-600 flex-shrink-0" />
                                             <span>{order.userId?.phone} ({order.userId?.name})</span>
                                         </div>
                                     </div>
@@ -203,7 +203,7 @@ export default function WorkerDashboard() {
                     )}
 
                     {loadingServices ? (
-                        <div className="text-center py-12 text-gray-400">Yuklanmoqda...</div>
+                        <div className="text-center py-12 text-gray-600">Yuklanmoqda...</div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {services?.map((svc: any) => (

@@ -226,7 +226,7 @@ export default function CheckoutPage() {
                                     className="btn-primary w-full py-3 text-base justify-center gap-2"
                                 >
                                     {mutation.isPending ? (
-                                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                        <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-line" />
                                     ) : (
                                         <ChevronRight className="w-4 h-4" />
                                     )}

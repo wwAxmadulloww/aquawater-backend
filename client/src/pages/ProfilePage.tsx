@@ -39,21 +39,21 @@ export default function ProfilePage() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    <User className="w-4 h-4 inline mr-1.5 text-gray-400" />
+                                    <User className="w-4 h-4 inline mr-1.5 text-gray-600" />
                                     {t('profile.name')}
                                 </label>
                                 <input value={user?.name || ''} className="input bg-gray-50" readOnly />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    <Phone className="w-4 h-4 inline mr-1.5 text-gray-400" />
+                                    <Phone className="w-4 h-4 inline mr-1.5 text-gray-600" />
                                     {t('profile.phone')}
                                 </label>
                                 <input value={user?.phone || ''} className="input bg-gray-50" readOnly />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    <Globe className="w-4 h-4 inline mr-1.5 text-gray-400" />
+                                    <Globe className="w-4 h-4 inline mr-1.5 text-gray-600" />
                                     {t('profile.language')}
                                 </label>
                                 <div className="flex gap-2">

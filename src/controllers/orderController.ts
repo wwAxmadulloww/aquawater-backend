@@ -20,11 +20,51 @@ function dispatchOrderSideEffects(order: any, phone: string, name: string): void
         .catch((err) => console.error('[Order] Telegram notification failed:', err?.message || err));
 }
 
+/*
+ * Delivery fields used to be `z.string().min(1)`, which is no validation at
+ * all: the API accepted a deliveryDate of "banana", of "   ", and of
+ * 1900-01-01, and a time slot of arbitrary prose. Those orders reached the
+ * admin table, the courier's screen and the Telegram notification exactly as
+ * typed, and nothing downstream could make sense of them.
+ *
+ * The date must be a real calendar date — the regex alone would pass
+ * 2026-02-31 — no earlier than today and no further out than a season, since a
+ * delivery slot booked a year ahead is a mistake, not a request.
+ */
+const MAX_DAYS_AHEAD = 90;
+
+const deliveryDate = z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Sana YYYY-MM-DD ko\'rinishida bo\'lishi kerak')
+    .refine((v) => {
+        const d = new Date(v + 'T00:00:00Z');
+        return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+    }, 'Bunday sana mavjud emas')
+    .refine((v) => {
+        const today = new Date().toISOString().slice(0, 10);
+        return v >= today;
+    }, 'Yetkazish sanasi o\'tmishda bo\'lishi mumkin emas')
+    .refine((v) => {
+        const limit = new Date(Date.now() + MAX_DAYS_AHEAD * 86400000).toISOString().slice(0, 10);
+        return v <= limit;
+    }, `Yetkazish sanasi ${MAX_DAYS_AHEAD} kundan uzoq bo\'lishi mumkin emas`);
+
+// Shape rather than a fixed list, so the slots offered at checkout can change
+// without a server release. Both dash characters are accepted because the web
+// client writes an en dash and hand-built requests tend to use a hyphen.
+const deliveryTimeSlot = z.string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d\s*[–-]\s*([01]\d|2[0-3]):[0-5]\d$/,
+        'Yetkazish vaqti "09:00–11:00" ko\'rinishida bo\'lishi kerak');
+
+// A per-line ceiling. Anything past this is a wholesale enquiry that should
+// reach a person, not a quantity someone meant to type into a web basket.
+const MAX_QTY_PER_LINE = 100;
+
 export const orderSchema = z.object({
     items: z.array(z.object({
         productId: z.string(),
-        qty: z.number().int().positive(),
-    })).min(1),
+        qty: z.number().int().positive().max(MAX_QTY_PER_LINE,
+            `Bitta mahsulotdan ko'pi bilan ${MAX_QTY_PER_LINE} dona buyurtma qilish mumkin`),
+    })).min(1).max(20, 'Buyurtmada 20 tadan ortiq tur mahsulot bo\'lishi mumkin emas'),
     addressSnapshot: z.object({
         region: z.string().min(1),
         city: z.string().min(1),
@@ -33,8 +73,8 @@ export const orderSchema = z.object({
         house: z.string().min(1),
         apartment: z.string().optional(),
     }),
-    deliveryDate: z.string().min(1),
-    deliveryTimeSlot: z.string().min(1),
+    deliveryDate,
+    deliveryTimeSlot,
     paymentMethod: z.enum(['cash', 'click', 'payme']),
 });
 

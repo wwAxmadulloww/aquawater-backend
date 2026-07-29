@@ -74,12 +74,12 @@ export default function OrdersPage() {
                                             <span className={`badge ${STATUS_CLASSES[order.status]}`}>
                                                 {getStatusLabel(order.status)}
                                             </span>
-                                            <span className="text-xs text-gray-400 font-mono">#{order._id.slice(-8)}</span>
+                                            <span className="text-xs text-gray-600 font-mono">#{order._id.slice(-8)}</span>
                                         </div>
                                         <p className="text-sm text-gray-600 truncate mb-1">
                                             {order.items.map((i: any) => `${i.nameSnapshot} ×${i.qty}`).join(', ')}
                                         </p>
-                                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                                        <div className="flex items-center gap-4 text-xs text-gray-600">
                                             <span className="flex items-center gap-1">
                                                 <Clock className="w-3 h-3" />
                                                 {new Date(order.createdAt).toLocaleDateString('uz-UZ')}
@@ -89,7 +89,7 @@ export default function OrdersPage() {
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                         <p className="font-bold text-primary-700">{formatPrice(total)}</p>
-                                        <p className="text-xs text-gray-400 capitalize">{order.paymentMethod}</p>
+                                        <p className="text-xs text-gray-600 capitalize">{order.paymentMethod}</p>
                                     </div>
                                 </div>
                             )

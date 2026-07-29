@@ -3,11 +3,13 @@
 @tailwind utilities;
 
 /*
- * Depth here reads as water optics, not generic frosted glass: light enters a
- * surface, bends, and concentrates. Three mechanics carry it — a two-part
- * tinted shadow, a specular top edge on every raised surface, and a caustic
- * light field behind the darkest sections. Everything else stays quiet so
- * those read as deliberate.
+ * A monochrome dark system.
+ *
+ * Depth is no longer read from colour or blur — on a black canvas neither
+ * works. Three mechanics carry it instead: a lit top edge on every raised
+ * surface, a hairline border, and a wide soft pool of shadow that darkens the
+ * canvas around a panel. Colour appears at exactly one place, the accent, so
+ * that price and primary action are the brightest things on any screen.
  */
 
 @layer base {
@@ -20,13 +22,11 @@
     }
 
     body {
-        @apply bg-foam text-gray-900 font-sans antialiased;
-        /* A faint vertical gradient reads as depth in a tank rather than a flat page.
-           Deliberately NOT background-attachment: fixed — a fixed background forces
-           the whole page to repaint on every scroll frame, and combined with the
-           frosted panels it made scrolling visibly hang. The gradient is subtle
-           enough that scrolling it with the page costs nothing to look at. */
-        background-image: linear-gradient(180deg, #f4fafb 0%, #eaf4f6 100%);
+        @apply bg-ink text-gray-900 font-sans antialiased;
+        /* A single very soft pool of light at the top, so the canvas is not a
+           flat void and the header has something to sit against. */
+        background-image: radial-gradient(110% 60% at 50% -10%, #16161a 0%, #000 60%);
+        background-repeat: no-repeat;
     }
 
     h1, h2, h3 {
@@ -34,132 +34,117 @@
     }
 
     h4, h5, h6 {
-        @apply font-sans font-bold;
+        @apply font-sans font-semibold tracking-tight;
     }
 
-    /* Keyboard focus stays obvious on every interactive surface. */
     :focus-visible {
-        outline: 2px solid theme('colors.glacier');
+        outline: 2px solid theme('colors.accent');
         outline-offset: 2px;
         border-radius: 6px;
     }
 
     ::selection {
-        background: theme('colors.caustic');
-        color: theme('colors.abyss');
+        background: theme('colors.accent');
+        color: #000;
     }
 }
 
 @layer components {
     .btn {
-        @apply relative inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl
-               font-semibold tracking-tight transition-all duration-200
-               focus:outline-none disabled:opacity-45 disabled:cursor-not-allowed;
+        @apply relative inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5
+               text-sm font-medium tracking-tight transition-all duration-200
+               focus:outline-none disabled:cursor-not-allowed disabled:opacity-40;
     }
 
     /*
-     * The primary button is the one control that behaves like a solid object:
-     * a lit top edge, a coloured shadow beneath, and on click it presses into
-     * the page rather than merely changing tint.
+     * The reference's primary control is a white pill on black — the highest
+     * contrast the page has, spent on the one action that matters.
      */
     .btn-primary {
-        @apply btn text-white;
-        background-image: linear-gradient(180deg, #17b0c9 0%, #12a0b8 45%, #0f8ba1 100%);
-        box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.35),
-            0 1px 2px rgba(5, 42, 56, 0.20),
-            0 10px 22px -8px rgba(18, 160, 184, 0.65);
+        @apply btn bg-gray-950 font-semibold text-ink;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, .10), 0 10px 30px -12px rgba(255, 255, 255, .35);
     }
 
     .btn-primary:hover:not(:disabled) {
         @apply -translate-y-0.5;
-        box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.45),
-            0 2px 4px rgba(5, 42, 56, 0.20),
-            0 18px 32px -10px rgba(18, 160, 184, 0.75);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, .18), 0 16px 40px -14px rgba(255, 255, 255, .5);
     }
 
     .btn-primary:active:not(:disabled) {
         @apply translate-y-0;
-        box-shadow:
-            inset 0 2px 4px rgba(5, 42, 56, 0.35),
-            0 1px 2px rgba(5, 42, 56, 0.20);
     }
 
+    /* The quiet control: outlined, transparent, reads as a second option. */
     .btn-secondary {
-        @apply btn bg-white/80 text-primary-800 border border-primary-100;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px -2px rgba(5, 42, 56, 0.12);
+        @apply btn border border-line bg-transparent text-gray-900;
     }
 
     .btn-secondary:hover:not(:disabled) {
-        @apply bg-white -translate-y-0.5 border-primary-200;
+        @apply border-gray-500 bg-gray-200;
     }
 
     .btn-ghost {
-        @apply btn bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+        @apply btn bg-transparent text-gray-600 hover:bg-gray-200 hover:text-gray-950;
     }
 
     .btn-danger {
-        @apply btn text-white;
-        background-image: linear-gradient(180deg, #f2565a 0%, #dc2f35 100%);
-        box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.28),
-            0 10px 22px -10px rgba(220, 47, 53, 0.7);
+        @apply btn bg-[#e5484d] font-semibold text-white;
+        box-shadow: 0 10px 30px -14px rgba(229, 72, 77, .8);
     }
 
     .btn-danger:hover:not(:disabled) {
-        @apply -translate-y-0.5;
+        @apply -translate-y-0.5 bg-[#f0595e];
     }
 
-    /* Inputs sit below the surface — an inset shadow, not a raised border. */
+    /* The circular icon button from the reference's nav and cards. */
+    .btn-round {
+        @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full
+               border border-line text-gray-900 transition-colors duration-200
+               hover:border-gray-500 hover:bg-gray-200;
+    }
+
+    /* Inputs are wells cut into the surface, not raised objects. */
     .input {
-        @apply w-full px-4 py-3 rounded-2xl bg-white/90 text-gray-900 placeholder-gray-400
-               border border-gray-200 transition-all duration-200;
-        box-shadow: inset 0 2px 4px rgba(5, 42, 56, 0.05);
+        @apply w-full rounded-2xl border border-line bg-gray-100 px-4 py-3
+               text-gray-900 placeholder-gray-500 transition-all duration-200;
     }
 
     .input:focus {
-        @apply outline-none border-primary-300 bg-white;
-        box-shadow:
-            inset 0 2px 4px rgba(5, 42, 56, 0.04),
-            0 0 0 4px rgba(18, 160, 184, 0.15);
+        @apply border-primary-400 bg-gray-200 outline-none;
+        box-shadow: 0 0 0 3px rgba(58, 210, 232, .16);
     }
 
     /*
-     * Cards read as panes of glass over the page: a lit top edge where light
-     * catches the leading surface, and a tinted shadow beneath.
+     * Panels: the floating cards of the reference. A hairline, a lit top edge,
+     * and a wide pool of shadow. No blur — on black it does nothing but cost.
      */
     .card {
-        @apply relative rounded-3xl bg-white/85 border border-white/70;
+        @apply relative rounded-3xl border border-line bg-surface;
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.9),
-            0 1px 2px rgba(5, 42, 56, 0.06),
-            0 12px 32px -12px rgba(5, 42, 56, 0.18);
+            inset 0 1px 0 rgba(255, 255, 255, .06),
+            0 20px 50px -24px rgba(0, 0, 0, .95);
     }
 
-    /*
-     * Objects you could pick up. Tilts away from the pointer and catches a
-     * specular sweep — the one place this design spends its boldness.
-     */
+    /* Objects you could pick up: tilt away from the pointer, edge lights up. */
     .card-3d {
-        @apply card transition-transform duration-300 ease-out;
+        @apply card transition-all duration-300 ease-out;
         transform-style: preserve-3d;
         will-change: transform;
     }
 
     .card-3d:hover {
-        transform: perspective(900px) rotateX(3deg) rotateY(-3deg) translateY(-6px) scale(1.015);
+        @apply border-gray-400;
+        transform: perspective(1000px) rotateX(3deg) rotateY(-3deg) translateY(-6px) scale(1.012);
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.95),
-            0 2px 6px rgba(5, 42, 56, 0.10),
-            0 28px 50px -16px rgba(18, 160, 184, 0.38);
+            inset 0 1px 0 rgba(255, 255, 255, .12),
+            0 34px 70px -26px rgba(0, 0, 0, 1);
     }
 
-    /* The specular sweep: a diagonal highlight crossing the face on hover. */
+    /* A specular sweep crossing the face on hover. */
     .card-3d::after {
         content: '';
         @apply pointer-events-none absolute inset-0 rounded-3xl opacity-0;
-        background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+        background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .09) 50%, transparent 62%);
         transition: opacity .45s ease, transform .7s ease;
         transform: translateX(-30%);
     }
@@ -170,130 +155,81 @@
     }
 
     .badge {
-        @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-tight;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        @apply inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1
+               text-xs font-medium tracking-tight;
     }
 
     .badge-pending {
-        @apply badge bg-sun/20 text-[#9a5606];
+        @apply badge border-sun/25 bg-sun/10 text-sun;
     }
 
     .badge-accepted {
-        @apply badge bg-primary-100 text-primary-800;
+        @apply badge border-primary-600/25 bg-primary-600/10 text-primary-700;
     }
 
     .badge-delivered {
-        @apply badge bg-caustic/25 text-[#0b6d5f];
+        @apply badge border-[#3ddc97]/25 bg-[#3ddc97]/10 text-[#7ff0c0];
     }
 
     .container-custom {
-        @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+        @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
     }
 
     /*
-     * Deep water. Behind the hero and the footer, so the page gains a floor and
-     * a ceiling — you are looking into the tank, not at another card.
-     */
-    .deep {
-        @apply relative overflow-hidden text-white;
-        background-image:
-            radial-gradient(120% 80% at 50% -10%, #0a4c5f 0%, #052a38 55%, #03181f 100%);
-    }
-
-    /*
-     * Caustics — the rippling light water throws. Two blurred fields drifting
-     * at different rates, so the pattern never visibly loops. Pure CSS, so it
-     * costs nothing on the wire.
-     */
-    .caustics::before,
-    .caustics::after {
-        content: '';
-        @apply pointer-events-none absolute;
-        inset: -25%;
-        background-repeat: no-repeat;
-        filter: blur(42px);
-        opacity: .5;
-    }
-
-    .caustics::before {
-        background-image:
-            radial-gradient(38% 26% at 22% 30%, rgba(88, 232, 210, 0.55), transparent 70%),
-            radial-gradient(30% 22% at 72% 22%, rgba(18, 160, 184, 0.50), transparent 70%),
-            radial-gradient(34% 24% at 55% 74%, rgba(88, 232, 210, 0.35), transparent 70%);
-        animation: drift 18s ease-in-out infinite;
-    }
-
-    .caustics::after {
-        background-image:
-            radial-gradient(28% 20% at 80% 62%, rgba(118, 213, 226, 0.45), transparent 70%),
-            radial-gradient(24% 18% at 30% 78%, rgba(18, 160, 184, 0.40), transparent 70%);
-        animation: driftSlow 26s ease-in-out infinite;
-    }
-
-    /* The meniscus: where one section's water meets the next. */
-    .waterline {
-        @apply relative h-px w-full;
-        background-image: linear-gradient(90deg, transparent, rgba(88, 232, 210, 0.55), transparent);
-    }
-
-
-    /*
-     * Photographic stage.
-     *
-     * The reference sites get their richness from a real photograph carrying
-     * the whole upper page, with content floating over it on frosted panels —
-     * not from gradients. The image is set on a fixed layer so the panels
-     * appear to drift across it as you scroll, and a dark teal scrim keeps
-     * white text at full contrast over the bright water.
+     * The stage: the black field the hero object stands in. The vignette pulls
+     * the eye to the centre the way the reference's does.
      */
     .stage {
-        @apply relative isolate overflow-hidden text-white;
+        @apply relative isolate overflow-hidden text-gray-950;
     }
 
-    .stage::before {
-        content: '';
-        @apply absolute inset-0 -z-20 bg-cover bg-center;
-        background-image: var(--stage-image);
-    }
-
-    /* Scrim: dense at the edges where text sits, clearer through the middle
-       so the photograph is still legible as a photograph. */
     .stage::after {
         content: '';
-        @apply absolute inset-0 -z-10;
-        background-image:
-            linear-gradient(180deg, rgba(3,24,31,.72) 0%, rgba(5,42,56,.30) 30%, rgba(5,42,56,.42) 65%, rgba(3,24,31,.88) 100%),
-            linear-gradient(90deg, rgba(3,24,31,.70) 0%, rgba(3,24,31,.20) 48%, transparent 78%);
+        @apply pointer-events-none absolute inset-0 -z-10;
+        background-image: radial-gradient(75% 55% at 50% 42%, transparent 0%, rgba(0, 0, 0, .75) 100%);
     }
 
-    /* Frosted panel for use over the photograph. */
+    /* A panel floating over the stage — the reference's stat cards. */
     .glass {
-        @apply relative rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl;
+        @apply relative rounded-3xl border border-line bg-surface/80 backdrop-blur-xl;
         box-shadow:
-            inset 0 1px 0 rgba(255,255,255,.28),
-            0 24px 60px -24px rgba(3,24,31,.85);
+            inset 0 1px 0 rgba(255, 255, 255, .08),
+            0 24px 60px -22px rgba(0, 0, 0, 1);
     }
 
-    /* A single claim, stacked into the badge rail beside the product. */
     .pill {
-        @apply flex flex-col items-center gap-2 rounded-3xl border border-white/20
-               bg-white/10 px-4 py-4 text-center backdrop-blur-2xl;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+        @apply flex flex-col items-center gap-2 rounded-3xl border border-line bg-surface
+               px-4 py-4 text-center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
     }
 
-    /* An eyebrow that reads as a measurement mark rather than decoration. */
+    /* Small uppercase label with wide tracking — the reference's section marks. */
     .eyebrow {
-        @apply inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-600;
+        @apply inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.28em] text-gray-600;
+    }
+
+    /*
+     * Display type. The reference's headline is set tight, heavy and very
+     * large, and it is allowed to run to the edge of its container.
+     */
+    .display {
+        @apply font-display font-extrabold uppercase leading-[0.86] tracking-[-0.045em] text-gray-950;
+    }
+
+    /* The thin-stroke wireframe object. Strokes are drawn, never filled. */
+    .wire {
+        fill: none;
+        stroke: currentColor;
+        vector-effect: non-scaling-stroke;
     }
 }
 
 @layer utilities {
     .text-gradient {
-        background-image: linear-gradient(120deg, #12a0b8 0%, #58e8d2 100%);
+        background-image: linear-gradient(120deg, #ffffff 0%, #6ce0f0 100%);
         @apply bg-clip-text text-transparent;
     }
 
-    /* Numerals in tables and totals should line up column to column. */
     .tabular {
         font-variant-numeric: tabular-nums;
     }
@@ -304,17 +240,17 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #e8f1f3;
+    background: #0a0a0b;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #b0c8ce;
+    background: #2a2a2e;
     border-radius: 999px;
-    border: 3px solid #e8f1f3;
+    border: 3px solid #0a0a0b;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #7c9ba4;
+    background: #3d3d43;
 }
 
 /*

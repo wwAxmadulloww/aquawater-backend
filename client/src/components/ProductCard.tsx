@@ -32,7 +32,7 @@ export default function ProductCard({ product }: { product: Product }) {
             to={`/products/${product._id}`}
             className="card-3d group block overflow-hidden"
         >
-            <div className="relative aspect-square overflow-hidden bg-gradient-to-b from-primary-50/60 to-white">
+            <div className="relative aspect-square overflow-hidden bg-gray-200">
                 <img
                     src={product.imageUrl}
                     alt={product.name}
@@ -40,14 +40,14 @@ export default function ProductCard({ product }: { product: Product }) {
                     loading="lazy"
                 />
                 {!product.inStock && (
-                    <div className="absolute inset-0 bg-foam/70 backdrop-blur-[2px] flex items-center justify-center">
-                        <span className="bg-abyss text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                    <div className="absolute inset-0 flex items-center justify-center bg-ink/75 backdrop-blur-[2px]">
+                        <span className="rounded-full border border-line bg-ink px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-gray-900">
                             Sotuvda yo'q
                         </span>
                     </div>
                 )}
                 {product.category === 'water' && (
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-primary-700 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-white/70 uppercase shadow-[inset_0_1px_0_rgba(255,255,255,.9),0_2px_8px_-2px_rgba(5,42,56,.2)]">
+                    <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-ink/70 px-2.5 py-1 text-[10px] uppercase tracking-wider text-gray-900 backdrop-blur-sm">
                         Asosiy
                     </div>
                 )}
@@ -55,19 +55,19 @@ export default function ProductCard({ product }: { product: Product }) {
 
             <div className="p-5">
                 <div className="flex justify-between items-start gap-2 mb-2">
-                    <h3 className="font-bold text-gray-900 leading-tight group-hover:text-primary-600 transition-colors line-clamp-2 min-h-[40px]">
+                    <h3 className="line-clamp-2 min-h-[40px] font-semibold leading-tight text-gray-950 transition-colors group-hover:text-accent">
                         {product.name}
                     </h3>
                 </div>
 
-                <p className="text-gray-500 text-xs mb-4 line-clamp-2 min-h-[32px]">
+                <p className="mb-4 line-clamp-2 min-h-[32px] text-xs text-gray-600">
                     {product.description}
                 </p>
 
                 <div className="flex items-center justify-between mt-auto">
                     <div>
-                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Narxi</p>
-                        <p className="text-lg font-bold text-gray-900 tabular">
+                        <p className="mb-0.5 text-[10px] uppercase tracking-wider text-gray-500">Narxi</p>
+                        <p className="tabular text-lg font-semibold text-accent">
                             {formatPrice(product.price)}
                         </p>
                     </div>
@@ -75,9 +75,9 @@ export default function ProductCard({ product }: { product: Product }) {
                     <button
                         onClick={handleAdd}
                         disabled={!product.inStock}
-                        className={`p-3.5 rounded-2xl transition-all duration-200 ${product.inStock
-                                ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg shadow-primary-200 active:scale-90'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        className={`rounded-full p-3.5 transition-all duration-200 ${product.inStock
+                                ? 'bg-gray-950 text-ink hover:bg-white active:scale-90'
+                                : 'cursor-not-allowed border border-line text-gray-500'
                             }`}
                         title={t('products.addToCart')}
                     >

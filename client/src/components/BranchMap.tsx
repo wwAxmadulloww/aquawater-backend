@@ -57,11 +57,11 @@ export default function BranchMap({ branches }: BranchMapProps) {
                                 </p>
                                 <div className="space-y-1.5 border-t border-gray-100 pt-2 mt-2">
                                     <p className="text-[11px] text-gray-600 flex items-center gap-1.5">
-                                        <Phone className="w-3 h-3 text-gray-400" />
+                                        <Phone className="w-3 h-3 text-gray-600" />
                                         {b.phone}
                                     </p>
                                     <p className="text-[11px] text-gray-600 flex items-center gap-1.5">
-                                        <Clock className="w-3 h-3 text-gray-400" />
+                                        <Clock className="w-3 h-3 text-gray-600" />
                                         {b.workingHours}
                                     </p>
                                 </div>

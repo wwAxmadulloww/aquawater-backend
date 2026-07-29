@@ -38,7 +38,7 @@ function ProductFormPanel({ form, editing, isPending, onChange, onSubmit, onCanc
         <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-gray-900">{editing ? t('admin.editProduct') : t('admin.addProduct')}</h2>
-                <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
+                <button onClick={onCancel} className="text-gray-600 hover:text-gray-600">
                     <X className="w-5 h-5" />
                 </button>
             </div>
@@ -145,8 +145,8 @@ function ProductFormPanel({ form, editing, isPending, onChange, onSubmit, onCanc
                         />
                     ) : (
                         <div className="w-28 h-28 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-1">
-                            <ImageOff className="w-6 h-6 text-gray-300" />
-                            <span className="text-xs text-gray-400">
+                            <ImageOff className="w-6 h-6 text-gray-600" />
+                            <span className="text-xs text-gray-600">
                                 {form.imageUrl && imgError ? 'URL noto\'g\'ri' : 'URL kiriting'}
                             </span>
                         </div>
@@ -304,7 +304,7 @@ export default function AdminProducts() {
                                                 style={{ display: p.imageUrl ? 'none' : 'flex' }}
                                                 className="w-9 h-9 rounded-lg bg-gray-100 items-center justify-center flex-shrink-0"
                                             >
-                                                <ImageOff className="w-4 h-4 text-gray-400" />
+                                                <ImageOff className="w-4 h-4 text-gray-600" />
                                             </div>
                                             <span className="font-medium text-gray-900">{p.name}</span>
                                         </div>

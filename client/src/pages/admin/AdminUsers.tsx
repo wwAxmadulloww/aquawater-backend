@@ -28,14 +28,14 @@ function RoleEditModal({ user, onClose }: RoleModalProps) {
     })
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between p-4 border-b border-gray-100">
                     <h3 className="font-bold text-gray-900 flex items-center gap-2">
                         <ShieldAlert className="w-5 h-5 text-primary-600" />
                         Rolni tahrirlash
                     </h3>
-                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50"><X className="w-5 h-5" /></button>
+                    <button onClick={onClose} className="p-1 text-gray-600 hover:text-gray-600 rounded-lg hover:bg-gray-50"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -72,7 +72,7 @@ function RoleEditModal({ user, onClose }: RoleModalProps) {
                                 placeholder="Masalan: Santexnik, Nasos ustasi..."
                                 className="input text-sm"
                             />
-                            <p className="text-xs text-gray-400 mt-1">Bu ishchining qanday xizmat ko'rsatishini bildiradi.</p>
+                            <p className="text-xs text-gray-600 mt-1">Bu ishchining qanday xizmat ko'rsatishini bildiradi.</p>
                         </div>
                     )}
                 </div>
@@ -181,7 +181,7 @@ export default function AdminUsers() {
                                         {isSuperAdmin && u.role !== 'super_admin' && (
                                             <button
                                                 onClick={() => handleDelete(u)}
-                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex"
+                                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex"
                                                 title="Foydalanuvchini o'chirish"
                                             >
                                                 <Trash2 className="w-4 h-4" />

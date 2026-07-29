@@ -8,28 +8,24 @@ const regions = ['Toshkent', 'Samarqand', 'Buxoro', 'Andijon', 'Namangan', 'Farg
 export default function Footer() {
     const { t } = useLanguage()
     return (
-        <footer className="deep caustics pt-20 pb-10 text-white/60">
-            {/* Subtle light effect */}
-            <div className="waterline absolute inset-x-0 top-0" />
+        <footer className="border-t border-line bg-ink pb-10 pt-20 text-gray-600">
 
             <div className="container-custom relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
                     {/* Brand & Mission */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl
-                                            bg-gradient-to-b from-[#2ad0e8] to-[#0f7d94]
-                                            shadow-[inset_0_1px_0_rgba(255,255,255,.5),0_8px_18px_-8px_rgba(18,160,184,.9)]">
-                                <Droplets className="w-6 h-6 text-white" />
-                            </div>
-                            <span className="font-display text-2xl font-semibold tracking-tight text-white">AquaWater</span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-accent">
+                                <Droplets className="h-5 w-5" />
+                            </span>
+                            <span className="font-display text-lg font-semibold uppercase tracking-[0.16em] text-gray-950">AquaWater</span>
                         </div>
-                        <p className="text-sm leading-relaxed max-w-xs transition-colors hover:text-gray-300">
+                        <p className="text-sm leading-relaxed max-w-xs transition-colors hover:text-gray-600">
                             Bizning maqsadimiz — har bir xonadonga toza, mineral va sifatli ichimlik suvini eng zamonaviy texnologiyalar orqali tezda yetkazib berish.
                         </p>
                         <div className="flex gap-4">
                             {[Instagram, Send, Facebook].map((Icon, i) => (
-                                <a key={i} href="#" className="w-10 h-10 bg-gray-800/50 rounded-xl flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all duration-300 transform hover:-translate-y-1">
+                                <a key={i} href="#" className="btn-round transition-transform duration-300 hover:-translate-y-1">
                                     <Icon className="w-5 h-5" />
                                 </a>
                             ))}
@@ -38,7 +34,7 @@ export default function Footer() {
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="text-white font-bold mb-6 text-sm uppercase tracking-[0.1em]">Sahifalar</h3>
+                        <h3 className="eyebrow mb-6">Sahifalar</h3>
                         <ul className="space-y-4 text-sm">
                             {[
                                 { to: '/products', label: 'Mahsulotlar' },
@@ -47,8 +43,8 @@ export default function Footer() {
                                 { to: '/cart', label: 'Savat' }
                             ].map(link => (
                                 <li key={link.to}>
-                                    <Link to={link.to} className="hover:text-primary-400 transition-colors flex items-center gap-2 group">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-gray-700 group-hover:bg-primary-500 transition-colors" />
+                                    <Link to={link.to} className="group flex items-center gap-2 transition-colors hover:text-gray-950">
+                                        <div className="h-1 w-1 rounded-full bg-gray-400 transition-colors group-hover:bg-accent" />
                                         {link.label}
                                     </Link>
                                 </li>
@@ -58,11 +54,11 @@ export default function Footer() {
 
                     {/* Branches / Regions */}
                     <div>
-                        <h3 className="text-white font-bold mb-6 text-sm uppercase tracking-[0.1em]">Viloyatlar</h3>
+                        <h3 className="eyebrow mb-6">Viloyatlar</h3>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                             {regions.map(r => (
-                                <span key={r} className="flex items-center gap-2 hover:text-gray-200 transition-colors cursor-default">
-                                    <MapPin className="w-3.5 h-3.5 text-primary-500/50" />
+                                <span key={r} className="flex cursor-default items-center gap-2 transition-colors hover:text-gray-900">
+                                    <MapPin className="h-3.5 w-3.5 text-gray-500" />
                                     {r}
                                 </span>
                             ))}
@@ -71,30 +67,30 @@ export default function Footer() {
 
                     {/* Contact Info */}
                     <div>
-                        <h3 className="text-white font-bold mb-6 text-sm uppercase tracking-[0.1em]">Aloqa</h3>
+                        <h3 className="eyebrow mb-6">Aloqa</h3>
                         <div className="space-y-5">
-                            <a href="tel:+998901234567" className="group flex items-center gap-4 text-sm hover:text-white transition-colors">
-                                <div className="w-10 h-10 bg-primary-900/20 text-primary-400 rounded-xl flex items-center justify-center group-hover:bg-primary-600 group-hover:text-white transition-all">
+                            <a href="tel:+998901234567" className="group flex items-center gap-4 text-sm transition-colors hover:text-gray-950">
+                                <div className="btn-round">
                                     <Phone className="w-5 h-5" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] text-gray-500 uppercase font-black">Telefon</span>
-                                    <span className="font-bold">+998 90 123 45 67</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Telefon</span>
+                                    <span className="font-medium text-gray-900">+998 90 123 45 67</span>
                                 </div>
                             </a>
-                            <div className="group flex items-center gap-4 text-sm hover:text-white transition-colors">
-                                <div className="w-10 h-10 bg-gray-800/50 text-gray-400 rounded-xl flex items-center justify-center group-hover:bg-gray-700 transition-all">
+                            <div className="group flex items-center gap-4 text-sm transition-colors hover:text-gray-950">
+                                <div className="btn-round">
                                     <Clock className="w-5 h-5" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] text-gray-500 uppercase font-black">Xizmat vaqti</span>
-                                    <span className="font-bold">24/7 Davomida</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Xizmat vaqti</span>
+                                    <span className="font-medium text-gray-900">24/7 Davomida</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="mt-8 pt-8 border-t border-gray-800/50 flex flex-wrap gap-2">
+                        <div className="mt-8 flex flex-wrap gap-2 border-t border-line pt-8">
                             {['Click', 'Payme', 'Visa', 'MasterCard'].map(m => (
-                                <span key={m} className="px-3 py-1 bg-gray-800/30 border border-gray-800 text-[10px] font-bold tracking-widest uppercase rounded-lg">
+                                <span key={m} className="rounded-full border border-line px-3 py-1 text-[10px] uppercase tracking-widest">
                                     {m}
                                 </span>
                             ))}
@@ -102,16 +98,16 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="pt-10 border-t border-gray-800/50 flex flex-col md:flex-row items-center justify-between gap-6 text-[10px] font-bold tracking-widest uppercase text-gray-600">
+                <div className="flex flex-col items-center justify-between gap-6 border-t border-line pt-10 text-[10px] uppercase tracking-widest text-gray-500 md:flex-row">
                     <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
                         <span>© 2026 AquaWater Uzbekistan</span>
-                        <span className="hidden md:inline text-gray-800">•</span>
+                        <span className="hidden text-gray-600 md:inline">•</span>
                         <span>{t('footer.rights')}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <span>Made by</span>
-                        <span className="text-primary-500">Antigravity Team</span>
-                        <span className="text-gray-800">|</span>
+                        <span className="text-accent">Antigravity Team</span>
+                        <span className="text-gray-600">|</span>
                         <span>UX/UI Platinum Edition</span>
                     </div>
                 </div>

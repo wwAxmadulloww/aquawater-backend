@@ -47,7 +47,7 @@ export default function ProductsPage() {
                                 onClick={() => setCategory(c.val)}
                                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${category === c.val
                                         ? 'bg-primary-600 text-white shadow-sm'
-                                        : 'bg-white border border-gray-200 text-gray-600 hover:border-primary-300 hover:text-primary-600'
+                                        : 'bg-surface border border-gray-200 text-gray-600 hover:border-primary-300 hover:text-primary-600'
                                     }`}
                             >
                                 {c.label}
@@ -55,7 +55,7 @@ export default function ProductsPage() {
                         ))}
                     </div>
                     <div className="flex items-center gap-2">
-                        <SlidersHorizontal className="w-4 h-4 text-gray-400" />
+                        <SlidersHorizontal className="w-4 h-4 text-gray-600" />
                         <select
                             value={sort}
                             onChange={e => setSort(e.target.value as Sort)}
@@ -83,7 +83,7 @@ export default function ProductsPage() {
                         ))}
                     </div>
                 ) : products?.length === 0 ? (
-                    <div className="text-center py-20 text-gray-400">
+                    <div className="text-center py-20 text-gray-600">
                         <div className="text-5xl mb-4">🔍</div>
                         <p className="font-medium">{t('products.empty')}</p>
                     </div>

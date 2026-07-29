@@ -91,14 +91,14 @@ export default function AdminOrders() {
                                     </tr>
                                 ))
                             ) : orders?.length === 0 ? (
-                                <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-400">Buyurtmalar topilmadi</td></tr>
+                                <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-600">Buyurtmalar topilmadi</td></tr>
                             ) : orders?.map((order: any) => {
                                 const customer = typeof order.userId === 'object' ? order.userId : null
                                 return (
                                     <tr key={order._id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-4 py-3">
                                             <div>
-                                                <p className="font-mono text-xs text-gray-400 mb-1">#{order._id.slice(-6)}</p>
+                                                <p className="font-mono text-xs text-gray-600 mb-1">#{order._id.slice(-6)}</p>
                                                 <p className="font-medium text-gray-900 text-xs">{customer?.name || '—'}</p>
                                                 <p className="text-gray-500 text-xs">{customer?.phone || '—'}</p>
                                             </div>
@@ -106,7 +106,7 @@ export default function AdminOrders() {
                                         <td className="px-4 py-3">
                                             <div className="text-xs text-gray-700 max-w-[160px] truncate space-y-1">
                                                 {order.items.map((i: any, idx: number) => (
-                                                    <div key={idx}>{i.nameSnapshot} <span className="text-gray-400">×{i.qty}</span></div>
+                                                    <div key={idx}>{i.nameSnapshot} <span className="text-gray-600">×{i.qty}</span></div>
                                                 ))}
                                                 <div className="font-semibold text-primary-700 mt-1">
                                                     {formatPrice(order.items.reduce((s: number, i: any) => s + i.priceSnapshot * i.qty, 0))}
@@ -117,7 +117,7 @@ export default function AdminOrders() {
                                             <p className="truncate max-w-[150px]" title={`${order.addressSnapshot?.city}, ${order.addressSnapshot?.district}, ${order.addressSnapshot?.street}`}>
                                                 {order.addressSnapshot?.city}, {order.addressSnapshot?.district}
                                             </p>
-                                            <p className="text-gray-400 mt-1">{order.deliveryDate} | {order.deliveryTimeSlot}</p>
+                                            <p className="text-gray-600 mt-1">{order.deliveryDate} | {order.deliveryTimeSlot}</p>
                                         </td>
 
                                         {/* Kuryer & Ishchi biriktirish */}
@@ -172,7 +172,7 @@ export default function AdminOrders() {
                                                     if (confirm('Buyurtmani o\'chirishni tasdiqlaysizmi?')) deleteMut.mutate(order._id)
                                                 }}
                                                 disabled={deleteMut.isPending}
-                                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-block"
+                                                className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-block"
                                                 title="Buyurtmani o'chirish"
                                             >
                                                 <Trash2 className="w-4 h-4" />

@@ -27,14 +27,14 @@ export default function AdminPage() {
     const handleLogout = () => { logout(); navigate('/') }
 
     const Sidebar = () => (
-        <aside className="w-64 bg-gray-900 text-white flex flex-col min-h-full">
-            <div className="px-6 py-5 border-b border-gray-800 flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                    <Droplets className="w-5 h-5 text-white" />
-                </div>
+        <aside className="flex min-h-full w-64 flex-col border-r border-line bg-gray-100 text-gray-900">
+            <div className="flex items-center gap-3 border-b border-line px-6 py-5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-line text-accent">
+                    <Droplets className="h-4 w-4" />
+                </span>
                 <div>
-                    <p className="font-bold text-sm">AquaWater</p>
-                    <p className="text-xs text-gray-400">Admin Panel</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-gray-950">AquaWater</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-gray-600">Admin Panel</p>
                 </div>
             </div>
             <nav className="flex-1 px-3 py-4 space-y-1">
@@ -46,8 +46,8 @@ export default function AdminPage() {
                             to={item.path}
                             onClick={() => setSidebarOpen(false)}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${active
-                                ? 'bg-primary-600 text-white'
-                                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                ? 'bg-gray-950 text-ink'
+                                : 'text-gray-600 hover:bg-gray-200 hover:text-gray-950'
                                 }`}
                         >
                             <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -56,12 +56,12 @@ export default function AdminPage() {
                     )
                 })}
             </nav>
-            <div className="p-4 border-t border-gray-800">
-                <button onClick={handleLogout} className="flex items-center gap-3 w-full px-3 py-2.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl text-sm transition-colors">
+            <div className="border-t border-line p-4">
+                <button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-950">
                     <LogOut className="w-4 h-4" />
                     {t('nav.logout')}
                 </button>
-                <Link to="/" className="flex items-center gap-3 w-full px-3 py-2 text-gray-400 hover:text-white text-xs mt-1 rounded-xl hover:bg-gray-800 transition-colors">
+                <Link to="/" className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs text-gray-600 transition-colors hover:bg-gray-200 hover:text-gray-950">
                     ← Saytga qaytish
                 </Link>
             </div>
@@ -78,7 +78,7 @@ export default function AdminPage() {
             {/* Mobile sidebar overlay */}
             {sidebarOpen && (
                 <div className="fixed inset-0 z-50 flex md:hidden">
-                    <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+                    <div className="fixed inset-0 bg-black/70" onClick={() => setSidebarOpen(false)} />
                     <div className="relative z-10 w-64">
                         <Sidebar />
                     </div>
@@ -88,7 +88,7 @@ export default function AdminPage() {
             {/* Main content */}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Mobile topbar */}
-                <div className="md:hidden flex items-center h-14 px-4 bg-white border-b border-gray-200 gap-3">
+                <div className="md:hidden flex items-center h-14 px-4 bg-surface border-b border-gray-200 gap-3">
                     <button onClick={() => setSidebarOpen(true)} className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg">
                         <Menu className="w-5 h-5" />
                     </button>

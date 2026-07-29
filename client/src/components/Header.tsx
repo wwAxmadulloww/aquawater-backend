@@ -19,17 +19,16 @@ export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false)
 
     return (
-        <header className="sticky top-0 z-50 border-b border-white/60 bg-foam/80 backdrop-blur-xl
-                           shadow-[inset_0_-1px_0_rgba(255,255,255,.7),0_1px_16px_-8px_rgba(5,42,56,.25)]">
-            <div className="container-custom flex items-center h-16 gap-4">
+        <header className="sticky top-0 z-50 border-b border-line/80 bg-ink/70 backdrop-blur-xl">
+            <div className="container-custom flex h-16 items-center gap-4">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 mr-4 flex-shrink-0">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl
-                                    bg-gradient-to-b from-[#2ad0e8] to-[#0f7d94]
-                                    shadow-[inset_0_1px_0_rgba(255,255,255,.5),0_6px_14px_-6px_rgba(18,160,184,.9)]">
-                        <Droplets className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="hidden font-display text-lg font-semibold tracking-tight text-gray-900 sm:block">AquaWater</span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-accent">
+                        <Droplets className="h-4 w-4" />
+                    </span>
+                    <span className="hidden font-display text-base font-semibold uppercase tracking-[0.16em] text-gray-950 sm:block">
+                        AquaWater
+                    </span>
                 </Link>
 
                 {/* Desktop nav */}
@@ -43,14 +42,14 @@ export default function Header() {
 
                 <div className="flex items-center gap-2 ml-auto">
                     {/* Language switcher */}
-                    <div className="flex items-center gap-0.5 rounded-2xl bg-gray-100/80 p-1 shadow-[inset_0_1px_3px_rgba(5,42,56,.10)]">
+                    <div className="flex items-center gap-0.5 rounded-full border border-line p-1">
                         {LANGS.map(l => (
                             <button
                                 key={l.code}
                                 onClick={() => setLang(l.code)}
-                                className={`rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${lang === l.code
-                                    ? 'bg-white text-primary-700 shadow-[0_1px_3px_rgba(5,42,56,.18)]'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                className={`rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider transition-all ${lang === l.code
+                                    ? 'bg-gray-950 text-ink'
+                                    : 'text-gray-600 hover:text-gray-900'
                                     }`}
                             >
                                 {l.label}
@@ -59,12 +58,11 @@ export default function Header() {
                     </div>
 
                     {/* Cart */}
-                    <Link to="/cart" className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                    <Link to="/cart" className="btn-round relative">
                         <ShoppingCart className="w-5 h-5" />
                         {totalItems > 0 && (
                             <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full
-                                             bg-sun text-[11px] font-extrabold text-abyss
-                                             shadow-[0_2px_8px_-2px_rgba(255,169,77,.9)]">
+                                             bg-accent text-[10px] font-bold text-ink">
                                 {totalItems > 9 ? '9+' : totalItems}
                             </span>
                         )}
@@ -73,7 +71,7 @@ export default function Header() {
                     {/* User */}
                     {isAuthenticated ? (
                         <div className="hidden md:flex items-center gap-2">
-                            <Link to="/profile" className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                            <Link to="/profile" className="btn-round">
                                 <User className="w-5 h-5" />
                             </Link>
                             <button onClick={() => { logout(); navigate('/') }} className="btn-ghost text-sm py-1.5">
@@ -87,7 +85,7 @@ export default function Header() {
                     )}
 
                     {/* Mobile menu btn */}
-                    <button className="md:hidden p-2 text-gray-600" onClick={() => setMenuOpen(v => !v)}>
+                    <button className="btn-round md:hidden" onClick={() => setMenuOpen(v => !v)}>
                         {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
                 </div>
@@ -95,7 +93,7 @@ export default function Header() {
 
             {/* Mobile menu */}
             {menuOpen && (
-                <div className="flex flex-col gap-1 border-t border-white/60 bg-foam/95 px-4 py-3 backdrop-blur-xl md:hidden">
+                <div className="flex flex-col gap-1 border-t border-line bg-ink/95 px-4 py-3 backdrop-blur-xl md:hidden">
                     <MobileNav to="/products" onClick={() => setMenuOpen(false)}>{t('nav.products')}</MobileNav>
                     {isAuthenticated && <MobileNav to="/orders" onClick={() => setMenuOpen(false)}>{t('nav.orders')}</MobileNav>}
                     {isAdmin && <MobileNav to="/admin" onClick={() => setMenuOpen(false)}>{t('nav.admin')}</MobileNav>}
@@ -121,7 +119,7 @@ export default function Header() {
 
 function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
     return (
-        <Link to={to} className="px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+        <Link to={to} className="rounded-full px-3 py-2 text-[11px] font-medium uppercase tracking-[0.16em] text-gray-600 transition-colors hover:text-gray-950">
             {children}
         </Link>
     )
@@ -129,7 +127,7 @@ function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
 
 function MobileNav({ to, onClick, children }: { to: string; onClick: () => void; children: React.ReactNode }) {
     return (
-        <Link to={to} onClick={onClick} className="py-2 px-2 text-gray-700 font-medium hover:text-primary-600 rounded-lg transition-colors">
+        <Link to={to} onClick={onClick} className="rounded-lg px-2 py-2 text-sm font-medium text-gray-800 transition-colors hover:text-gray-950">
             {children}
         </Link>
     )

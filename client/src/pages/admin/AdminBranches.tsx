@@ -123,7 +123,7 @@ export default function AdminBranches() {
             </div>
 
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600" />
                 <input
                     type="text"
                     placeholder="Filiallarni qidirish..."
@@ -134,8 +134,8 @@ export default function AdminBranches() {
             </div>
 
             {isFormOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-                    <div className="bg-white rounded-3xl w-full max-w-2xl p-6 shadow-xl my-8">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-black/70">
+                    <div className="bg-surface rounded-3xl w-full max-w-2xl p-6 shadow-xl my-8">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-bold text-gray-900">
                                 {editingId ? 'Filialni tahrirlash' : 'Yangi filial qo\'shish'}
@@ -211,7 +211,7 @@ export default function AdminBranches() {
                             <div className="col-span-1 md:col-span-2 flex gap-3 mt-4">
                                 <button type="button" onClick={() => setIsFormOpen(false)} className="btn-secondary flex-1 py-3">Bekor qilish</button>
                                 <button type="submit" disabled={mutation.isPending} className="btn-primary flex-1 py-3 justify-center gap-2">
-                                    {mutation.isPending && <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />}
+                                    {mutation.isPending && <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-line" />}
                                     <Save className="w-5 h-5" />
                                     Saqlash
                                 </button>
@@ -238,23 +238,23 @@ export default function AdminBranches() {
                                         <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
                                         <span className="truncate">{b.address}</span>
                                     </p>
-                                    <div className="flex flex-wrap gap-4 text-xs text-gray-400">
-                                        <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-gray-300" /> {b.phone}</span>
-                                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-gray-300" /> {b.workingHours}</span>
+                                    <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+                                        <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-gray-600" /> {b.phone}</span>
+                                        <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-gray-600" /> {b.workingHours}</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="flex md:flex-col lg:flex-row gap-2">
                                 <button
                                     onClick={() => handleEdit(b)}
-                                    className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                                    className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
                                     title="Tahrirlash"
                                 >
                                     <Edit2 className="w-5 h-5" />
                                 </button>
                                 <button
                                     onClick={() => handleDelete(b._id)}
-                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                    className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                                     title="O'chirish"
                                 >
                                     <Trash2 className="w-5 h-5" />
@@ -265,9 +265,9 @@ export default function AdminBranches() {
                 ))}
 
                 {filtered?.length === 0 && (
-                    <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200">
+                    <div className="text-center py-12 bg-surface rounded-3xl border border-dashed border-gray-200">
                         <MapPin className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                        <p className="text-gray-400">Filiallar topilmadi</p>
+                        <p className="text-gray-600">Filiallar topilmadi</p>
                     </div>
                 )}
             </div>

@@ -30,9 +30,9 @@ export default function CourierDashboard() {
 
             <div className="space-y-4">
                 {isLoading ? (
-                    <div className="text-center py-12 text-gray-400">Yuklanmoqda...</div>
+                    <div className="text-center py-12 text-gray-600">Yuklanmoqda...</div>
                 ) : orders?.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
+                    <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-600">
                         Sizga biriktirilgan buyurtmalar yo'q
                     </div>
                 ) : (
@@ -70,15 +70,15 @@ export default function CourierDashboard() {
 
                                 <div className="space-y-3 mb-6">
                                     <div className="flex items-start gap-3 text-sm text-gray-900 font-medium bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                        <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                                        <MapPin className="w-5 h-5 text-gray-600 flex-shrink-0" />
                                         <span>{order.addressSnapshot?.region}, {order.addressSnapshot?.city}, {order.addressSnapshot?.district}, {order.addressSnapshot?.street} {order.addressSnapshot?.house} {order.addressSnapshot?.apartment ? `(Xonadon: ${order.addressSnapshot.apartment})` : ''}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm text-gray-600">
-                                        <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                        <Calendar className="w-4 h-4 text-gray-600 flex-shrink-0" />
                                         <span>{order.deliveryDate} ({order.deliveryTimeSlot})</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm text-gray-600">
-                                        <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                        <Phone className="w-4 h-4 text-gray-600 flex-shrink-0" />
                                         <a href={`tel:${order.userId?.phone}`} className="text-primary-600 hover:underline">{order.userId?.phone}</a>
                                         <span>({order.userId?.name})</span>
                                     </div>
