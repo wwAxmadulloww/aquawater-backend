@@ -42,17 +42,25 @@ export default function WaterVessel({ className = '' }: { className?: string }) 
         <div className={`relative select-none ${className}`} aria-hidden="true">
             <div
                 className="relative h-full w-full"
-                style={{ clipPath: BOTTLE, WebkitClipPath: BOTTLE } as React.CSSProperties}
+                style={{
+                    clipPath: BOTTLE,
+                    WebkitClipPath: BOTTLE,
+                    // drop-shadow follows the clip silhouette, unlike box-shadow.
+                    filter:
+                        'drop-shadow(0 0 1px rgba(255,255,255,.75)) ' +
+                        'drop-shadow(0 0 14px rgba(88,232,210,.35)) ' +
+                        'drop-shadow(0 26px 46px rgba(3,24,31,.75))',
+                } as React.CSSProperties}
             >
                 {/* The vessel itself: tinted polycarbonate, lit from the upper left */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0a3f4f]/70 via-[#cdf2fa]/25 to-[#0a3f4f]/70" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0a3f4f]/65 via-[#cdf2fa]/22 to-[#0a3f4f]/65" />
 
                 {/* Water, filled to a real line so the headspace above reads as air */}
                 <div className="absolute inset-x-0 bottom-0 h-[70%]
-                                bg-gradient-to-b from-[#3fd0e6]/90 via-[#12a0b8]/95 to-[#084e60]">
+                                bg-gradient-to-b from-[#3fd0e6]/72 via-[#12a0b8]/80 to-[#084e60]/92">
                     {/* Meniscus — the ellipse the surface makes seen slightly from above */}
-                    <div className="absolute inset-x-0 -top-2 h-4 rounded-[50%] bg-[#7cebf7]/90
-                                    shadow-[0_3px_14px_rgba(88,232,210,.7)]" />
+                    <div className="absolute inset-x-0 -top-2 h-4 rounded-[50%] bg-[#7cebf7]/75
+                                    shadow-[0_3px_14px_rgba(88,232,210,.6)]" />
                 </div>
 
                 {/* Specular streak down the leading edge */}
@@ -64,7 +72,7 @@ export default function WaterVessel({ className = '' }: { className?: string }) 
                                 bg-gradient-to-b from-white/50 to-transparent" />
 
                 {/* Cap: opaque, so it reads as a different material to the body */}
-                <div className="absolute inset-x-[38%] top-0 h-[5%] bg-gradient-to-b from-[#3ad9ef] to-[#0d7e96]" />
+                <div className="absolute inset-x-[38%] top-0 h-[5%] bg-gradient-to-b from-[#3ad9ef] to-[#0d7e96] shadow-[0_2px_6px_rgba(3,24,31,.5)]" />
             </div>
 
             {/* Contact shadow — pins the bottle to the floor instead of letting it float */}

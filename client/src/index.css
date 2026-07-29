@@ -233,6 +233,51 @@
         background-image: linear-gradient(90deg, transparent, rgba(88, 232, 210, 0.55), transparent);
     }
 
+
+    /*
+     * Photographic stage.
+     *
+     * The reference sites get their richness from a real photograph carrying
+     * the whole upper page, with content floating over it on frosted panels —
+     * not from gradients. The image is set on a fixed layer so the panels
+     * appear to drift across it as you scroll, and a dark teal scrim keeps
+     * white text at full contrast over the bright water.
+     */
+    .stage {
+        @apply relative isolate overflow-hidden text-white;
+    }
+
+    .stage::before {
+        content: '';
+        @apply absolute inset-0 -z-20 bg-cover bg-center;
+        background-image: var(--stage-image);
+    }
+
+    /* Scrim: dense at the edges where text sits, clearer through the middle
+       so the photograph is still legible as a photograph. */
+    .stage::after {
+        content: '';
+        @apply absolute inset-0 -z-10;
+        background-image:
+            linear-gradient(180deg, rgba(3,24,31,.72) 0%, rgba(5,42,56,.30) 30%, rgba(5,42,56,.42) 65%, rgba(3,24,31,.88) 100%),
+            linear-gradient(90deg, rgba(3,24,31,.70) 0%, rgba(3,24,31,.20) 48%, transparent 78%);
+    }
+
+    /* Frosted panel for use over the photograph. */
+    .glass {
+        @apply relative rounded-3xl border border-white/20 bg-white/10 backdrop-blur-2xl;
+        box-shadow:
+            inset 0 1px 0 rgba(255,255,255,.28),
+            0 24px 60px -24px rgba(3,24,31,.85);
+    }
+
+    /* A single claim, stacked into the badge rail beside the product. */
+    .pill {
+        @apply flex flex-col items-center gap-2 rounded-3xl border border-white/20
+               bg-white/10 px-4 py-4 text-center backdrop-blur-2xl;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+    }
+
     /* An eyebrow that reads as a measurement mark rather than decoration. */
     .eyebrow {
         @apply inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-600;
