@@ -1,4 +1,5 @@
 import { BotLang, t } from './texts';
+import { ot } from './orderTexts';
 
 /**
  * Persistent reply keyboard shown under the input field.
@@ -8,11 +9,12 @@ import { BotLang, t } from './texts';
  */
 export function mainKeyboard(lang: BotLang) {
     const x = t(lang);
+    const o = ot(lang);
     return {
         keyboard: [
-            [{ text: x.btnProducts }, { text: x.btnMyOrders }],
-            [{ text: x.btnBranches }, { text: x.btnSupport }],
-            [{ text: x.btnLanguage }],
+            [{ text: x.btnProducts }, { text: o.btnCart }],
+            [{ text: x.btnMyOrders }, { text: x.btnBranches }],
+            [{ text: x.btnSupport }, { text: x.btnLanguage }],
         ],
         resize_keyboard: true,
         is_persistent: true,

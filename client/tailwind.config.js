@@ -1,9 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 
 /*
- * A monochrome dark system: near-black canvas, panels that separate from it by
- * a hair of light rather than by colour, and one cold accent doing all the
- * interactive work.
+ * Midnight blue. The canvas is #02060E — a navy so dark it reads as black at a
+ * glance but never goes flat the way #000 does, because every neutral above it
+ * carries the same blue cast and the whole screen sits on one hue. Panels
+ * separate from it by a hair of light, and #0356C5 does all the interactive
+ * work.
  *
  * The `gray` ramp is deliberately INVERTED — gray-50 is the darkest value and
  * gray-950 the lightest. Every `text-gray-900` and `bg-gray-50` already in the
@@ -24,45 +26,46 @@ export default {
                 // The one cold accent. Water, at the only point the page raises
                 // its voice: prices, primary actions, active state.
                 primary: {
-                    50: '#062227',
-                    100: '#08333b',
-                    200: '#0a4550',
-                    300: '#0d5f6e',
-                    400: '#12879b',
-                    500: '#19b3cc',
-                    600: '#3ad2e8',
-                    700: '#6ce0f0',
-                    800: '#a3ecf7',
-                    900: '#cdf5fb',
-                    950: '#eafbfe',
+                    50: '#031127',
+                    100: '#04204d',
+                    200: '#052e73',
+                    300: '#0244a0',
+                    400: '#0356c5',   // the brand blue
+                    500: '#1268de',
+                    600: '#2f83ef',   // the blue that survives on a dark panel
+                    700: '#62a4f6',
+                    800: '#9bc6fa',
+                    900: '#cbe1fd',
+                    950: '#ecf5fe',
                 },
                 // Inverted ramp — see the note above.
                 gray: {
-                    50: '#0a0a0b',
-                    100: '#121214',
-                    200: '#1c1c1f',
-                    300: '#2a2a2e',
-                    400: '#3d3d43',
-                    500: '#6b6b73',
-                    600: '#8e8e96',
-                    700: '#adadb4',
-                    800: '#c9c9ce',
-                    900: '#ebebee',
+                    50: '#02060e',
+                    100: '#071129',
+                    200: '#0c1c3a',
+                    300: '#143054',
+                    400: '#1d4275',
+                    500: '#5d7ba8',
+                    600: '#8ea9d0',
+                    700: '#b6c9e6',
+                    800: '#d5e1f4',
+                    900: '#eaf1fc',
                     950: '#ffffff',
                 },
-                ink: '#000000',        // the canvas
-                surface: '#111113',    // a panel lifted off it
-                surface2: '#1a1a1d',   // a panel on a panel
-                line: '#26262b',       // the hair of light that separates them
-                accent: '#3ad2e8',
-                sun: '#d7f24a',        // the single warm pop, used sparingly
+                ink: '#02060e',        // the canvas
+                surface: '#061229',    // a panel lifted off it
+                surface2: '#0b1f3f',   // a panel on a panel
+                line: '#14315e',       // the hair of light that separates them
+                accent: '#2f83ef',     // for text and icons, where #0356c5 is too dark
+                brand: '#0356c5',      // for fills, where white sits on top of it
+                sun: '#f0a83c',        // the one warm note, used sparingly
 
                 // Retained so older utility usages keep resolving.
-                abyss: '#000000',
-                tank: '#111113',
-                glacier: '#3ad2e8',
-                caustic: '#3ad2e8',
-                foam: '#0a0a0b',
+                abyss: '#02060e',
+                tank: '#061229',
+                glacier: '#0356c5',
+                caustic: '#2f83ef',
+                foam: '#02060e',
             },
             fontFamily: {
                 // One grotesk for everything. The reference gets its authority
@@ -76,12 +79,12 @@ export default {
                  * is nothing darker. Panels separate by a lit top edge plus a
                  * wide, very soft pool that darkens the canvas around them.
                  */
-                depth: 'inset 0 1px 0 rgba(255,255,255,.06), 0 2px 8px rgba(0,0,0,.6)',
-                lift: 'inset 0 1px 0 rgba(255,255,255,.08), 0 24px 60px -20px rgba(0,0,0,.95)',
-                submerged: 'inset 0 1px 0 rgba(255,255,255,.06), 0 18px 44px -16px rgba(0,0,0,.9)',
+                depth: 'inset 0 1px 0 rgba(255,255,255,.06), 0 2px 8px rgba(1,4,12,.7)',
+                lift: 'inset 0 1px 0 rgba(255,255,255,.08), 0 24px 60px -20px rgba(1,4,12,.95)',
+                submerged: 'inset 0 1px 0 rgba(255,255,255,.06), 0 18px 44px -16px rgba(1,4,12,.9)',
                 // Kept so existing shadow-soft / shadow-card usages stay valid.
-                soft: 'inset 0 1px 0 rgba(255,255,255,.05), 0 10px 30px -12px rgba(0,0,0,.85)',
-                card: 'inset 0 1px 0 rgba(255,255,255,.05), 0 6px 20px -8px rgba(0,0,0,.8)',
+                soft: 'inset 0 1px 0 rgba(255,255,255,.05), 0 10px 30px -12px rgba(1,4,12,.85)',
+                card: 'inset 0 1px 0 rgba(255,255,255,.05), 0 6px 20px -8px rgba(1,4,12,.8)',
             },
             keyframes: {
                 rise: {

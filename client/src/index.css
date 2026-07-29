@@ -3,13 +3,16 @@
 @tailwind utilities;
 
 /*
- * A monochrome dark system.
+ * A midnight-blue dark system.
  *
- * Depth is no longer read from colour or blur — on a black canvas neither
- * works. Three mechanics carry it instead: a lit top edge on every raised
- * surface, a hairline border, and a wide soft pool of shadow that darkens the
- * canvas around a panel. Colour appears at exactly one place, the accent, so
- * that price and primary action are the brightest things on any screen.
+ * Depth is not read from colour or blur — on a canvas this dark neither works.
+ * Three mechanics carry it instead: a lit top edge on every raised surface, a
+ * hairline border, and a wide soft pool of shadow that darkens the canvas
+ * around a panel. Those shadows are tinted navy rather than neutral black,
+ * because a grey shadow over a blue panel reads as a dirty smudge.
+ *
+ * Saturation appears at exactly one place, the brand blue, so that price and
+ * primary action are the strongest things on any screen.
  */
 
 @layer base {
@@ -23,9 +26,11 @@
 
     body {
         @apply bg-ink text-gray-900 font-sans antialiased;
-        /* A single very soft pool of light at the top, so the canvas is not a
-           flat void and the header has something to sit against. */
-        background-image: radial-gradient(110% 60% at 50% -10%, #16161a 0%, #000 60%);
+        /* A pool of deep blue at the top, so the canvas is not a flat void and
+           the header has something to sit against. The gradient runs to the
+           darkest navy rather than to black, which is what keeps the page on
+           one hue instead of fading to grey. */
+        background-image: radial-gradient(120% 65% at 50% -12%, #072045 0%, #041642 32%, #02060e 72%);
         background-repeat: no-repeat;
     }
 
@@ -45,7 +50,7 @@
 
     ::selection {
         background: theme('colors.accent');
-        color: #000;
+        color: theme('colors.ink');
     }
 }
 
@@ -57,17 +62,23 @@
     }
 
     /*
-     * The reference's primary control is a white pill on black — the highest
-     * contrast the page has, spent on the one action that matters.
+     * The primary control is the brand blue with white on it — the only
+     * saturated fill on the page, spent on the one action that matters. A white
+     * pill was right when the canvas was pure black; on a blue page it reads as
+     * a hole punched through it.
      */
     .btn-primary {
-        @apply btn bg-gray-950 font-semibold text-ink;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, .10), 0 10px 30px -12px rgba(255, 255, 255, .35);
+        @apply btn bg-brand font-semibold text-white;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, .22),
+            0 10px 30px -10px rgba(3, 86, 197, .75);
     }
 
     .btn-primary:hover:not(:disabled) {
-        @apply -translate-y-0.5;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, .18), 0 16px 40px -14px rgba(255, 255, 255, .5);
+        @apply -translate-y-0.5 bg-primary-500;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, .3),
+            0 18px 42px -12px rgba(3, 86, 197, .9);
     }
 
     .btn-primary:active:not(:disabled) {
@@ -111,18 +122,18 @@
 
     .input:focus {
         @apply border-primary-400 bg-gray-200 outline-none;
-        box-shadow: 0 0 0 3px rgba(58, 210, 232, .16);
+        box-shadow: 0 0 0 3px rgba(47, 131, 239, .2);
     }
 
     /*
-     * Panels: the floating cards of the reference. A hairline, a lit top edge,
-     * and a wide pool of shadow. No blur — on black it does nothing but cost.
+     * Panels: a hairline, a lit top edge, and a wide pool of shadow. No blur —
+     * against a surface this dark it does nothing but cost a filter pass.
      */
     .card {
         @apply relative rounded-3xl border border-line bg-surface;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, .06),
-            0 20px 50px -24px rgba(0, 0, 0, .95);
+            0 20px 50px -24px rgba(1, 4, 12, .95);
     }
 
     /* Objects you could pick up: tilt away from the pointer, edge lights up. */
@@ -137,7 +148,7 @@
         transform: perspective(1000px) rotateX(3deg) rotateY(-3deg) translateY(-6px) scale(1.012);
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, .12),
-            0 34px 70px -26px rgba(0, 0, 0, 1);
+            0 34px 70px -26px rgba(1, 4, 12, 1);
     }
 
     /* A specular sweep crossing the face on hover. */
@@ -176,8 +187,8 @@
     }
 
     /*
-     * The stage: the black field the hero object stands in. The vignette pulls
-     * the eye to the centre the way the reference's does.
+     * The stage: the field the hero object stands in. The vignette pulls the
+     * eye to the centre.
      */
     .stage {
         @apply relative isolate overflow-hidden text-gray-950;
@@ -186,7 +197,7 @@
     .stage::after {
         content: '';
         @apply pointer-events-none absolute inset-0 -z-10;
-        background-image: radial-gradient(75% 55% at 50% 42%, transparent 0%, rgba(0, 0, 0, .75) 100%);
+        background-image: radial-gradient(75% 55% at 50% 42%, transparent 0%, rgba(2, 6, 14, .82) 100%);
     }
 
     /* A panel floating over the stage — the reference's stat cards. */
@@ -194,7 +205,7 @@
         @apply relative rounded-3xl border border-line bg-surface/80 backdrop-blur-xl;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, .08),
-            0 24px 60px -22px rgba(0, 0, 0, 1);
+            0 24px 60px -22px rgba(1, 4, 12, 1);
     }
 
     .pill {
@@ -226,7 +237,7 @@
 
 @layer utilities {
     .text-gradient {
-        background-image: linear-gradient(120deg, #ffffff 0%, #6ce0f0 100%);
+        background-image: linear-gradient(120deg, #ffffff 0%, #62a4f6 100%);
         @apply bg-clip-text text-transparent;
     }
 
@@ -240,17 +251,17 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #0a0a0b;
+    background: #02060e;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #2a2a2e;
+    background: #143054;
     border-radius: 999px;
-    border: 3px solid #0a0a0b;
+    border: 3px solid #02060e;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #3d3d43;
+    background: #1d4275;
 }
 
 /*

@@ -6,6 +6,8 @@ import Branch from '../models/Branch';
 import Order from '../models/Order';
 import { TelegramClient, escapeHtml } from './TelegramClient';
 import { BotLang, normalizeLang, t, statusLabel } from './texts';
+import { Ordering } from './ordering';
+import { ot } from './orderTexts';
 import {
     mainKeyboard,
     requestPhoneKeyboard,
@@ -15,8 +17,6 @@ import {
     orderActionKeyboard,
 } from './keyboards';
 
-const MAX_ORDERS_SHOWN = 5;
-const MAX_PRODUCTS_SHOWN = 12;
 const MAX_BRANCHES_SHOWN = 8;
 
 /** Statuses an operator may set from the Telegram group. */
@@ -64,7 +64,11 @@ async function getBotUser(chat: any, from: any): Promise<IBotUser> {
 }
 
 export class BotHandlers {
-    constructor(private readonly deps: HandlerDeps) {}
+    private readonly ordering: Ordering;
+
+    constructor(private readonly deps: HandlerDeps) {
+        this.ordering = new Ordering({ client: deps.client, siteUrl: deps.siteUrl });
+    }
 
     /** Single entry point for both long-polling and the webhook route. */
     public async handleUpdate(update: any): Promise<void> {
@@ -108,6 +112,12 @@ export class BotHandlers {
         const lang = normalizeLang(botUser.language);
         const x = t(lang);
 
+        // A checkout in progress owns the next plain message: the customer is
+        // answering a question, not picking from the menu.
+        if (!text.startsWith('/') && await this.ordering.onCheckoutText(chatId, lang, botUser, text)) {
+            return;
+        }
+
         // A pending contact request takes priority over menu matching.
         if (botUser.awaiting === 'phone' && text === x.btnBack) {
             await BotUser.updateOne({ chatId }, { $set: { awaiting: null } });
@@ -116,8 +126,12 @@ export class BotHandlers {
         }
 
         if (/^\/start/i.test(text)) return this.onStart(chatId, lang, botUser);
-        if (/^\/help/i.test(text)) return this.showMainMenu(chatId, lang);
+        if (/^\/help/i.test(text)) return this.showSupport(chatId, lang);
+        if (/^\/menu/i.test(text)) return this.showMainMenu(chatId, lang);
         if (/^\/lang/i.test(text)) return this.askLanguage(chatId, lang);
+        if (/^\/catalog/i.test(text)) return this.ordering.showCatalog(chatId, lang);
+        if (/^\/cart/i.test(text)) return this.ordering.showCart(chatId, lang, botUser);
+        if (/^\/orders/i.test(text)) return this.showOrders(chatId, lang, botUser);
         if (/^\/id/i.test(text)) {
             await this.deps.client.sendMessage(chatId, `🆔 <code>${escapeHtml(chatId)}</code>`);
             return;
@@ -127,7 +141,8 @@ export class BotHandlers {
         // mid-conversation never strands the user with a dead keyboard.
         const action = this.matchMenuAction(text);
         switch (action) {
-            case 'products': return this.showProducts(chatId, lang);
+            case 'products': return this.ordering.showCatalog(chatId, lang);
+            case 'cart': return this.ordering.showCart(chatId, lang, botUser);
             case 'orders': return this.showOrders(chatId, lang, botUser);
             case 'branches': return this.showBranches(chatId, lang);
             case 'support': return this.showSupport(chatId, lang);
@@ -141,7 +156,8 @@ export class BotHandlers {
     private matchMenuAction(text: string): string | null {
         const normalized = text.toLowerCase();
         const table: Record<string, string[]> = {
-            products: ['mahsulot', 'товар', 'product', 'katalog', 'каталог'],
+            products: ['mahsulot', 'товар', 'product', 'katalog', 'каталог', 'catalog'],
+            cart: ['savat', 'корзин', 'cart'],
             orders: ['buyurtmalarim', 'мои заказ', 'my order', 'buyurtma'],
             branches: ['filial', 'филиал', 'branch', 'xarita', 'карта'],
             support: ['aloqa', 'контакт', 'contact', 'qo\'llab', 'поддержк', 'support'],
@@ -173,28 +189,6 @@ export class BotHandlers {
     }
 
     // ── Content ──────────────────────────────────────────────────────────
-
-    private async showProducts(chatId: string, lang: BotLang): Promise<void> {
-        const x = t(lang);
-        await this.deps.client.sendChatAction(chatId);
-
-        const products = await Product.find({ status: 'approved', inStock: true })
-            .sort({ category: 1, price: 1 })
-            .limit(MAX_PRODUCTS_SHOWN)
-            .lean();
-
-        if (products.length === 0) {
-            await this.deps.client.sendMessage(chatId, x.productsEmpty, mainKeyboard(lang));
-            return;
-        }
-
-        const lines = products.map(
-            (p: any) => `• <b>${escapeHtml(p.name)}</b>\n   ${formatPrice(p.price)}`,
-        );
-
-        const body = `${x.productsTitle}\n\n${lines.join('\n')}\n\n${x.productsFooter}`;
-        await this.deps.client.sendMessage(chatId, body, orderCtaKeyboard(lang, this.deps.siteUrl));
-    }
 
     private async showBranches(chatId: string, lang: BotLang): Promise<void> {
         const x = t(lang);
@@ -240,39 +234,7 @@ export class BotHandlers {
         }
 
         await this.deps.client.sendChatAction(chatId);
-
-        const orders = await Order.find({ userId: botUser.userId })
-            .sort({ createdAt: -1 })
-            .limit(MAX_ORDERS_SHOWN)
-            .lean();
-
-        if (orders.length === 0) {
-            await this.deps.client.sendMessage(chatId, x.ordersEmpty, mainKeyboard(lang));
-            return;
-        }
-
-        const blocks = orders.map((o: any) => {
-            const total = (o.items || []).reduce(
-                (sum: number, i: any) => sum + (i.priceSnapshot || 0) * (i.qty || 0),
-                0,
-            );
-            const items = (o.items || [])
-                .map((i: any) => `   • ${escapeHtml(i.nameSnapshot)} × ${i.qty}`)
-                .join('\n');
-
-            return [
-                `<b>#${escapeHtml(String(o._id).slice(-6).toUpperCase())}</b> — ${statusLabel(o.status, lang)}`,
-                items,
-                `   💰 <b>${formatPrice(total)}</b>`,
-                o.deliveryDate ? `   📅 ${escapeHtml(o.deliveryDate)} ${escapeHtml(o.deliveryTimeSlot || '')}` : '',
-            ].filter(Boolean).join('\n');
-        });
-
-        await this.deps.client.sendMessage(
-            chatId,
-            `${x.ordersTitle}\n\n${blocks.join('\n\n')}`,
-            mainKeyboard(lang),
-        );
+        await this.ordering.showOrderList(chatId, lang, botUser);
     }
 
     private async showSupport(chatId: string, lang: BotLang): Promise<void> {
@@ -344,7 +306,97 @@ export class BotHandlers {
         if (data.startsWith('lang:')) return this.onLanguageChosen(cb, data.slice(5));
         if (data.startsWith('st:')) return this.onStatusButton(cb, data);
 
-        await this.deps.client.answerCallbackQuery(cb.id, 'Noma\'lum amal.');
+        return this.onShopCallback(cb, data);
+    }
+
+    /**
+     * Every button in the shop flow.
+     *
+     * Telegram keeps a spinner on a button until the callback is answered, so
+     * each branch acknowledges first and does the work afterwards — an
+     * un-answered query leaves the customer looking at a control that appears
+     * to have hung.
+     */
+    private async onShopCallback(cb: any, data: string): Promise<void> {
+        const chatId = String(cb.message?.chat?.id || '');
+        if (!chatId) return;
+
+        if (data === 'noop') {
+            await this.deps.client.answerCallbackQuery(cb.id);
+            return;
+        }
+
+        if (!dbReady()) {
+            await this.deps.client.answerCallbackQuery(cb.id, t('uz').dbUnavailable, true);
+            return;
+        }
+
+        const botUser = await getBotUser(cb.message.chat, cb.from);
+        const lang = normalizeLang(botUser.language);
+        const x = ot(lang);
+        const o = this.ordering;
+
+        const [verb, ...rest] = data.split(':');
+        const arg = rest.join(':');
+
+        await this.deps.client.answerCallbackQuery(cb.id);
+
+        switch (verb) {
+            case 'cat': return o.showCatalog(chatId, lang);
+            case 'p': return o.showProduct(chatId, lang, arg, botUser);
+
+            case 'add':
+            case 'inc': {
+                const updated = await o.addToCart(chatId, arg, 1);
+                if (updated) await o.showCart(chatId, lang, updated);
+                return;
+            }
+            case 'dec': {
+                const updated = await o.addToCart(chatId, arg, -1);
+                if (updated) await o.showCart(chatId, lang, updated);
+                return;
+            }
+            case 'rm': {
+                await o.removeFromCart(chatId, arg);
+                const updated = await BotUser.findOne({ chatId });
+                if (updated) await o.showCart(chatId, lang, updated);
+                return;
+            }
+            case 'clr': {
+                await o.clearCart(chatId);
+                await this.deps.client.sendMessage(chatId, x.cartCleared);
+                return;
+            }
+            case 'cart': return o.showCart(chatId, lang, botUser);
+
+            case 'co': {
+                const ready = await o.beginCheckout(chatId, lang, botUser);
+                // Checkout cannot proceed without a linked account, and the
+                // contact keyboard is the only way to ask for one.
+                if (!ready) {
+                    await BotUser.updateOne({ chatId }, { $set: { awaiting: 'phone' } });
+                    await this.deps.client.sendMessage(
+                        chatId, t(lang).ordersNeedPhone, requestPhoneKeyboard(lang),
+                    );
+                }
+                return;
+            }
+            case 'same': return o.onSameAddress(chatId, lang, botUser);
+            case 'rg': return o.onRegionChosen(chatId, lang, arg);
+            case 'dt': return o.onDateChosen(chatId, lang, arg);
+            case 'ts': return o.onSlotChosen(chatId, lang, Number(arg));
+            case 'pm': return o.onPaymentChosen(chatId, lang, arg);
+            case 'ok': return o.placeOrder(chatId, lang, botUser);
+            case 'xco': return o.cancelCheckout(chatId, lang);
+
+            case 'ords': return this.showOrders(chatId, lang, botUser);
+            case 'o': return o.showOrder(chatId, lang, botUser, arg);
+            case 'xo': return o.cancelOrder(chatId, lang, botUser, arg);
+            case 'rep': return o.repeatOrder(chatId, lang, botUser, arg);
+
+            default:
+                await this.deps.client.sendMessage(chatId, t(lang).unknown, mainKeyboard(lang));
+        }
     }
 
     private async onLanguageChosen(cb: any, raw: string): Promise<void> {

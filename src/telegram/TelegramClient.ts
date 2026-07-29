@@ -187,6 +187,37 @@ export class TelegramClient {
         });
     }
 
+    /**
+     * Sends a product photo with its caption.
+     *
+     * Returns false rather than throwing when Telegram cannot fetch the image —
+     * a product row can hold any URL an admin typed, and a broken one must not
+     * cost the customer the message body. The caller falls back to text.
+     */
+    public async sendPhoto(
+        chatId: string | number,
+        photo: string,
+        caption: string,
+        replyMarkup?: unknown,
+    ): Promise<boolean> {
+        return this.enqueue(async () => {
+            try {
+                await this.call('sendPhoto', {
+                    chat_id: chatId,
+                    photo,
+                    // Telegram rejects captions over 1024 characters outright.
+                    caption: caption.slice(0, 1024),
+                    parse_mode: 'HTML',
+                    ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
+                }, { retries: 0 });
+                return true;
+            } catch (err) {
+                console.warn(`[Telegram] sendPhoto failed, falling back to text: ${(err as Error).message}`);
+                return false;
+            }
+        });
+    }
+
     public async editMessageText(
         chatId: string | number,
         messageId: number,

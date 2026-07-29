@@ -5,10 +5,20 @@ import { statusLabel } from '../telegram/texts';
 
 const POLL_TIMEOUT_SEC = 25;
 
+/*
+ * Every command here must have a branch in the handler. The bot previously
+ * advertised /catalog and /orders in this menu with nothing routing them, so
+ * tapping either produced "unknown command" — the worst kind of dead control,
+ * because the bot itself suggested it.
+ */
 const BOT_COMMANDS = [
     { command: 'start', description: 'Botni ishga tushirish / Запустить / Start' },
-    { command: 'help', description: 'Yordam / Помощь / Help' },
+    { command: 'catalog', description: 'Mahsulotlar / Товары / Products' },
+    { command: 'cart', description: 'Savat / Корзина / Cart' },
+    { command: 'orders', description: 'Buyurtmalarim / Мои заказы / My orders' },
+    { command: 'menu', description: 'Asosiy menyu / Главное меню / Main menu' },
     { command: 'lang', description: 'Tilni o\'zgartirish / Сменить язык / Change language' },
+    { command: 'help', description: 'Aloqa / Контакты / Contact' },
 ];
 
 /**
@@ -22,9 +32,58 @@ export class TelegramBotService {
     private static client: TelegramClient | null = null;
     private static handlers: BotHandlers | null = null;
 
+    private static configured = false;
     private static polling = false;
     private static stopRequested = false;
     private static offset = 0;
+
+    /**
+     * Runs the one-off bot configuration, at most once per process.
+     *
+     * Failures are logged and swallowed: a bot that cannot update its own menu
+     * must still answer the customer who just messaged it.
+     */
+    private static async ensureConfigured(): Promise<void> {
+        if (this.configured) return;
+        this.configured = true;
+
+        try {
+            await this.getClient()?.setMyCommands(BOT_COMMANDS);
+            await this.syncMenuButton();
+        } catch (err) {
+            console.error('[Telegram] Configuration sync failed:', (err as Error).message);
+        }
+    }
+
+    /**
+     * Points the composer's Mini App button at the current deployment.
+     *
+     * Set once through BotFather it silently rots: this button still opened a
+     * retired Vercel deployment months after the site moved, showing customers
+     * an old design against a database that no longer backed it. Setting it on
+     * boot from WEBAPP_URL means the button can never disagree with the site
+     * the bot is actually talking to.
+     */
+    public static async syncMenuButton(): Promise<void> {
+        const url = process.env.WEBAPP_URL;
+        if (!url || !/^https:\/\//.test(url)) {
+            console.warn('[Telegram] WEBAPP_URL is not an https URL; menu button left unchanged.');
+            return;
+        }
+
+        try {
+            await this.getClient()?.call('setChatMenuButton', {
+                menu_button: {
+                    type: 'web_app',
+                    text: '💧 Buyurtma berish',
+                    web_app: { url },
+                },
+            });
+            console.log(`[Telegram] Mini App button -> ${url}`);
+        } catch (err) {
+            console.error('[Telegram] Failed to set the menu button:', (err as Error).message);
+        }
+    }
 
     // ── Configuration ────────────────────────────────────────────────────
 
@@ -95,6 +154,7 @@ export class TelegramBotService {
             }
 
             await client.setMyCommands(BOT_COMMANDS);
+            await this.syncMenuButton();
 
             if (!this.adminChatId) {
                 console.warn('⚠️  [Telegram] TELEGRAM_ADMIN_CHAT_ID not set — order notifications disabled.');
@@ -176,6 +236,12 @@ export class TelegramBotService {
     public static async handleUpdate(update: any): Promise<void> {
         const handlers = this.getHandlers();
         if (!handlers) return;
+
+        // Webhook mode never runs startPolling, so the command list and the
+        // Mini App button would only ever be configured on a machine that
+        // long-polls — which in production is none of them. Doing it here, once
+        // per cold start, keeps both in step with whatever is deployed.
+        await this.ensureConfigured();
 
         try {
             await handlers.handleUpdate(update);
