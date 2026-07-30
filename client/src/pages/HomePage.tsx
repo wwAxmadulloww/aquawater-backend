@@ -24,15 +24,15 @@ const HOW_STEPS = ['step1', 'step2', 'step3'] as const
 
 // Claims read like the certifications on a label — short, checkable, no adjectives.
 const CLAIMS = [
-    { icon: <Droplets className="h-5 w-5" />, title: 'Tozalangan', note: 'Ko\'p bosqichli filtr' },
-    { icon: <Truck className="h-5 w-5" />, title: 'Yetkazamiz', note: 'Uy va ofisga' },
-    { icon: <Recycle className="h-5 w-5" />, title: 'Qaytariladi', note: 'Idish almashtiriladi' },
+    { icon: <Droplets className="h-5 w-5" />, title: 'home.claim.filtered', note: 'home.claim.filteredNote' },
+    { icon: <Truck className="h-5 w-5" />, title: 'home.claim.delivery', note: 'home.claim.deliveryNote' },
+    { icon: <Recycle className="h-5 w-5" />, title: 'home.claim.return', note: 'home.claim.returnNote' },
 ] as const
 
 const QUALITIES = [
-    { icon: <Droplets className="h-6 w-6" />, title: 'Toza ta\'m', desc: 'Ortiqcha mineral va xlor yo\'q — suv suvday ta\'m beradi.' },
-    { icon: <BadgeCheck className="h-6 w-6" />, title: 'Tekshirilgan', desc: 'Har partiya laboratoriya nazoratidan o\'tadi.' },
-    { icon: <Truck className="h-6 w-6" />, title: 'Kelishilgan vaqtda', desc: 'Yetkazish vaqtini o\'zingiz tanlaysiz.' },
+    { icon: <Droplets className="h-6 w-6" />, title: 'home.why.taste', desc: 'home.why.tasteDesc' },
+    { icon: <BadgeCheck className="h-6 w-6" />, title: 'home.why.tested', desc: 'home.why.testedDesc' },
+    { icon: <Truck className="h-6 w-6" />, title: 'home.why.onTime', desc: 'home.why.onTimeDesc' },
 ] as const
 
 const TRUST = [
@@ -86,20 +86,20 @@ export default function HomePage() {
                     <div className="absolute right-4 top-24 hidden w-52 flex-col gap-4 lg:flex xl:right-6 xl:w-56">
                         {cheapest !== null && (
                             <div className="glass animate-rise p-5">
-                                <p className="eyebrow">Eng arzon</p>
+                                <p className="eyebrow">{t('home.hero.cheapest')}</p>
                                 <p className="tabular mt-2 font-display text-2xl font-bold text-gray-950">
                                     {formatPrice(cheapest)}
                                 </p>
-                                <p className="mt-1 text-xs text-gray-600">Yetkazib berish bilan</p>
+                                <p className="mt-1 text-xs text-gray-600">{t('home.hero.cheapestNote')}</p>
                             </div>
                         )}
                         <div className="glass animate-rise p-5">
-                            <p className="eyebrow">Ish vaqti</p>
+                            <p className="eyebrow">{t('home.hero.hours')}</p>
                             <p className="tabular mt-2 font-display text-2xl font-bold text-gray-950">
                                 {hours || '08:00 - 22:00'}
                             </p>
                             <p className="mt-1 text-xs text-gray-600">
-                                {branchCount ? `${branchCount} ta filial` : 'Toshkent bo\'ylab'}
+                                {branchCount ? `${branchCount} ${t('home.hero.branchCount')}` : t('home.hero.everywhere')}
                             </p>
                         </div>
                     </div>
@@ -107,7 +107,7 @@ export default function HomePage() {
                     <div className="relative max-w-3xl animate-rise">
                         <p className="eyebrow">
                             <Zap className="h-3 w-3 text-accent" />
-                            Toshkent
+                            {t('home.hero.city')}
                         </p>
 
                         <p className="mt-5 max-w-sm text-sm leading-relaxed text-gray-700 [text-shadow:0_2px_12px_rgb(0_0_0)] md:text-base">
@@ -150,8 +150,8 @@ export default function HomePage() {
                                 {c.icon}
                             </span>
                             <span className="min-w-0">
-                                <span className="block text-sm font-semibold text-gray-950">{c.title}</span>
-                                <span className="block text-xs text-gray-600">{c.note}</span>
+                                <span className="block text-sm font-semibold text-gray-950">{t(c.title as any)}</span>
+                                <span className="block text-xs text-gray-600">{t(c.note as any)}</span>
                             </span>
                         </li>
                     ))}
@@ -162,9 +162,9 @@ export default function HomePage() {
             {/* ── Why this water ──────────────────────────────────────────── */}
             <section className="pb-20 md:pb-24">
                 <div className="container-custom">
-                    <p className="eyebrow">Nega aynan biz</p>
+                    <p className="eyebrow">{t('home.why.eyebrow')}</p>
                     <h2 className="mb-12 mt-3 max-w-2xl text-3xl text-gray-950 md:text-5xl">
-                        Suvni tanlashda uchta narsa muhim
+                        {t('home.why.title')}
                     </h2>
 
                     <Reveal3D lean={18} depth={200}>
@@ -175,8 +175,8 @@ export default function HomePage() {
                                                  border border-line text-accent">
                                     {q.icon}
                                 </span>
-                                <h3 className="mt-5 text-lg text-gray-950">{q.title}</h3>
-                                <p className="mt-2 text-sm leading-relaxed text-gray-600">{q.desc}</p>
+                                <h3 className="mt-5 text-lg text-gray-950">{t(q.title as any)}</h3>
+                                <p className="mt-2 text-sm leading-relaxed text-gray-600">{t(q.desc as any)}</p>
                             </div>
                         ))}
                     </div>
@@ -203,11 +203,11 @@ export default function HomePage() {
                 <div className="container-custom">
                     <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
                         <div>
-                            <p className="eyebrow">Tanlovimiz</p>
+                            <p className="eyebrow">{t('home.picks.eyebrow')}</p>
                             <h2 className="mt-3 text-3xl text-gray-950 md:text-5xl">{t('home.products.title')}</h2>
                         </div>
                         <Link to="/products" className="group inline-flex items-center gap-1.5 text-sm font-medium text-accent">
-                            Barchasi
+                            {t('home.all')}
                             <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                         </Link>
                     </div>
@@ -225,7 +225,7 @@ export default function HomePage() {
             {/* ── How it works ────────────────────────────────────────────── */}
             <section className="pb-20 md:pb-24">
                 <div className="container-custom">
-                    <p className="eyebrow">Uch qadam</p>
+                    <p className="eyebrow">{t('home.steps.eyebrow')}</p>
                     <h2 className="mb-12 mt-3 text-3xl text-gray-950 md:text-5xl">
                         {t('home.howworks.title')}
                     </h2>
@@ -253,9 +253,9 @@ export default function HomePage() {
             {/* ── Branches ────────────────────────────────────────────────── */}
             <section className="pb-20 md:pb-24">
                 <div className="container-custom">
-                    <p className="eyebrow">Qayerdamiz</p>
-                    <h2 className="mb-3 mt-3 text-3xl text-gray-950 md:text-5xl">Bizning filiallarimiz</h2>
-                    <p className="mb-10 max-w-2xl text-gray-600">Sizga eng yaqin filialni xaritadan toping.</p>
+                    <p className="eyebrow">{t('home.branches.eyebrow')}</p>
+                    <h2 className="mb-3 mt-3 text-3xl text-gray-950 md:text-5xl">{t('home.branches.title')}</h2>
+                    <p className="mb-10 max-w-2xl text-gray-600">{t('home.branches.subtitle')}</p>
 
                     <Reveal3D lean={10} depth={140}>
                     <div className="card overflow-hidden p-2">
@@ -291,11 +291,11 @@ export default function HomePage() {
                     <div className="card flex flex-col items-start gap-8 p-8 md:flex-row md:items-center
                                     md:justify-between md:p-12">
                         <div>
-                            <p className="eyebrow">To'lov usullari</p>
+                            <p className="eyebrow">{t('home.pay.eyebrow')}</p>
                             <h3 className="mt-3 font-display text-2xl text-gray-950 md:text-4xl">
-                                Naqd, Click yoki Payme
+                                {t('home.pay.title')}
                             </h3>
-                            <p className="mt-2 text-sm text-gray-600">Kuryerga topshirishda yoki oldindan to'lang.</p>
+                            <p className="mt-2 text-sm text-gray-600">{t('home.pay.subtitle')}</p>
                         </div>
                         <Link to="/products" className="btn-primary group shrink-0 px-8 py-4 text-sm">
                             {t('home.hero.cta')}

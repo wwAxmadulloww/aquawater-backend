@@ -70,6 +70,22 @@ app.use(cors({
 
 app.use(express.json({ limit: '1mb' }));
 
+/*
+ * Baseline response hardening.
+ *
+ * Deliberately no X-Frame-Options: the site is also the bot's Telegram Mini
+ * App, and DENY would stop it loading inside Telegram entirely. CSP
+ * frame-ancestors expresses the same protection with an allow-list, which
+ * X-Frame-Options cannot.
+ */
+app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+    res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org");
+    next();
+});
+
 // Connect MongoDB Atlas in background. Guarded so a missing URI on serverless
 // (already logged above) degrades to "never connects" instead of mongoose
 // throwing on a non-string argument.

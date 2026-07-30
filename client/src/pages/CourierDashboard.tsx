@@ -3,9 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, MapPin, Phone, Package, Calendar } from 'lucide-react'
 import { getOrders, updateOrderStatus, formatPrice } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../i18n/LanguageContext'
+import { orderCode, paymentKey } from '../lib/orderFormat'
 import toast from 'react-hot-toast'
 
 export default function CourierDashboard() {
+    const { t } = useLanguage()
     const { user } = useAuth()
     const qc = useQueryClient()
 
@@ -52,7 +55,7 @@ export default function CourierDashboard() {
                                             <Package className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-semibold text-gray-900">Buyurtma #{order._id.slice(-6)}</p>
+                                            <p className="text-sm font-semibold text-gray-900">Buyurtma #{orderCode(order._id)}</p>
                                             <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
                                         </div>
                                     </div>
@@ -95,7 +98,7 @@ export default function CourierDashboard() {
 
                                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                                     <div>
-                                        <p className="text-xs text-gray-500 mb-0.5">To'lov holati: <span className="uppercase font-medium text-gray-700">{order.paymentMethod}</span></p>
+                                        <p className="text-xs text-gray-500 mb-0.5">To'lov holati: <span className="font-medium text-gray-700">{t(paymentKey(order.paymentMethod) as any)}</span></p>
                                         <p className="font-bold text-gray-900 text-lg">{formatPrice(order.items.reduce((s: number, i: any) => s + i.priceSnapshot * i.qty, 0))}</p>
                                     </div>
 

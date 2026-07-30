@@ -21,7 +21,7 @@ export default function Footer() {
                             <span className="font-display text-lg font-semibold uppercase tracking-[0.16em] text-gray-950">AquaWater</span>
                         </div>
                         <p className="text-sm leading-relaxed max-w-xs transition-colors hover:text-gray-600">
-                            Bizning maqsadimiz — har bir xonadonga toza, mineral va sifatli ichimlik suvini eng zamonaviy texnologiyalar orqali tezda yetkazib berish.
+                            {t('footer.mission')}
                         </p>
                         {/*
                           * Instagram and Facebook used to sit here on href="#",
@@ -38,24 +38,24 @@ export default function Footer() {
                                        text-xs text-gray-800 transition-colors hover:border-gray-500 hover:text-gray-950"
                         >
                             <Send className="h-4 w-4 text-accent" />
-                            Telegram bot
+                            {t('footer.telegramBot')}
                         </a>
                     </div>
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="eyebrow mb-6">Sahifalar</h3>
+                        <h3 className="eyebrow mb-6">{t('footer.pages')}</h3>
                         <ul className="space-y-4 text-sm">
                             {[
-                                { to: '/products', label: 'Mahsulotlar' },
-                                { to: '/orders', label: 'Buyurtmalar' },
-                                { to: '/profile', label: 'Profil' },
-                                { to: '/cart', label: 'Savat' }
+                                { to: '/products', label: 'nav.products' },
+                                { to: '/orders', label: 'nav.orders' },
+                                { to: '/profile', label: 'nav.profile' },
+                                { to: '/cart', label: 'nav.cart' }
                             ].map(link => (
                                 <li key={link.to}>
                                     <Link to={link.to} className="group flex items-center gap-2 transition-colors hover:text-gray-950">
                                         <div className="h-1 w-1 rounded-full bg-gray-400 transition-colors group-hover:bg-accent" />
-                                        {link.label}
+                                        {t(link.label as any)}
                                     </Link>
                                 </li>
                             ))}
@@ -64,7 +64,7 @@ export default function Footer() {
 
                     {/* Branches / Regions */}
                     <div>
-                        <h3 className="eyebrow mb-6">Viloyatlar</h3>
+                        <h3 className="eyebrow mb-6">{t('footer.regions')}</h3>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                             {regions.map(r => (
                                 <span key={r} className="flex cursor-default items-center gap-2 transition-colors hover:text-gray-900">
@@ -77,14 +77,14 @@ export default function Footer() {
 
                     {/* Contact Info */}
                     <div>
-                        <h3 className="eyebrow mb-6">Aloqa</h3>
+                        <h3 className="eyebrow mb-6">{t('footer.contact')}</h3>
                         <div className="space-y-5">
                             <a href="tel:+998901234567" className="group flex items-center gap-4 text-sm transition-colors hover:text-gray-950">
                                 <div className="btn-round">
                                     <Phone className="w-5 h-5" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Telefon</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">{t('footer.phone')}</span>
                                     <span className="font-medium text-gray-900">+998 90 123 45 67</span>
                                 </div>
                             </a>
@@ -93,8 +93,8 @@ export default function Footer() {
                                     <Clock className="w-5 h-5" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Xizmat vaqti</span>
-                                    <span className="font-medium text-gray-900">24/7 Davomida</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">{t('footer.serviceHours')}</span>
+                                    <span className="font-medium text-gray-900">{t('footer.allDay')}</span>
                                 </div>
                             </div>
                         </div>

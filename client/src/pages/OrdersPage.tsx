@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Package, Clock } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
+import { orderCode, paymentKey } from '../lib/orderFormat'
 import { getOrders, formatPrice } from '../api/client'
 
 const STATUS_CLASSES: Record<string, string> = {
@@ -74,7 +75,7 @@ export default function OrdersPage() {
                                             <span className={`badge ${STATUS_CLASSES[order.status]}`}>
                                                 {getStatusLabel(order.status)}
                                             </span>
-                                            <span className="text-xs text-gray-600 font-mono">#{order._id.slice(-8)}</span>
+                                            <span className="font-mono text-xs text-gray-600">#{orderCode(order._id)}</span>
                                         </div>
                                         <p className="text-sm text-gray-600 truncate mb-1">
                                             {order.items.map((i: any) => `${i.nameSnapshot} ×${i.qty}`).join(', ')}
@@ -89,7 +90,7 @@ export default function OrdersPage() {
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                         <p className="font-bold text-primary-700">{formatPrice(total)}</p>
-                                        <p className="text-xs text-gray-600 capitalize">{order.paymentMethod}</p>
+                                        <p className="text-xs text-gray-600">{t(paymentKey(order.paymentMethod) as any)}</p>
                                     </div>
                                 </div>
                             )

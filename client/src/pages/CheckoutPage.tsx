@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { CheckCircle, MapPin, Calendar, CreditCard, ChevronRight } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
+import { orderCode } from '../lib/orderFormat'
 import { useCart } from '../context/CartContext'
 import { createOrder, formatPrice } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -89,7 +90,7 @@ export default function CheckoutPage() {
                     <p className="text-gray-500 mb-6">{t('checkout.success.desc')}</p>
                     <div className="bg-gray-50 rounded-xl px-6 py-4 mb-8">
                         <p className="text-xs text-gray-500 mb-1">{t('checkout.success.order')}</p>
-                        <p className="font-mono font-bold text-primary-700 text-sm break-all">#{orderId}</p>
+                        <p className="font-mono text-lg font-bold tracking-widest text-primary-700">#{orderCode(orderId)}</p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link to="/orders" className="btn-primary py-3 px-6">{t('checkout.success.viewOrders')}</Link>

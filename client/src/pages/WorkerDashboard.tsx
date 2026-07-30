@@ -5,6 +5,7 @@ import { getOrders, getProducts, createProduct, updateOrderStatus, formatPrice }
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import toast from 'react-hot-toast'
+import { orderCode } from '../lib/orderFormat'
 
 interface ServiceForm {
     name: string
@@ -15,6 +16,16 @@ interface ServiceForm {
 
 const EMPTY_FORM: ServiceForm = {
     name: '', description: '', price: '', imageUrl: ''
+}
+
+/** The design system's badge variants, keyed by the statuses the app stores. */
+const STATUS_BADGE: Record<string, string> = {
+    pending: 'badge-pending',
+    confirmed: 'badge-accepted',
+    assigned: 'badge-accepted',
+    in_transit: 'badge-accepted',
+    delivered: 'badge-delivered',
+    cancelled: 'border-[#e5484d]/25 bg-[#e5484d]/10 text-[#ff9ea1]',
 }
 
 export default function WorkerDashboard() {
@@ -108,15 +119,20 @@ export default function WorkerDashboard() {
                                                 <Package className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-900">Buyurtma #{order._id.slice(-6)}</p>
+                                                <p className="text-sm font-semibold text-gray-900">Buyurtma #{orderCode(order._id)}</p>
                                                 <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
                                             </div>
                                         </div>
-                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                                                order.status === 'accepted' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-yellow-100 text-yellow-700'
-                                            }`}>
-                                            {order.status === 'delivered' ? 'Bajarilgan' : order.status === 'accepted' ? 'Qabul qilingan' : 'Kutilmoqda'}
+                                        {/*
+                                         * This tested for a status called 'accepted', which the app has
+                                         * never stored — the real vocabulary is pending / confirmed /
+                                         * assigned / in_transit / delivered / cancelled. Every one of
+                                         * those except 'delivered' therefore collapsed into
+                                         * "Kutilmoqda", so a loader could not tell a cancelled order
+                                         * from a waiting one, nor see that a courier already had it.
+                                         */}
+                                        <span className={`badge ${STATUS_BADGE[order.status] || 'badge-pending'}`}>
+                                            {t(`orders.status.${order.status}` as any)}
                                         </span>
                                     </div>
 

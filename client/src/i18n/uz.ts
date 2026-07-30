@@ -152,6 +152,49 @@ export const uz = {
     'footer.support': 'Qo\'llab-quvvatlash',
     'footer.rights': 'Barcha huquqlar himoyalangan',
     'footer.phone': 'Telefon',
+
+    // Home — sections added with the dark redesign. These were hardcoded in the
+    // components, so switching to Russian or English left most of the page in
+    // Uzbek even though the switcher said otherwise.
+    'home.claim.filtered': 'Tozalangan',
+    'home.claim.filteredNote': "Ko'p bosqichli filtr",
+    'home.claim.delivery': 'Yetkazamiz',
+    'home.claim.deliveryNote': 'Uy va ofisga',
+    'home.claim.return': 'Qaytariladi',
+    'home.claim.returnNote': 'Idish almashtiriladi',
+
+    'home.why.eyebrow': 'Nega aynan biz',
+    'home.why.title': 'Suvni tanlashda uchta narsa muhim',
+    'home.why.taste': "Toza ta'm",
+    'home.why.tasteDesc': "Ortiqcha mineral va xlor yo'q — suv suvday ta'm beradi.",
+    'home.why.tested': 'Tekshirilgan',
+    'home.why.testedDesc': "Har partiya laboratoriya nazoratidan o'tadi.",
+    'home.why.onTime': 'Kelishilgan vaqtda',
+    'home.why.onTimeDesc': "Yetkazish vaqtini o'zingiz tanlaysiz.",
+
+    'home.picks.eyebrow': 'Tanlovimiz',
+    'home.steps.eyebrow': 'Uch qadam',
+    'home.branches.eyebrow': 'Qayerdamiz',
+    'home.branches.title': 'Bizning filiallarimiz',
+    'home.branches.subtitle': 'Sizga eng yaqin filialni xaritadan toping.',
+    'home.pay.eyebrow': "To'lov usullari",
+    'home.pay.title': 'Naqd, Click yoki Payme',
+    'home.pay.subtitle': "Kuryerga topshirishda yoki oldindan to'lang.",
+    'home.hero.city': 'Toshkent',
+    'home.hero.cheapest': 'Eng arzon',
+    'home.hero.cheapestNote': 'Yetkazib berish bilan',
+    'home.hero.hours': 'Ish vaqti',
+    'home.hero.branchCount': 'ta filial',
+    'home.hero.everywhere': "Toshkent bo'ylab",
+    'home.all': 'Barchasi',
+
+    // Footer
+    'footer.mission': 'Bizning maqsadimiz — har bir xonadonga toza, mineral va sifatli ichimlik suvini eng zamonaviy texnologiyalar orqali tezda yetkazib berish.',
+    'footer.pages': 'Sahifalar',
+    'footer.contact': 'Aloqa',
+    'footer.serviceHours': 'Xizmat vaqti',
+    'footer.allDay': '24/7 Davomida',
+    'footer.telegramBot': 'Telegram bot',
 }
 
 export type TranslationKey = keyof typeof uz
