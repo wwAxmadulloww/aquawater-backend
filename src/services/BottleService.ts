@@ -141,7 +141,16 @@ export async function outstandingHolders(limit = 100) {
     ]);
 }
 
-/** Depot-wide totals, for the admin dashboard. */
+/**
+ * Depot-wide totals, for the admin dashboard.
+ *
+ * `outstanding` is the sum of the POSITIVE balances, not issued minus returned.
+ * Those two differ whenever a customer has handed back more than they were
+ * issued — a stocktake correction, or empties dropped off from before the
+ * ledger existed — and the netted figure then quietly cancels somebody else's
+ * real debt. The screen showed 2 outstanding while the chase list beneath it
+ * named two customers holding two each.
+ */
 export async function depotSummary() {
     const [agg] = await BottleMovement.aggregate([
         {
@@ -153,9 +162,17 @@ export async function depotSummary() {
         },
     ]);
 
-    const issued = agg?.issued ?? 0;
-    const returned = agg?.returned ?? 0;
-    return { issued, returned, outstanding: issued - returned };
+    const [net] = await BottleMovement.aggregate([
+        { $group: { _id: '$userId', balance: { $sum: '$delta' } } },
+        { $match: { balance: { $gt: 0 } } },
+        { $group: { _id: null, outstanding: { $sum: '$balance' } } },
+    ]);
+
+    return {
+        issued: agg?.issued ?? 0,
+        returned: agg?.returned ?? 0,
+        outstanding: net?.outstanding ?? 0,
+    };
 }
 
 export const BottleService = {
