@@ -34,11 +34,14 @@ export async function countReturnables(order: any): Promise<number> {
 /**
  * Records a movement and keeps the cached balance in step.
  *
- * A duplicate (same order, same direction) is swallowed rather than treated as
- * an error: delivery notifications get retried and couriers double-tap, and
- * counting one delivery twice would leave a customer apparently owing bottles
- * they never received. The unique index on the collection is what makes this
- * safe under concurrency, rather than a read-then-write check.
+ * A duplicate order-linked movement (same order, same direction) is swallowed
+ * rather than treated as an error: delivery notifications get retried and
+ * couriers double-tap, and counting one delivery twice would leave a customer
+ * apparently owing bottles they never received. The unique index is what makes
+ * this safe under concurrency, rather than a read-then-write check.
+ *
+ * A manual adjustment carries no order, so it has nothing to be a duplicate of
+ * and any collision there is a genuine fault that must surface.
  */
 export async function record(opts: {
     userId: mongoose.Types.ObjectId | string;
@@ -60,10 +63,13 @@ export async function record(opts: {
             note: opts.note,
         });
     } catch (err: any) {
-        if (err?.code === 11000) {
+        if (err?.code === 11000 && opts.orderId) {
             console.log('[Bottles] Movement already recorded for this order; ignoring.');
             return false;
         }
+        // A manual adjustment has no order to be a duplicate of, so a collision
+        // here is a real fault and must reach the caller rather than look like
+        // a correction that silently did nothing.
         throw err;
     }
 

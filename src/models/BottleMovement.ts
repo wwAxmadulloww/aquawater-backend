@@ -41,15 +41,21 @@ const BottleMovementSchema = new Schema<IBottleMovement>(
 );
 
 /*
- * One movement per order per direction. Delivery notifications can be retried
- * and a courier can double-tap "delivered"; without this a single delivery
- * could be counted twice and the customer would appear to owe bottles they
- * never received. `sparse` keeps manual adjustments, which carry no orderId,
- * out of the constraint.
+ * One movement per order per direction, so a retried delivery notification or a
+ * double-tapped "delivered" cannot count the same delivery twice and leave a
+ * customer apparently owing bottles they never received.
+ *
+ * `partialFilterExpression` rather than `sparse`. On a COMPOUND index sparse
+ * only skips a document when every indexed field is missing, and `direction` is
+ * always present — so manual adjustments, which carry no orderId, were indexed
+ * as (null, 'adjustment') and collided with each other. Exactly one manual
+ * correction could ever be recorded in the whole database; every later one was
+ * rejected as a duplicate. The partial filter restricts the constraint to
+ * movements that actually belong to an order.
  */
 BottleMovementSchema.index(
     { orderId: 1, direction: 1 },
-    { unique: true, sparse: true },
+    { unique: true, partialFilterExpression: { orderId: { $exists: true } } },
 );
 
 export default mongoose.model<IBottleMovement>('BottleMovement', BottleMovementSchema);
