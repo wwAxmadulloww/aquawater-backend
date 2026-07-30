@@ -79,7 +79,7 @@ export default function CheckoutPage() {
     if (!isAuthenticated) {
         return (
             <div className="container-custom py-20 text-center">
-                <p className="text-gray-600 mb-4">Buyurtma berish uchun tizimga kiring.</p>
+                <p className="text-gray-600 mb-4">{t('checkout.loginFirst')}</p>
                 <Link to="/login" className="btn-primary px-8 py-3">{t('auth.login')}</Link>
             </div>
         )
@@ -89,7 +89,7 @@ export default function CheckoutPage() {
         return (
             <div className="container-custom py-20 text-center">
                 <p className="text-gray-600 mb-4">Savat bo'sh.</p>
-                <Link to="/products" className="btn-primary px-8 py-3">Mahsulotlarga o'tish</Link>
+                <Link to="/products" className="btn-primary px-8 py-3">{t('common.toProducts')}</Link>
             </div>
         )
     }
@@ -231,7 +231,7 @@ export default function CheckoutPage() {
                         {/* Order summary */}
                         <div>
                             <div className="card p-6 sticky top-24">
-                                <h2 className="font-bold text-lg text-gray-900 mb-4">Buyurtma</h2>
+                                <h2 className="font-bold text-lg text-gray-900 mb-4">{t('checkout.summary')}</h2>
                                 <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
                                     {items.map(i => (
                                         <div key={i._id} className="flex justify-between text-sm">

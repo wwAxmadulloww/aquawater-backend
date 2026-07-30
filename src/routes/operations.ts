@@ -189,8 +189,23 @@ router.post('/subscriptions', auth, async (req: AuthRequest, res: Response) => {
         }
     }
 
-    const quote = await DeliveryService.quote(parsed.data.addressSnapshot.region, 0);
-    if (!quote.ok && quote.reason === 'no_zone') {
+    /*
+     * Priced against the real basket, not against zero.
+     *
+     * Quoting with a zero total made every zone with a minimum look like a
+     * failure, so the check was reduced to "does the region exist" — and a
+     * standing order below the minimum was accepted, then failed silently every
+     * single week with the customer wondering where their water was.
+     */
+    const priced = await Product.find({ _id: { $in: parsed.data.items.map(i => i.productId) } })
+        .select('price')
+        .lean();
+    const priceById = new Map(priced.map((p: any) => [String(p._id), p.price]));
+    const basketTotal = parsed.data.items.reduce(
+        (sum, i) => sum + (priceById.get(i.productId) ?? 0) * i.qty, 0);
+
+    const quote = await DeliveryService.quote(parsed.data.addressSnapshot.region, basketTotal);
+    if (!quote.ok) {
         res.status(400).json({ message: quote.message });
         return;
     }

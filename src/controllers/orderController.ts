@@ -194,6 +194,21 @@ export const deleteOrder = async (req: AuthRequest, res: Response): Promise<void
             res.status(404).json({ message: 'Order not found' });
             return;
         }
+
+        /*
+         * Deleting an order has to return its stock, exactly as cancelling does.
+         * Without this the units it claimed were gone for good: the shelf count
+         * fell every time an operator tidied up an old order, and the shop
+         * eventually refused sales for stock it actually had.
+         *
+         * Only for orders that had not been delivered — a delivered order's
+         * goods really did leave the depot.
+         */
+        if (order.status !== 'delivered') {
+            await releaseStockFor(order)
+                .catch((err: any) => console.error('[Order] Stock release on delete failed:', err?.message || err));
+        }
+
         res.json({ message: 'Order deleted' });
     } catch {
         res.status(500).json({ message: 'Server error' });

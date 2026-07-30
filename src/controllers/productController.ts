@@ -13,6 +13,21 @@ export const productSchema = z.object({
     price: z.number().positive(),
     imageUrl: z.string().url(),
     inStock: z.boolean().optional().default(true),
+    /** True for containers the customer keeps and owes back. */
+    returnable: z.boolean().optional(),
+    /** Units on hand, or null for anything not counted (services, made to order). */
+    stockQty: z.number().int().min(0).max(1_000_000).nullable().optional(),
+});
+
+/**
+ * A stocktake sets an absolute figure, not a delta.
+ *
+ * That is what walking the depot with a clipboard produces, and it is the only
+ * operation that can honestly clear the "never counted" state — an increment
+ * carries forward whatever error was in the previous number.
+ */
+export const stocktakeSchema = z.object({
+    stockQty: z.number().int().min(0).max(1_000_000).nullable(),
 });
 
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
@@ -106,6 +121,45 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
         }
         res.json(product);
     } catch {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+/**
+ * Records a physical count. Also puts the product back on sale when a count
+ * finds units for something that had sold out, since the two always move
+ * together and asking an operator to remember both is how they drift apart.
+ */
+export const stocktake = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid id' });
+            return;
+        }
+
+        const parsed = stocktakeSchema.safeParse(req.body);
+        if (!parsed.success) {
+            res.status(400).json({ message: 'Qoldiq soni noto\'g\'ri' });
+            return;
+        }
+
+        const { stockQty } = parsed.data;
+        const update: Record<string, unknown> = {
+            stockQty,
+            stockCountedAt: new Date(),
+        };
+        // An untracked product carries no stock claim, so its availability is
+        // whatever the operator set by hand and must not be overwritten here.
+        if (stockQty !== null) update.inStock = stockQty > 0;
+
+        const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true });
+        if (!product) {
+            res.status(404).json({ message: 'Product not found' });
+            return;
+        }
+        res.json(product);
+    } catch (err) {
+        console.error('[Product] stocktake error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };

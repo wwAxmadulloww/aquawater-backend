@@ -219,4 +219,8 @@ export const en = {
     'trust.since': 'Running for',
     'trust.months': 'months',
     'trust.note': 'These figures are read live from our database.',
+
+    'checkout.loginFirst': 'Sign in to place an order.',
+    'common.toProducts': 'Browse products',
+    'checkout.summary': 'Order',
 }

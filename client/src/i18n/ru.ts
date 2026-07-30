@@ -219,4 +219,8 @@ export const ru = {
     'trust.since': 'В работе',
     'trust.months': 'мес.',
     'trust.note': 'Эти цифры берутся из базы в реальном времени.',
+
+    'checkout.loginFirst': 'Войдите, чтобы оформить заказ.',
+    'common.toProducts': 'Перейти к товарам',
+    'checkout.summary': 'Заказ',
 }

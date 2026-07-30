@@ -20,6 +20,14 @@ export interface IProduct extends Document {
      * selling two hundred bottles on a day it had forty.
      */
     stockQty?: number | null;
+    /**
+     * When someone last physically counted this product.
+     *
+     * Null means the figure has never been verified against the shelf — which
+     * is the honest state for any number the system was seeded with. The admin
+     * panel shows those as uncounted rather than presenting a guess as fact.
+     */
+    stockCountedAt?: Date | null;
     workerId?: mongoose.Types.ObjectId;
     status: 'pending' | 'approved' | 'rejected';
 }
@@ -35,6 +43,7 @@ const ProductSchema = new Schema<IProduct>(
         inStock: { type: Boolean, default: true },
         returnable: { type: Boolean, default: false },
         stockQty: { type: Number, default: null, min: 0 },
+        stockCountedAt: { type: Date, default: null },
         workerId: { type: Schema.Types.ObjectId, ref: 'User' },
         status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
     },

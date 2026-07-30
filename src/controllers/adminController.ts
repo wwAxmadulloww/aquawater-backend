@@ -67,7 +67,16 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
             { $sort: { _id: 1 } },
         ]);
 
+        // Products with a tracked quantity that nobody has physically counted.
+        // Those figures came from a seed, not a shelf, and until someone counts
+        // them the guard against overselling is running on a guess.
+        const uncountedStock = await Product.find({
+            stockQty: { $ne: null },
+            $or: [{ stockCountedAt: null }, { stockCountedAt: { $exists: false } }],
+        }).select('name stockQty').lean();
+
         res.json({
+            uncountedStock,
             totalOrders,
             deliveredOrders,
             pendingOrders,

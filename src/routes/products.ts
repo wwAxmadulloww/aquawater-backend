@@ -20,5 +20,6 @@ router.post('/', auth, adminOrWorker, productController.createProduct);
 router.put('/:id', auth, adminOnly, productController.updateProduct);
 router.delete('/:id', auth, adminOnly, productController.deleteProduct);
 router.patch('/:id/approve', auth, adminOnly, productController.approveProduct);
+router.patch('/:id/stocktake', auth, adminOrWorker, productController.stocktake);
 
 export default router;

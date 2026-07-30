@@ -60,7 +60,7 @@ export default function CartPage() {
                     {/* Summary */}
                     <div>
                         <div className="card p-6 sticky top-24">
-                            <h2 className="font-bold text-lg text-gray-900 mb-4">Buyurtma xulosasi</h2>
+                            <h2 className="font-bold text-lg text-gray-900 mb-4">{t('checkout.summary')}</h2>
                             <div className="space-y-3 text-sm mb-4">
                                 <div className="flex justify-between text-gray-600">
                                     <span>{t('cart.subtotal')}</span>

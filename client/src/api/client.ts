@@ -101,6 +101,13 @@ export const updateProduct = (id: string, data: unknown) =>
 export const deleteProduct = (id: string) =>
     api.delete(`/products/${id}`).then(r => r.data)
 
+/**
+ * Records a physical count. Sends an absolute figure, not a delta — an
+ * increment would carry forward whatever error the previous number held.
+ */
+export const stocktakeProduct = (id: string, stockQty: number | null) =>
+    api.patch(`/products/${id}/stocktake`, { stockQty }).then(r => r.data)
+
 export const approveProduct = (id: string, status: 'approved' | 'rejected') =>
     api.patch(`/products/${id}/approve`, { status }).then(r => r.data)
 

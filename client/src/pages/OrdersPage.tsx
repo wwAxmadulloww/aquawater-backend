@@ -60,7 +60,7 @@ export default function OrdersPage() {
                     <div className="text-center py-20">
                         <div className="text-6xl mb-4">📦</div>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('orders.empty')}</h2>
-                        <Link to="/products" className="btn-primary px-8 py-3 mt-4 inline-flex">Mahsulotlarga o'tish</Link>
+                        <Link to="/products" className="btn-primary px-8 py-3 mt-4 inline-flex">{t('common.toProducts')}</Link>
                     </div>
                 ) : (
                     <div className="space-y-4">

@@ -221,6 +221,10 @@ export const uz = {
     'trust.since': 'Ishlayotgan vaqt',
     'trust.months': 'oy',
     'trust.note': 'Bu raqamlar bazadan real vaqtda olinadi.',
+
+    'checkout.loginFirst': 'Buyurtma berish uchun tizimga kiring.',
+    'common.toProducts': 'Mahsulotlarga o\'tish',
+    'checkout.summary': 'Buyurtma',
 }
 
 export type TranslationKey = keyof typeof uz

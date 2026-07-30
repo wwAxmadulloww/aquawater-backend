@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Edit2, Trash2, X, Check, Package, Wrench, ImageOff } from 'lucide-react'
-import { getProducts, createProduct, updateProduct, deleteProduct, formatPrice } from '../../api/client'
+import { getProducts, createProduct, updateProduct, deleteProduct, stocktakeProduct, formatPrice } from '../../api/client'
 import { useLanguage } from '../../i18n/LanguageContext'
 import toast from 'react-hot-toast'
 
@@ -183,6 +183,8 @@ export default function AdminProducts() {
     const [editing, setEditing] = useState<string | null>(null)
     const [showForm, setShowForm] = useState(false)
     const [form, setForm] = useState<ProductForm>(EMPTY)
+    /** Which row is being counted, and the figure typed so far. */
+    const [counting, setCounting] = useState<{ id: string; value: string } | null>(null)
 
     const { data: products, isLoading } = useQuery({
         queryKey: ['products', 'admin-all'],
@@ -206,6 +208,17 @@ export default function AdminProducts() {
         mutationFn: (id: string) => deleteProduct(id),
         onSuccess: () => { toast.success('O\'chirildi'); refresh() },
         onError: () => toast.error(t('common.error'))
+    })
+
+    const stockMut = useMutation({
+        mutationFn: ({ id, stockQty }: { id: string; stockQty: number | null }) =>
+            stocktakeProduct(id, stockQty),
+        onSuccess: () => {
+            toast.success('Qoldiq hisobga olindi')
+            setCounting(null)
+            qc.invalidateQueries({ queryKey: ['admin-products'] })
+        },
+        onError: (err: any) => toast.error(err.response?.data?.message || 'Xatolik'),
     })
 
     const approveMut = useMutation({
@@ -266,6 +279,7 @@ export default function AdminProducts() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nomi</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Turi</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Narx</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qoldiq</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Holat</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tasdiq</th>
                                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amallar</th>
@@ -318,10 +332,75 @@ export default function AdminProducts() {
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-primary-700 font-medium">{formatPrice(p.price)}</td>
+                                    {/*
+                                      * Stock is edited by counting, not by nudging a number: the
+                                      * field takes an absolute figure and stamps when it was
+                                      * counted. Until that happens the figure is shown as
+                                      * unverified, because the values the system started with
+                                      * were seeded, not counted, and presenting a seeded number
+                                      * as inventory is how a shop oversells.
+                                      */}
                                     <td className="px-4 py-3">
-                                        <span className={`badge ${p.inStock ? 'badge-delivered' : 'badge-pending'}`}>
-                                            {p.inStock ? 'Mavjud' : 'Tugagan'}
-                                        </span>
+                                        {p.stockQty === null || p.stockQty === undefined ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs text-gray-600">Hisoblanmaydi</span>
+                                                <button
+                                                    onClick={() => setCounting({ id: p._id, value: '0' })}
+                                                    className="text-[11px] text-accent hover:underline"
+                                                >
+                                                    Hisobga olish
+                                                </button>
+                                            </div>
+                                        ) : counting?.id === p._id ? (
+                                            <form
+                                                className="flex items-center gap-1.5"
+                                                onSubmit={e => {
+                                                    e.preventDefault()
+                                                    const n = Number(counting?.value)
+                                                    if (!Number.isInteger(n) || n < 0) {
+                                                        toast.error('Butun, manfiy bo\'lmagan son kiriting')
+                                                        return
+                                                    }
+                                                    stockMut.mutate({ id: p._id, stockQty: n })
+                                                }}
+                                            >
+                                                <input
+                                                    type="number" min={0} inputMode="numeric" autoFocus
+                                                    value={counting?.value ?? ''}
+                                                    onChange={e => setCounting({ id: p._id, value: e.target.value })}
+                                                    className="input w-20 px-2 py-1 text-sm"
+                                                />
+                                                <button type="submit" disabled={stockMut.isPending}
+                                                        className="btn-primary px-2.5 py-1 text-[11px]">OK</button>
+                                                <button type="button" onClick={() => setCounting(null)}
+                                                        className="text-[11px] text-gray-600 hover:underline">Bekor</button>
+                                            </form>
+                                        ) : (
+                                            <button
+                                                onClick={() => setCounting({ id: p._id, value: String(p.stockQty) })}
+                                                className="group flex items-center gap-2 text-left"
+                                                title="Sanab, haqiqiy qoldiqni kiriting"
+                                            >
+                                                <span className="tabular font-medium text-gray-900">{p.stockQty}</span>
+                                                {p.stockCountedAt ? (
+                                                    <span className="text-[10px] text-gray-600">
+                                                        {new Date(p.stockCountedAt).toLocaleDateString()}
+                                                    </span>
+                                                ) : (
+                                                    <span className="badge-pending badge text-[10px]">tekshirilmagan</span>
+                                                )}
+                                            </button>
+                                        )}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex flex-col gap-1">
+                                            <span className={`badge ${p.inStock ? 'badge-delivered' : 'badge-pending'}`}>
+                                                {p.inStock ? 'Mavjud' : 'Tugagan'}
+                                            </span>
+                                            {p.returnable && (
+                                                <span className="text-[10px] text-accent">idish qaytariladi</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3">
                                         {p.status === 'pending' ? (
