@@ -216,7 +216,7 @@ export default function AdminProducts() {
         onSuccess: () => {
             toast.success('Qoldiq hisobga olindi')
             setCounting(null)
-            qc.invalidateQueries({ queryKey: ['admin-products'] })
+            refresh()
         },
         onError: (err: any) => toast.error(err.response?.data?.message || 'Xatolik'),
     })
