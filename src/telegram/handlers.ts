@@ -131,6 +131,8 @@ export class BotHandlers {
         if (/^\/lang/i.test(text)) return this.askLanguage(chatId, lang);
         if (/^\/catalog/i.test(text)) return this.ordering.showCatalog(chatId, lang);
         if (/^\/cart/i.test(text)) return this.ordering.showCart(chatId, lang, botUser);
+        if (/^\/bottles/i.test(text)) return this.ordering.showBottles(chatId, lang, botUser);
+        if (/^\/repeat/i.test(text)) return this.ordering.showSubscriptions(chatId, lang, botUser);
         if (/^\/orders/i.test(text)) return this.showOrders(chatId, lang, botUser);
         if (/^\/id/i.test(text)) {
             await this.deps.client.sendMessage(chatId, `🆔 <code>${escapeHtml(chatId)}</code>`);
@@ -143,6 +145,8 @@ export class BotHandlers {
         switch (action) {
             case 'products': return this.ordering.showCatalog(chatId, lang);
             case 'cart': return this.ordering.showCart(chatId, lang, botUser);
+            case 'bottles': return this.ordering.showBottles(chatId, lang, botUser);
+            case 'subs': return this.ordering.showSubscriptions(chatId, lang, botUser);
             case 'orders': return this.showOrders(chatId, lang, botUser);
             case 'branches': return this.showBranches(chatId, lang);
             case 'support': return this.showSupport(chatId, lang);
@@ -158,6 +162,8 @@ export class BotHandlers {
         const table: Record<string, string[]> = {
             products: ['mahsulot', 'товар', 'product', 'katalog', 'каталог', 'catalog'],
             cart: ['savat', 'корзин', 'cart'],
+            bottles: ['idish', 'бутыл', 'тара', 'bottle'],
+            subs: ['doimiy', 'регуляр', 'standing', 'obuna'],
             orders: ['buyurtmalarim', 'мои заказ', 'my order', 'buyurtma'],
             branches: ['filial', 'филиал', 'branch', 'xarita', 'карта'],
             support: ['aloqa', 'контакт', 'contact', 'qo\'llab', 'поддержк', 'support'],
@@ -390,6 +396,13 @@ export class BotHandlers {
             case 'xco': return o.cancelCheckout(chatId, lang);
 
             case 'ords': return this.showOrders(chatId, lang, botUser);
+            case 'btl': return o.showBottles(chatId, lang, botUser);
+            case 'sub': return o.askSubscriptionDay(chatId, lang, botUser);
+            case 'sd': return o.createSubscription(chatId, lang, botUser, Number(arg));
+            case 'subs': return o.showSubscriptions(chatId, lang, botUser);
+            case 'sp': return o.toggleSubscription(chatId, lang, botUser, arg, false);
+            case 'sr': return o.toggleSubscription(chatId, lang, botUser, arg, true);
+            case 'sx': return o.deleteSubscription(chatId, lang, botUser, arg);
             case 'o': return o.showOrder(chatId, lang, botUser, arg);
             case 'xo': return o.cancelOrder(chatId, lang, botUser, arg);
             case 'rep': return o.repeatOrder(chatId, lang, botUser, arg);

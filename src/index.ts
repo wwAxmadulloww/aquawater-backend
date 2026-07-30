@@ -8,6 +8,8 @@ import orderRoutes from './routes/orders';
 import adminRoutes from './routes/admin';
 import branchRoutes from './routes/branches';
 import telegramRoutes from './routes/telegram';
+import operationsRoutes from './routes/operations';
+import { DeliveryService } from './services/DeliveryService';
 import { TelegramBotService } from './services/TelegramBotService';
 import { waitForDb } from './config/db';
 
@@ -96,6 +98,11 @@ if (MONGODB_URI) {
         .catch((err) => console.error('❌ MongoDB connection error:', err.message));
 }
 
+mongoose.connection.once('connected', () => {
+    void DeliveryService.ensureSeeded()
+        .catch((err) => console.error('[Delivery] Zone seed failed:', err?.message || err));
+});
+
 mongoose.connection.on('disconnected', () => console.warn('⚠️  MongoDB disconnected'));
 mongoose.connection.on('reconnected', () => console.log('✅ MongoDB reconnected'));
 
@@ -139,16 +146,33 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/telegram', telegramRoutes);
+app.use('/api', operationsRoutes);
 
 app.use('/api', (_req, res) => {
     res.status(404).json({ message: 'Endpoint topilmadi' });
 });
 
-// Global error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+/*
+ * Global error handler.
+ *
+ * Server faults are also pushed to the operator group. Until this existed the
+ * only way anyone learned the site was broken was a customer complaining or
+ * someone testing by hand — which is exactly how the Atlas outage was found.
+ * 5xx only: a 400 is the client being told no, not a fault worth waking anyone.
+ */
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error('Unhandled Error:', err);
-    res.status(err.status || 500).json({
-        message: err.message || 'Internal Server Error'
+    const status = err.status || 500;
+
+    if (status >= 500) {
+        void TelegramBotService.alertOperators(
+            `${req.method} ${req.path} — ${err.message || 'Internal Server Error'}`,
+            err?.stack,
+        ).catch(() => {});
+    }
+
+    res.status(status).json({
+        message: status >= 500 ? 'Internal Server Error' : (err.message || 'Bad Request'),
     });
 });
 

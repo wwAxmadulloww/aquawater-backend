@@ -16,6 +16,8 @@ const BOT_COMMANDS = [
     { command: 'catalog', description: 'Mahsulotlar / Товары / Products' },
     { command: 'cart', description: 'Savat / Корзина / Cart' },
     { command: 'orders', description: 'Buyurtmalarim / Мои заказы / My orders' },
+    { command: 'bottles', description: 'Idishlarim / Моя тара / My bottles' },
+    { command: 'repeat', description: 'Doimiy buyurtma / Регулярный заказ / Standing order' },
     { command: 'menu', description: 'Asosiy menyu / Главное меню / Main menu' },
     { command: 'lang', description: 'Tilni o\'zgartirish / Сменить язык / Change language' },
     { command: 'help', description: 'Aloqa / Контакты / Contact' },
@@ -33,9 +35,52 @@ export class TelegramBotService {
     private static handlers: BotHandlers | null = null;
 
     private static configured = false;
+    /** Alert subject -> last sent, for de-duplication. */
+    private static alertedAt = new Map<string, number>();
     private static polling = false;
     private static stopRequested = false;
     private static offset = 0;
+
+    /**
+     * Sends a message to one chat, for callers outside the message loop —
+     * subscription runs, reminders, failure alerts.
+     *
+     * Returns false rather than throwing when the bot is unconfigured or the
+     * chat is gone: none of those callers should fail their own job because a
+     * notification could not be delivered.
+     */
+    public static async sendToChat(chatId: string | number, text: string): Promise<boolean> {
+        const client = this.getClient();
+        if (!client) return false;
+        const id = await client.sendMessage(chatId, text);
+        return id !== null;
+    }
+
+    /**
+     * Alerts the operator group that something is broken.
+     *
+     * De-duplicated by message for an hour. Without that, one failing endpoint
+     * under load turns a single outage into hundreds of identical messages, and
+     * the group becomes something people mute — which is worse than having no
+     * alerting at all.
+     */
+    public static async alertOperators(subject: string, detail?: string): Promise<void> {
+        if (!this.adminChatId) return;
+
+        const key = subject.slice(0, 120);
+        const now = Date.now();
+        const last = this.alertedAt.get(key);
+        if (last && now - last < 60 * 60 * 1000) return;
+        this.alertedAt.set(key, now);
+
+        const body = [
+            `🚨 <b>Tizimda muammo</b>`,
+            escapeHtml(subject),
+            detail ? `\n<code>${escapeHtml(detail.slice(0, 500))}</code>` : '',
+        ].filter(Boolean).join('\n');
+
+        await this.sendToChat(this.adminChatId, body).catch(() => {});
+    }
 
     /**
      * Runs the one-off bot configuration, at most once per process.

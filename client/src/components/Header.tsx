@@ -35,6 +35,7 @@ export default function Header() {
                 <nav className="hidden md:flex items-center gap-1 flex-1">
                     <NavLink to="/products">{t('nav.products')}</NavLink>
                     {isAuthenticated && <NavLink to="/orders">{t('nav.orders')}</NavLink>}
+                    {isAuthenticated && <NavLink to="/subscriptions">{t('subs.title')}</NavLink>}
                     {isAdmin && <NavLink to="/admin">{t('nav.admin')}</NavLink>}
                     {user?.role === 'worker' && <NavLink to="/worker">Ishchi Paneli</NavLink>}
                     {user?.role === 'courier' && <NavLink to="/courier">Kuryer Paneli</NavLink>}
@@ -96,6 +97,7 @@ export default function Header() {
                 <div className="flex flex-col gap-1 border-t border-line bg-ink/95 px-4 py-3 backdrop-blur-xl md:hidden">
                     <MobileNav to="/products" onClick={() => setMenuOpen(false)}>{t('nav.products')}</MobileNav>
                     {isAuthenticated && <MobileNav to="/orders" onClick={() => setMenuOpen(false)}>{t('nav.orders')}</MobileNav>}
+                    {isAuthenticated && <MobileNav to="/subscriptions" onClick={() => setMenuOpen(false)}>{t('subs.title')}</MobileNav>}
                     {isAdmin && <MobileNav to="/admin" onClick={() => setMenuOpen(false)}>{t('nav.admin')}</MobileNav>}
                     {user?.role === 'worker' && <MobileNav to="/worker" onClick={() => setMenuOpen(false)}>Ishchi Paneli</MobileNav>}
                     {user?.role === 'courier' && <MobileNav to="/courier" onClick={() => setMenuOpen(false)}>Kuryer Paneli</MobileNav>}

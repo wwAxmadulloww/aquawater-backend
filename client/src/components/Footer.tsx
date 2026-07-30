@@ -1,12 +1,33 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Droplets, Phone, Send, MapPin, Clock } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { useLanguage } from '../i18n/LanguageContext'
+import { api, getDeliveryZones } from '../api/client'
 
-const regions = ['Toshkent', 'Samarqand', 'Buxoro', 'Andijon', 'Namangan', 'Farg\'ona']
 
 export default function Footer() {
     const { t } = useLanguage()
+
+    /*
+     * Contact details come from the branch record rather than being typed into
+     * this file. The hardcoded +998 90 123 45 67 was a template number that
+     * shipped to production and read as one — and a phone number in a footer is
+     * something the owner changes, not the developer.
+     */
+    const { data: branches } = useQuery({
+        queryKey: ['branches-footer'],
+        queryFn: async () => (await api.get('/branches')).data,
+        staleTime: 5 * 60 * 1000,
+    })
+
+    const { data: zones } = useQuery({
+        queryKey: ['delivery-zones'],
+        queryFn: getDeliveryZones,
+        staleTime: 5 * 60 * 1000,
+    })
+
+    const branch = branches?.[0]
     return (
         <footer className="border-t border-line bg-ink pb-10 pt-20 text-gray-600">
 
@@ -66,10 +87,10 @@ export default function Footer() {
                     <div>
                         <h3 className="eyebrow mb-6">{t('footer.regions')}</h3>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                            {regions.map(r => (
-                                <span key={r} className="flex cursor-default items-center gap-2 transition-colors hover:text-gray-900">
+                            {(zones || []).map((z: any) => (
+                                <span key={z._id} className="flex cursor-default items-center gap-2 transition-colors hover:text-gray-900">
                                     <MapPin className="h-3.5 w-3.5 text-gray-500" />
-                                    {r}
+                                    {z.region}
                                 </span>
                             ))}
                         </div>
@@ -79,22 +100,29 @@ export default function Footer() {
                     <div>
                         <h3 className="eyebrow mb-6">{t('footer.contact')}</h3>
                         <div className="space-y-5">
-                            <a href="tel:+998901234567" className="group flex items-center gap-4 text-sm transition-colors hover:text-gray-950">
-                                <div className="btn-round">
-                                    <Phone className="w-5 h-5" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">{t('footer.phone')}</span>
-                                    <span className="font-medium text-gray-900">+998 90 123 45 67</span>
-                                </div>
-                            </a>
+                            {/* Nothing is rendered when no branch has a phone
+                                number: an empty contact block is honest, a
+                                placeholder one is not. */}
+                            {branch?.phone && (
+                                <a href={`tel:${branch.phone}`} className="group flex items-center gap-4 text-sm transition-colors hover:text-gray-950">
+                                    <div className="btn-round">
+                                        <Phone className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] uppercase tracking-wider text-gray-500">{t('footer.phone')}</span>
+                                        <span className="font-medium text-gray-900">{branch.phone}</span>
+                                    </div>
+                                </a>
+                            )}
                             <div className="group flex items-center gap-4 text-sm transition-colors hover:text-gray-950">
                                 <div className="btn-round">
                                     <Clock className="w-5 h-5" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-[10px] uppercase tracking-wider text-gray-500">{t('footer.serviceHours')}</span>
-                                    <span className="font-medium text-gray-900">{t('footer.allDay')}</span>
+                                    <span className="font-medium text-gray-900">
+                                        {branch?.workingHours || t('footer.allDay')}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -114,12 +142,9 @@ export default function Footer() {
                         <span className="hidden text-gray-600 md:inline">•</span>
                         <span>{t('footer.rights')}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span>Made by</span>
-                        <span className="text-accent">Antigravity Team</span>
-                        <span className="text-gray-600">|</span>
-                        <span>UX/UI Platinum Edition</span>
-                    </div>
+                    {branch?.address && (
+                        <span className="text-center md:text-right">{branch.address}</span>
+                    )}
                 </div>
             </div>
         </footer>

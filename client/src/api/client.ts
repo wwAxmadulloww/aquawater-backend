@@ -114,8 +114,8 @@ export const getOrders = (params?: Record<string, string>) =>
 export const getOrder = (id: string) =>
     api.get(`/orders/${id}`).then(r => r.data)
 
-export const updateOrderStatus = (id: string, status: string) =>
-    api.patch(`/orders/${id}/status`, { status }).then(r => r.data)
+export const updateOrderStatus = (id: string, status: string, extra?: { emptiesCollected?: number }) =>
+    api.patch(`/orders/${id}/status`, { status, ...extra }).then(r => r.data)
 
 export const assignOrder = (id: string, data: { courierId?: string, workerId?: string }) =>
     api.patch(`/orders/${id}/assign`, data).then(r => r.data)
@@ -140,3 +140,60 @@ export const deleteAdminUser = (id: string) =>
 // Format currency
 export const formatPrice = (price: number) =>
     new Intl.NumberFormat('uz-UZ').format(price) + ' so\'m'
+
+// ── Delivery zones ───────────────────────────────────────────────────────
+
+export const getDeliveryZones = () =>
+    api.get('/delivery-zones').then(r => r.data)
+
+export const getDeliveryQuote = (region: string, total: number) =>
+    api.get('/delivery-quote', { params: { region, total } }).then(r => r.data)
+
+export const createDeliveryZone = (data: unknown) =>
+    api.post('/delivery-zones', data).then(r => r.data)
+
+export const updateDeliveryZone = (id: string, data: unknown) =>
+    api.put(`/delivery-zones/${id}`, data).then(r => r.data)
+
+export const deleteDeliveryZone = (id: string) =>
+    api.delete(`/delivery-zones/${id}`).then(r => r.data)
+
+// ── Returnable containers ────────────────────────────────────────────────
+
+export const getMyBottles = () =>
+    api.get('/bottles/me').then(r => r.data)
+
+export const getOutstandingBottles = () =>
+    api.get('/bottles/outstanding').then(r => r.data)
+
+export const adjustBottles = (data: { userId: string; delta: number; note?: string }) =>
+    api.post('/bottles/adjust', data).then(r => r.data)
+
+// ── Standing orders ──────────────────────────────────────────────────────
+
+export const getSubscriptions = () =>
+    api.get('/subscriptions').then(r => r.data)
+
+export const createSubscription = (data: unknown) =>
+    api.post('/subscriptions', data).then(r => r.data)
+
+export const updateSubscription = (id: string, data: unknown) =>
+    api.patch(`/subscriptions/${id}`, data).then(r => r.data)
+
+export const deleteSubscription = (id: string) =>
+    api.delete(`/subscriptions/${id}`).then(r => r.data)
+
+// ── Reports ──────────────────────────────────────────────────────────────
+
+export const getReport = (range: { from?: string; to?: string }) =>
+    api.get('/reports', { params: range }).then(r => r.data)
+
+/** Absolute URL for the CSV download, so the browser handles it as a file. */
+export const reportExportUrl = (group: string, range: { from?: string; to?: string }) => {
+    const qs = new URLSearchParams({ group, ...(range.from ? { from: range.from } : {}), ...(range.to ? { to: range.to } : {}) })
+    return `${api.defaults.baseURL}/reports/export?${qs}`
+}
+
+/** Public, checkable figures for the home page. */
+export const getTrustFigures = () =>
+    api.get('/trust').then(r => r.data)

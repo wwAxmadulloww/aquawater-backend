@@ -13,6 +13,12 @@ export interface IUser extends Document {
     name: string;
     phone: string;
     passwordHash: string;
+    /**
+     * Returnable containers this customer currently holds. A cache of the sum
+     * of their BottleMovement rows, kept for screens that only need the figure;
+     * the ledger remains the source of truth.
+     */
+    bottleBalance: number;
     role: 'customer' | 'admin' | 'worker' | 'courier' | 'super_admin';
     preferredLanguage: 'uz' | 'ru' | 'en';
     addresses: IAddress[];
@@ -34,6 +40,7 @@ const UserSchema = new Schema<IUser>(
         name: { type: String, required: false }, // Made optional for phone-first registration
         phone: { type: String, required: true, unique: true },
         passwordHash: { type: String, required: false }, // Made optional for multi-step registration
+        bottleBalance: { type: Number, default: 0 },
         role: { type: String, enum: ['customer', 'admin', 'worker', 'courier', 'super_admin'], default: 'customer' },
         preferredLanguage: { type: String, enum: ['uz', 'ru', 'en'], default: 'uz' },
         addresses: [AddressSchema],

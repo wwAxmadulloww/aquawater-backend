@@ -195,6 +195,32 @@ export const uz = {
     'footer.serviceHours': 'Xizmat vaqti',
     'footer.allDay': '24/7 Davomida',
     'footer.telegramBot': 'Telegram bot',
+
+    'checkout.goods': 'Mahsulotlar',
+    'checkout.free': 'Bepul',
+    'bottles.title': 'Bo\'sh idishlar',
+    'bottles.none': 'Sizda qaytarilishi kerak idish yo\'q.',
+    'bottles.owed': 'Sizda turgan idish',
+    'bottles.hint': 'Keyingi yetkazishda kuryerga bering.',
+    'subs.title': 'Doimiy buyurtma',
+    'subs.none': 'Doimiy buyurtmangiz yo\'q.',
+    'subs.weekly': 'Har hafta',
+    'subs.next': 'Keyingi',
+    'subs.pause': 'To\'xtatish',
+    'subs.resume': 'Davom etish',
+    'subs.delete': 'O\'chirish',
+    'subs.active': 'Faol',
+    'subs.paused': 'To\'xtatilgan',
+    'subs.create': 'Doimiy buyurtma yaratish',
+    'courier.empties': 'Qaytarilgan bo\'sh idish',
+
+    'trust.eyebrow': 'Raqamlar',
+    'trust.title': 'Aytmaymiz — ko\'rsatamiz',
+    'trust.delivered': 'Yetkazilgan buyurtma',
+    'trust.customers': 'Xizmat ko\'rsatilgan mijoz',
+    'trust.since': 'Ishlayotgan vaqt',
+    'trust.months': 'oy',
+    'trust.note': 'Bu raqamlar bazadan real vaqtda olinadi.',
 }
 
 export type TranslationKey = keyof typeof uz

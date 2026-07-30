@@ -25,6 +25,10 @@ export interface IOrder extends Document {
     deliveryDate: string;
     deliveryTimeSlot: string;
     paymentMethod: 'cash' | 'click' | 'payme';
+    /** Charged once per order, from the delivery zone in force when it was placed. */
+    deliveryFee: number;
+    /** Empty containers the courier took back on this delivery. */
+    emptiesCollected?: number;
     status: 'pending' | 'confirmed' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled';
     createdAt: Date;
 }
@@ -55,6 +59,8 @@ const OrderSchema = new Schema<IOrder>(
         deliveryDate: { type: String, required: true },
         deliveryTimeSlot: { type: String, required: true },
         paymentMethod: { type: String, enum: ['cash', 'click', 'payme'], required: true },
+        deliveryFee: { type: Number, default: 0, min: 0 },
+        emptiesCollected: { type: Number, default: 0, min: 0 },
         status: { type: String, enum: ['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled'], default: 'pending' },
     },
     { timestamps: true }

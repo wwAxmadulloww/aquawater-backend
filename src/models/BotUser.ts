@@ -43,6 +43,8 @@ export interface IBotUser extends Document {
     draft?: OrderDraft;
     /** Last address used, offered as a one-tap answer on the next order. */
     lastAddress?: Address;
+    /** When this chat was last nudged to reorder, so it is not nudged weekly. */
+    lastRemindedAt?: Date;
     isBlocked: boolean;
     lastSeenAt: Date;
 }
@@ -71,6 +73,7 @@ const BotUserSchema = new Schema<IBotUser>(
         },
         draft: { type: Schema.Types.Mixed, default: null },
         lastAddress: { type: Schema.Types.Mixed, default: null },
+        lastRemindedAt: { type: Date },
         // Set when Telegram reports the user blocked the bot, so we stop
         // wasting API calls on notifications that can never be delivered.
         isBlocked: { type: Boolean, default: false },

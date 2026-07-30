@@ -71,6 +71,27 @@ export interface OrderTexts {
     cannotCancel: string;
     repeatAdded: string;
     orderNotFound: string;
+
+    btnBottles: string;
+    bottlesTitle: string;
+    bottlesNone: string;
+    bottlesOwed: (n: number) => string;
+    bottlesHint: string;
+
+    btnSubscribe: string;
+    subsTitle: string;
+    subsNone: string;
+    subsAskDay: string;
+    subsCreated: (day: string, slot: string) => string;
+    subsPaused: string;
+    subsResumed: string;
+    subsRemoved: string;
+    btnPause: string;
+    btnResume: string;
+    btnDelete: string;
+    weekdays: string[];
+    deliveryFee: string;
+    freeDelivery: string;
 }
 
 const PAY = { cash: '💵', click: '🔵', payme: '🟢' };
@@ -139,6 +160,27 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         cannotCancel: '❗️ Bu buyurtmani endi bekor qilib bo\'lmaydi. Operatorga murojaat qiling.',
         repeatAdded: '✅ Mahsulotlar savatga qo\'shildi.',
         orderNotFound: '❌ Buyurtma topilmadi.',
+
+        btnBottles: '🫙 Idishlarim',
+        bottlesTitle: '🫙 <b>Bo\'sh idishlar hisobi</b>',
+        bottlesNone: '✅ Sizda qaytarilishi kerak idish yo\'q.',
+        bottlesOwed: (n) => `Sizda <b>${n} ta</b> idish turibdi.`,
+        bottlesHint: 'Keyingi yetkazishda kuryerga bering — hisobdan chiqariladi.',
+
+        btnSubscribe: '🔁 Doimiy buyurtma',
+        subsTitle: '🔁 <b>Doimiy buyurtmalar</b>',
+        subsNone: 'Sizda doimiy buyurtma yo\'q.\n\nSavatni to\'ldirib, "Doimiy buyurtma" ni tanlang — har hafta o\'zi yaratiladi.',
+        subsAskDay: '📅 <b>Har hafta qaysi kuni yetkazamiz?</b>',
+        subsCreated: (day, slot) => `✅ Doimiy buyurtma yaratildi.\n\nHar <b>${day}</b> kuni, ${slot}.`,
+        subsPaused: '⏸ Doimiy buyurtma to\'xtatildi.',
+        subsResumed: '▶️ Doimiy buyurtma qayta ishga tushdi.',
+        subsRemoved: '🗑 Doimiy buyurtma o\'chirildi.',
+        btnPause: '⏸ To\'xtatish',
+        btnResume: '▶️ Davom etish',
+        btnDelete: '🗑 O\'chirish',
+        weekdays: ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba'],
+        deliveryFee: 'Yetkazish',
+        freeDelivery: 'Bepul',
     },
 
     ru: {
@@ -204,6 +246,27 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         cannotCancel: '❗️ Этот заказ уже нельзя отменить. Свяжитесь с оператором.',
         repeatAdded: '✅ Товары добавлены в корзину.',
         orderNotFound: '❌ Заказ не найден.',
+
+        btnBottles: '🫙 Мои бутыли',
+        bottlesTitle: '🫙 <b>Учёт возвратной тары</b>',
+        bottlesNone: '✅ За вами нет тары к возврату.',
+        bottlesOwed: (n) => `За вами <b>${n} шт.</b> тары.`,
+        bottlesHint: 'Передайте курьеру при следующей доставке — спишем.',
+
+        btnSubscribe: '🔁 Регулярный заказ',
+        subsTitle: '🔁 <b>Регулярные заказы</b>',
+        subsNone: 'Регулярных заказов нет.\n\nНаполните корзину и выберите «Регулярный заказ» — он будет создаваться каждую неделю.',
+        subsAskDay: '📅 <b>В какой день недели доставлять?</b>',
+        subsCreated: (day, slot) => `✅ Регулярный заказ создан.\n\nКаждый <b>${day}</b>, ${slot}.`,
+        subsPaused: '⏸ Регулярный заказ приостановлен.',
+        subsResumed: '▶️ Регулярный заказ возобновлён.',
+        subsRemoved: '🗑 Регулярный заказ удалён.',
+        btnPause: '⏸ Пауза',
+        btnResume: '▶️ Возобновить',
+        btnDelete: '🗑 Удалить',
+        weekdays: ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'],
+        deliveryFee: 'Доставка',
+        freeDelivery: 'Бесплатно',
     },
 
     en: {
@@ -269,6 +332,27 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         cannotCancel: '❗️ This order can no longer be cancelled. Please contact an operator.',
         repeatAdded: '✅ Items added to your cart.',
         orderNotFound: '❌ Order not found.',
+
+        btnBottles: '🫙 My bottles',
+        bottlesTitle: '🫙 <b>Returnable containers</b>',
+        bottlesNone: '✅ You have no containers to return.',
+        bottlesOwed: (n) => `You are holding <b>${n}</b> container(s).`,
+        bottlesHint: 'Hand them to the courier on your next delivery and they come off your balance.',
+
+        btnSubscribe: '🔁 Standing order',
+        subsTitle: '🔁 <b>Standing orders</b>',
+        subsNone: 'You have no standing order.\n\nFill your cart and choose "Standing order" — it will be created every week.',
+        subsAskDay: '📅 <b>Which day each week?</b>',
+        subsCreated: (day, slot) => `✅ Standing order created.\n\nEvery <b>${day}</b>, ${slot}.`,
+        subsPaused: '⏸ Standing order paused.',
+        subsResumed: '▶️ Standing order resumed.',
+        subsRemoved: '🗑 Standing order removed.',
+        btnPause: '⏸ Pause',
+        btnResume: '▶️ Resume',
+        btnDelete: '🗑 Delete',
+        weekdays: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+        deliveryFee: 'Delivery',
+        freeDelivery: 'Free',
     },
 };
 

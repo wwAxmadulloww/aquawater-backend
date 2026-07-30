@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, MapPin, Phone, Package, Calendar } from 'lucide-react'
 import { getOrders, updateOrderStatus, formatPrice } from '../api/client'
@@ -9,6 +9,8 @@ import toast from 'react-hot-toast'
 
 export default function CourierDashboard() {
     const { t } = useLanguage()
+    // Per-order, because a courier works through several stops in one session.
+    const [empties, setEmpties] = useState<Record<string, number | ''>>({})
     const { user } = useAuth()
     const qc = useQueryClient()
 
@@ -19,7 +21,8 @@ export default function CourierDashboard() {
     })
 
     const statusMut = useMutation({
-        mutationFn: ({ id, status }: { id: string; status: string }) => updateOrderStatus(id, status),
+        mutationFn: ({ id, status, emptiesCollected }: { id: string; status: string; emptiesCollected?: number }) =>
+            updateOrderStatus(id, status, emptiesCollected === undefined ? undefined : { emptiesCollected }),
         onSuccess: () => { toast.success('Status yangilandi'); qc.invalidateQueries({ queryKey: ['courier-orders'] }) },
         onError: () => toast.error('Xatolik yuz berdi')
     })
@@ -113,14 +116,41 @@ export default function CourierDashboard() {
                                             </button>
                                         )}
                                         {['assigned', 'in_transit'].includes(order.status) && (
-                                            <button
-                                                onClick={() => statusMut.mutate({ id: order._id, status: 'delivered' })}
-                                                disabled={statusMut.isPending}
-                                                className="btn-primary py-2.5 px-5 text-sm gap-2 whitespace-nowrap"
-                                            >
-                                                <CheckCircle2 className="w-4 h-4" />
-                                                Yetkazildi
-                                            </button>
+                                            <>
+                                                {/*
+                                                  * The empties count is captured here rather than on a
+                                                  * separate screen because this is the only moment the
+                                                  * courier is standing at the door and knows the answer.
+                                                  * Defaults to 0 so the tap still works when they took
+                                                  * nothing back.
+                                                  */}
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={200}
+                                                    inputMode="numeric"
+                                                    value={empties[order._id] ?? ''}
+                                                    onChange={e => setEmpties(prev => ({
+                                                        ...prev,
+                                                        [order._id]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value)),
+                                                    }))}
+                                                    placeholder={t('courier.empties')}
+                                                    title={t('courier.empties')}
+                                                    className="input w-28 py-2.5 text-sm"
+                                                />
+                                                <button
+                                                    onClick={() => statusMut.mutate({
+                                                        id: order._id,
+                                                        status: 'delivered',
+                                                        emptiesCollected: Number(empties[order._id] || 0),
+                                                    })}
+                                                    disabled={statusMut.isPending}
+                                                    className="btn-primary py-2.5 px-5 text-sm gap-2 whitespace-nowrap"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    Yetkazildi
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 </div>

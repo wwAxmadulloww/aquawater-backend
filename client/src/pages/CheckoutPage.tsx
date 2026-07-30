@@ -1,15 +1,14 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { CheckCircle, MapPin, Calendar, CreditCard, ChevronRight } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
 import { orderCode } from '../lib/orderFormat'
 import { useCart } from '../context/CartContext'
-import { createOrder, formatPrice } from '../api/client'
+import { createOrder, formatPrice, getDeliveryQuote, getDeliveryZones } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
-const UZ_REGIONS = ['Toshkent shahri', 'Toshkent viloyati', 'Samarqand', 'Buxoro', 'Andijon', 'Namangan', 'Farg\'ona', 'Xorazm', 'Qashqadaryo', 'Surxondaryo', 'Jizzax', 'Sirdaryo', 'Navoiy', 'Qoraqalpog\'iston']
 const TIME_SLOTS = ['09:00–11:00', '11:00–13:00', '13:00–15:00', '15:00–17:00', '17:00–19:00']
 
 type PayMethod = 'cash' | 'click' | 'payme'
@@ -43,6 +42,22 @@ export default function CheckoutPage() {
     const [timeSlot, setTimeSlot] = useState(TIME_SLOTS[0])
     const [payment, setPayment] = useState<PayMethod>('cash')
     const [orderId, setOrderId] = useState<string | null>(null)
+
+    /*
+     * The delivery charge is quoted by the server, not computed here: a fee the
+     * page worked out for itself could disagree with the one the order is
+     * actually created with, and the customer would see one number and be
+     * charged another.
+     */
+    const { data: zones } = useQuery({ queryKey: ['delivery-zones'], queryFn: getDeliveryZones })
+    const { data: quote } = useQuery({
+        queryKey: ['delivery-quote', region, totalPrice],
+        queryFn: () => getDeliveryQuote(region, totalPrice),
+        enabled: !!region,
+    })
+
+    const deliveryFee = quote?.ok ? quote.fee : 0
+    const grandTotal = totalPrice + deliveryFee
 
     const mutation = useMutation({
         mutationFn: () => createOrder({
@@ -132,8 +147,18 @@ export default function CheckoutPage() {
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('checkout.region')} *</label>
                                         <select value={region} onChange={e => setRegion(e.target.value)} required className="input">
                                             <option value="">Tanlang...</option>
-                                            {UZ_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                                            {(zones || []).map((z: any) => (
+                                                <option key={z._id} value={z.region}>
+                                                    {z.region}{z.fee > 0 ? ` — ${formatPrice(z.fee)}` : ' — bepul'}
+                                                </option>
+                                            ))}
                                         </select>
+                                        {quote && !quote.ok && (
+                                            <p className="mt-1.5 text-xs text-[#ff9ea1]">{quote.message}</p>
+                                        )}
+                                        {quote?.ok && quote.eta && (
+                                            <p className="mt-1.5 text-xs text-gray-600">{quote.eta}</p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('checkout.city')} *</label>
@@ -215,15 +240,27 @@ export default function CheckoutPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="border-t border-gray-100 pt-3 mb-6">
-                                    <div className="flex justify-between font-bold text-gray-900">
+                                <div className="mb-6 space-y-2 border-t border-line pt-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">{t('checkout.goods')}</span>
+                                        <span className="text-gray-900">{formatPrice(totalPrice)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">{t('checkout.delivery')}</span>
+                                        <span className="text-gray-900">
+                                            {region
+                                                ? (deliveryFee > 0 ? formatPrice(deliveryFee) : t('checkout.free'))
+                                                : '—'}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between border-t border-line pt-2 font-bold text-gray-900">
                                         <span>{t('cart.total')}</span>
-                                        <span className="text-primary-700">{formatPrice(totalPrice)}</span>
+                                        <span className="text-accent">{formatPrice(grandTotal)}</span>
                                     </div>
                                 </div>
                                 <button
                                     type="submit"
-                                    disabled={mutation.isPending}
+                                    disabled={mutation.isPending || (!!region && quote && !quote.ok)}
                                     className="btn-primary w-full py-3 text-base justify-center gap-2"
                                 >
                                     {mutation.isPending ? (

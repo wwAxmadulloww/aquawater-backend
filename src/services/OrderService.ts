@@ -4,6 +4,7 @@ import Order from '../models/Order';
 import Product from '../models/Product';
 import { GoogleSheetsService } from './GoogleSheetsService';
 import { TelegramBotService } from './TelegramBotService';
+import { DeliveryService } from './DeliveryService';
 
 /**
  * Order creation, shared by the web API and the Telegram bot.
@@ -106,20 +107,62 @@ export async function createOrder(
 
     const { items, addressSnapshot, deliveryDate, deliveryTimeSlot, paymentMethod } = parsed.data;
 
+    /*
+     * Stock is claimed with a conditional update rather than a read followed by
+     * a write. Two customers ordering the last bottle at the same moment both
+     * pass a `stockQty >= qty` check made a moment earlier; only one of them can
+     * win a `findOneAndUpdate` that carries the same condition in its filter.
+     *
+     * Claims are remembered so that a later failure in the same order can put
+     * them back — otherwise a rejected delivery region would quietly consume
+     * stock nobody bought.
+     */
+    const claimed: { productId: mongoose.Types.ObjectId; qty: number }[] = [];
+
+    const releaseClaims = async () => {
+        for (const c of claimed) {
+            await Product.updateOne({ _id: c.productId }, { $inc: { stockQty: c.qty } });
+        }
+    };
+
+    const fail = async (status: number, message: string): Promise<CreateOrderResult> => {
+        await releaseClaims();
+        return { ok: false, status, message };
+    };
+
     // Prices come from the database, never from the request: a client that
     // sends its own price would otherwise set what it pays.
     const resolvedItems = [];
     for (const item of items) {
         if (!mongoose.Types.ObjectId.isValid(item.productId)) {
-            return { ok: false, status: 400, message: 'Mahsulot identifikatori noto\'g\'ri' };
+            return fail(400, 'Mahsulot identifikatori noto\'g\'ri');
         }
 
         const product = await Product.findById(item.productId);
-        if (!product) {
-            return { ok: false, status: 404, message: `Mahsulot topilmadi: ${item.productId}` };
-        }
-        if (!product.inStock) {
-            return { ok: false, status: 400, message: `"${product.name}" hozircha sotuvda yo'q` };
+        if (!product) return fail(404, `Mahsulot topilmadi: ${item.productId}`);
+        if (!product.inStock) return fail(400, `"${product.name}" hozircha sotuvda yo\'q`);
+
+        // A null stockQty means this product is not counted — services, and
+        // anything made to order.
+        if (product.stockQty !== null && product.stockQty !== undefined) {
+            const won = await Product.findOneAndUpdate(
+                { _id: product._id, stockQty: { $gte: item.qty } },
+                { $inc: { stockQty: -item.qty } },
+                { new: true },
+            );
+
+            if (!won) {
+                return fail(400,
+                    `"${product.name}" uchun omborda faqat ${product.stockQty} dona qoldi`);
+            }
+
+            claimed.push({ productId: product._id as any, qty: item.qty });
+
+            // Selling the last unit takes it off the shelf, so the catalogue
+            // stops offering something the depot cannot supply.
+            if ((won.stockQty ?? 0) === 0) {
+                await Product.updateOne({ _id: product._id }, { $set: { inStock: false } });
+            }
         }
 
         resolvedItems.push({
@@ -130,6 +173,12 @@ export async function createOrder(
         });
     }
 
+    // Delivery is priced and checked after the basket is known, because the
+    // minimum order for a zone is measured against the goods, not the total.
+    const itemsTotal = resolvedItems.reduce((sum, i) => sum + i.priceSnapshot * i.qty, 0);
+    const quote = await DeliveryService.quote(addressSnapshot.region, itemsTotal);
+    if (!quote.ok) return fail(400, quote.message);
+
     const order = await Order.create({
         userId,
         items: resolvedItems,
@@ -137,6 +186,7 @@ export async function createOrder(
         deliveryDate,
         deliveryTimeSlot,
         paymentMethod,
+        deliveryFee: quote.fee,
         status: 'pending',
     });
 
@@ -145,9 +195,29 @@ export async function createOrder(
     return { ok: true, order };
 }
 
-/** Total of an order's line items, from the prices captured at purchase. */
-export const orderTotal = (order: any): number =>
+/**
+ * Puts stock back when an order is called off.
+ *
+ * Guarded by the order's own status so a double cancellation — an admin and the
+ * customer at the same moment, or a retried request — cannot credit the depot
+ * twice with bottles it never got back.
+ */
+export async function releaseStockFor(order: any): Promise<void> {
+    for (const item of order?.items || []) {
+        await Product.updateOne(
+            { _id: item.productId, stockQty: { $ne: null } },
+            { $inc: { stockQty: item.qty }, $set: { inStock: true } },
+        );
+    }
+}
+
+/** Goods only, from the prices captured at purchase. */
+export const itemsTotal = (order: any): number =>
     (order?.items || []).reduce(
         (sum: number, i: any) => sum + (i.priceSnapshot || 0) * (i.qty || 0),
         0,
     );
+
+/** What the customer actually pays: goods plus the delivery charge. */
+export const orderTotal = (order: any): number =>
+    itemsTotal(order) + (order?.deliveryFee || 0);

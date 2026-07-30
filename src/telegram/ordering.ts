@@ -6,7 +6,10 @@ import Order from '../models/Order';
 import { TelegramClient, escapeHtml } from './TelegramClient';
 import { BotLang, t, statusLabel } from './texts';
 import { ot, TIME_SLOTS, REGIONS } from './orderTexts';
-import { createOrder, orderTotal } from '../services/OrderService';
+import { createOrder, orderTotal, releaseStockFor } from '../services/OrderService';
+import { BottleService } from '../services/BottleService';
+import { DeliveryService } from '../services/DeliveryService';
+import Subscription, { nextOccurrence } from '../models/Subscription';
 
 /**
  * Ordering inside Telegram: catalogue, basket, checkout, order history.
@@ -201,12 +204,20 @@ export class Ordering {
             return;
         }
 
+        // Delivery is quoted against the address used last time, so a returning
+        // customer sees the real figure rather than a goods-only total that
+        // changes at the last step.
+        const region = botUser.lastAddress?.region;
+        const q = region ? await DeliveryService.quote(region, total) : null;
+        const fee = q?.ok ? q.fee : null;
+
         const body = [
             x.cartTitle,
             '',
             ...lines.map(l => `• <b>${escapeHtml(l.name)}</b>\n   ${l.qty} × ${money(l.price)} = <b>${money(l.qty * l.price)}</b>`),
-            x.cartTotal(money(total)),
-        ].join('\n');
+            fee !== null ? `\n${x.deliveryFee}: <b>${fee === 0 ? x.freeDelivery : money(fee)}</b>` : '',
+            x.cartTotal(money(total + (fee ?? 0))),
+        ].filter(Boolean).join('\n');
 
         const rows = lines.map(l => ([
             { text: '➖', callback_data: `dec:${l.id}` },
@@ -216,6 +227,7 @@ export class Ordering {
         ]));
 
         rows.push([{ text: x.btnCheckout, callback_data: 'co' }]);
+        rows.push([{ text: x.btnSubscribe, callback_data: 'sub' }]);
         rows.push([
             { text: x.btnBackToCatalog, callback_data: 'cat' },
             { text: x.btnClear, callback_data: 'clr' },
@@ -378,6 +390,9 @@ export class Ordering {
         const payLabel = d.paymentMethod === 'click' ? x.payClick
             : d.paymentMethod === 'payme' ? x.payPayme : x.payCash;
 
+        const q = d.region ? await DeliveryService.quote(d.region, total) : null;
+        const fee = q?.ok ? q.fee : null;
+
         const body = [
             x.confirmTitle,
             '',
@@ -386,9 +401,10 @@ export class Ordering {
             `${x.confirmAddress}: ${escapeHtml(addressLine(d))}`,
             `${x.confirmWhen}: ${escapeHtml(d.deliveryDate || '')} ${escapeHtml(d.deliveryTimeSlot || '')}`,
             `${x.confirmPayment}: ${payLabel}`,
+            fee !== null ? `${x.deliveryFee}: ${fee === 0 ? x.freeDelivery : money(fee)}` : '',
             '',
-            `💰 <b>${money(total)}</b>`,
-        ].join('\n');
+            `💰 <b>${money(total + (fee ?? 0))}</b>`,
+        ].filter(Boolean).join('\n');
 
         await this.client.sendMessage(chatId, body, {
             inline_keyboard: [
@@ -532,7 +548,139 @@ export class Ordering {
 
         order.status = 'cancelled';
         await order.save();
+        // Same bookkeeping as a cancellation from the admin panel: the stock this
+        // order had claimed goes back on the shelf.
+        await releaseStockFor(order)
+            .catch((err: any) => console.error('[Bot] Stock release failed:', err?.message || err));
         await this.client.sendMessage(chatId, x.orderCancelled);
+    }
+
+    // ── Returnable containers ────────────────────────────────────────────
+
+    async showBottles(chatId: string, lang: BotLang, botUser: IBotUser): Promise<void> {
+        const x = ot(lang);
+
+        if (!botUser.userId) {
+            await this.client.sendMessage(chatId, x.needPhone);
+            return;
+        }
+
+        const { balance, movements } = await BottleService.statementFor(botUser.userId, 6);
+
+        const history = movements.map((m: any) => {
+            const when = new Date(m.createdAt).toISOString().slice(0, 10);
+            const sign = m.delta > 0 ? '➕' : '➖';
+            return `${sign} ${Math.abs(m.delta)} — ${when}${m.note ? ' · ' + escapeHtml(m.note) : ''}`;
+        });
+
+        const body = [
+            x.bottlesTitle,
+            '',
+            balance > 0 ? x.bottlesOwed(balance) : x.bottlesNone,
+            balance > 0 ? x.bottlesHint : '',
+            history.length ? '\n' + history.join('\n') : '',
+        ].filter(Boolean).join('\n');
+
+        await this.client.sendMessage(chatId, body);
+    }
+
+    // ── Standing orders ──────────────────────────────────────────────────
+
+    async askSubscriptionDay(chatId: string, lang: BotLang, botUser: IBotUser): Promise<void> {
+        const x = ot(lang);
+        const { lines } = await this.resolveCart(botUser);
+
+        if (lines.length === 0) { await this.client.sendMessage(chatId, x.cartEmpty); return; }
+        if (!botUser.userId) { await this.client.sendMessage(chatId, x.needPhone); return; }
+        // A standing order needs somewhere to go, and the only address the bot
+        // knows is the one from a previous checkout.
+        if (!botUser.lastAddress?.region) {
+            await this.client.sendMessage(chatId, x.needPhone === '' ? '' : x.subsNone);
+            return;
+        }
+
+        await this.client.sendMessage(chatId, x.subsAskDay, {
+            inline_keyboard: [
+                ...x.weekdays.map((d, i) => [{ text: d, callback_data: `sd:${i + 1}` }]),
+                [{ text: x.btnCancelCheckout, callback_data: 'xco' }],
+            ],
+        });
+    }
+
+    async createSubscription(chatId: string, lang: BotLang, botUser: IBotUser, weekday: number): Promise<void> {
+        const x = ot(lang);
+        const { lines } = await this.resolveCart(botUser);
+        const address = botUser.lastAddress;
+
+        if (lines.length === 0 || !botUser.userId || !address?.region) {
+            await this.client.sendMessage(chatId, x.cartEmpty);
+            return;
+        }
+
+        const slot = TIME_SLOTS[1];
+        await Subscription.create({
+            userId: botUser.userId,
+            items: lines.map(l => ({ productId: new mongoose.Types.ObjectId(l.id), qty: l.qty })),
+            addressSnapshot: address,
+            weekday,
+            deliveryTimeSlot: slot,
+            paymentMethod: 'cash',
+            nextRunAt: nextOccurrence(weekday),
+        });
+
+        await this.client.sendMessage(chatId, x.subsCreated(x.weekdays[weekday - 1], slot));
+        await this.showSubscriptions(chatId, lang, botUser);
+    }
+
+    async showSubscriptions(chatId: string, lang: BotLang, botUser: IBotUser): Promise<void> {
+        const x = ot(lang);
+        if (!botUser.userId) { await this.client.sendMessage(chatId, x.needPhone); return; }
+
+        const subs = await Subscription.find({ userId: botUser.userId }).sort({ createdAt: -1 }).limit(5).lean();
+        if (subs.length === 0) { await this.client.sendMessage(chatId, x.subsNone); return; }
+
+        for (const sub of subs as any[]) {
+            const items = (sub.items || []).length;
+            const body = [
+                x.subsTitle,
+                '',
+                `📅 ${x.weekdays[sub.weekday - 1]}, ${escapeHtml(sub.deliveryTimeSlot)}`,
+                `📦 ${items} tur mahsulot`,
+                sub.isActive ? '▶️ Faol' : '⏸ To\'xtatilgan',
+                sub.nextRunAt ? `➡️ ${new Date(sub.nextRunAt).toISOString().slice(0, 10)}` : '',
+            ].filter(Boolean).join('\n');
+
+            await this.client.sendMessage(chatId, body, {
+                inline_keyboard: [[
+                    sub.isActive
+                        ? { text: x.btnPause, callback_data: `sp:${sub._id}` }
+                        : { text: x.btnResume, callback_data: `sr:${sub._id}` },
+                    { text: x.btnDelete, callback_data: `sx:${sub._id}` },
+                ]],
+            });
+        }
+    }
+
+    async toggleSubscription(chatId: string, lang: BotLang, botUser: IBotUser, id: string, active: boolean): Promise<void> {
+        const x = ot(lang);
+        if (!mongoose.Types.ObjectId.isValid(id)) return;
+
+        // Scoped to the caller so one chat cannot pause another customer's order.
+        const sub = await Subscription.findOne({ _id: id, userId: botUser.userId });
+        if (!sub) { await this.client.sendMessage(chatId, x.orderNotFound); return; }
+
+        sub.isActive = active;
+        if (active) sub.nextRunAt = nextOccurrence(sub.weekday);
+        await sub.save();
+
+        await this.client.sendMessage(chatId, active ? x.subsResumed : x.subsPaused);
+    }
+
+    async deleteSubscription(chatId: string, lang: BotLang, botUser: IBotUser, id: string): Promise<void> {
+        const x = ot(lang);
+        if (!mongoose.Types.ObjectId.isValid(id)) return;
+        await Subscription.findOneAndDelete({ _id: id, userId: botUser.userId });
+        await this.client.sendMessage(chatId, x.subsRemoved);
     }
 
     async repeatOrder(chatId: string, lang: BotLang, botUser: IBotUser, orderId: string): Promise<void> {

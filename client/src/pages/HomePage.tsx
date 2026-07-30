@@ -6,7 +6,7 @@ import {
     Droplets, Truck, Recycle, BadgeCheck, Zap,
 } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
-import { getProducts, api, formatPrice } from '../api/client'
+import { getProducts, api, formatPrice, getTrustFigures } from '../api/client'
 import ProductCard from '../components/ProductCard'
 import BranchMap from '../components/BranchMap'
 import WireDrop from '../components/WireDrop'
@@ -54,6 +54,18 @@ export default function HomePage() {
         queryKey: ['branches-home'],
         queryFn: async () => (await api.get('/branches')).data,
     })
+
+    /*
+     * Figures a customer could in principle check, rather than adjectives.
+     * Trust in this category is built on evidence — how many deliveries have
+     * actually been made — and anything the database cannot back is simply not
+     * rendered rather than filled in with a flattering guess.
+     */
+    const { data: trust } = useQuery({ queryKey: ['trust'], queryFn: getTrustFigures })
+
+    const monthsRunning = trust?.since
+        ? Math.max(1, Math.round((Date.now() - new Date(trust.since).getTime()) / (30 * 86400000)))
+        : null
 
     const featuredProducts = products?.slice(0, 3) || []
 
@@ -197,6 +209,39 @@ export default function HomePage() {
                     </Reveal3D>
                 </div>
             </section>
+
+            {/* ── Evidence ────────────────────────────────────────────────── */}
+            {!!trust?.delivered && (
+                <section className="pb-20 md:pb-24">
+                    <div className="container-custom">
+                        <p className="eyebrow">{t('trust.eyebrow')}</p>
+                        <h2 className="mb-10 mt-3 max-w-2xl text-3xl text-gray-950 md:text-5xl">
+                            {t('trust.title')}
+                        </h2>
+
+                        <Reveal3D lean={14} depth={150}>
+                            <dl className="grid gap-4 sm:grid-cols-3">
+                                {[
+                                    { label: t('trust.delivered'), value: trust.delivered },
+                                    { label: t('trust.customers'), value: trust.customers },
+                                    ...(monthsRunning
+                                        ? [{ label: t('trust.since'), value: `${monthsRunning} ${t('trust.months')}` }]
+                                        : []),
+                                ].map(f => (
+                                    <div key={f.label} className="card p-7">
+                                        <dd className="tabular font-display text-4xl font-extrabold text-gray-950">
+                                            {f.value}
+                                        </dd>
+                                        <dt className="eyebrow mt-3">{f.label}</dt>
+                                    </div>
+                                ))}
+                            </dl>
+                        </Reveal3D>
+
+                        <p className="mt-4 text-xs text-gray-600">{t('trust.note')}</p>
+                    </div>
+                </section>
+            )}
 
             {/* ── Shop ────────────────────────────────────────────────────── */}
             <section className="pb-20 md:pb-24">

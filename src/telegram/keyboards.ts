@@ -13,7 +13,8 @@ export function mainKeyboard(lang: BotLang) {
     return {
         keyboard: [
             [{ text: x.btnProducts }, { text: o.btnCart }],
-            [{ text: x.btnMyOrders }, { text: x.btnBranches }],
+            [{ text: x.btnMyOrders }, { text: o.btnBottles }],
+            [{ text: o.btnSubscribe }, { text: x.btnBranches }],
             [{ text: x.btnSupport }, { text: x.btnLanguage }],
         ],
         resize_keyboard: true,

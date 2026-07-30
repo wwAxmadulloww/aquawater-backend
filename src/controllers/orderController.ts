@@ -2,7 +2,8 @@ import { Response } from 'express';
 import mongoose from 'mongoose';
 import Order from '../models/Order';
 import { AuthRequest } from '../middleware/auth';
-import { createOrder as createOrderForUser, orderSchema } from '../services/OrderService';
+import { createOrder as createOrderForUser, orderSchema, releaseStockFor } from '../services/OrderService';
+import { BottleService } from '../services/BottleService';
 import { TelegramBotService } from '../services/TelegramBotService';
 
 // Re-exported because the validation schema is part of this module's public
@@ -112,6 +113,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
             return;
         }
 
+        const previousStatus = order.status;
         const isAdmin = req.user!.role === 'admin' || req.user!.role === 'super_admin';
         const isCourier = req.user!.role === 'courier';
         const isAssignedCourier = order.courierId?.toString() === req.user!._id.toString();
@@ -138,7 +140,36 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
             return;
         }
 
+        /*
+         * A courier reports the empties they took back at the same moment they
+         * mark the order delivered — it is the only moment they have the
+         * information, and asking them to do it on a second screen means it
+         * never gets done.
+         */
+        if (status === 'delivered' && req.body.emptiesCollected !== undefined) {
+            const empties = Number(req.body.emptiesCollected);
+            if (!Number.isInteger(empties) || empties < 0 || empties > 200) {
+                res.status(400).json({ message: 'Qaytarilgan idish soni noto\'g\'ri' });
+                return;
+            }
+            order.emptiesCollected = empties;
+        }
+
         await order.save();
+
+        /*
+         * Containers move on delivery, not on order: an order that is cancelled
+         * never left the depot. Cancelling frees the stock it had claimed, so a
+         * called-off order does not keep bottles off the shelf.
+         */
+        if (status === 'delivered' && previousStatus !== 'delivered') {
+            await BottleService.settleDelivery(order, String(req.user!._id))
+                .catch((err: any) => console.error('[Order] Bottle ledger failed:', err?.message || err));
+        }
+        if (status === 'cancelled' && previousStatus !== 'cancelled') {
+            await releaseStockFor(order)
+                .catch((err: any) => console.error('[Order] Stock release failed:', err?.message || err));
+        }
 
         // Keep the Telegram group in sync with dashboard-driven changes.
         void TelegramBotService.sendStatusUpdateNotification(order, req.user?.name || req.user!.role)
