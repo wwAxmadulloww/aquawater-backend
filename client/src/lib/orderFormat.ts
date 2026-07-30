@@ -23,3 +23,22 @@ export const paymentKey = (method: string): string => {
     const m = String(method || '').toLowerCase();
     return known.includes(m) ? `checkout.payment.${m}` : 'orders.payment';
 };
+
+/** Goods only, from the prices captured at the time of purchase. */
+export const itemsTotal = (order: any): number =>
+    (order?.items || []).reduce(
+        (sum: number, i: any) => sum + (i.priceSnapshot || 0) * (i.qty || 0),
+        0,
+    );
+
+/**
+ * What the customer actually pays: goods plus the delivery charge.
+ *
+ * Every screen that shows a total has to use this. Six of them were summing the
+ * line items only, so after delivery fees were introduced the courier collecting
+ * cash at the door was shown less than the customer owed, and the operator, the
+ * customer's own order list and the accountant's export all understated the
+ * takings by the fee.
+ */
+export const orderTotal = (order: any): number =>
+    itemsTotal(order) + (order?.deliveryFee || 0);

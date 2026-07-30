@@ -14,6 +14,7 @@ interface Product {
     inStock: boolean
     category: string
     description: string
+    stockQty?: number | null
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -66,6 +67,14 @@ export default function ProductCard({ product }: { product: Product }) {
 
                 <div className="flex items-center justify-between mt-auto">
                     <div>
+                        {/* Only when it is genuinely low: a countdown on a full
+                            shelf is noise, and on an uncounted product it would
+                            be a guess dressed up as urgency. */}
+                        {typeof product.stockQty === 'number' && product.stockQty > 0 && product.stockQty <= 5 && (
+                            <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-sun">
+                                faqat {product.stockQty} ta qoldi
+                            </p>
+                        )}
                         <p className="mb-0.5 text-[10px] uppercase tracking-wider text-gray-500">Narxi</p>
                         <p className="tabular text-lg font-semibold text-accent">
                             {formatPrice(product.price)}

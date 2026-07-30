@@ -4,7 +4,7 @@ import { CheckCircle2, MapPin, Phone, Package, Calendar } from 'lucide-react'
 import { getOrders, updateOrderStatus, formatPrice } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
-import { orderCode, paymentKey } from '../lib/orderFormat'
+import { orderCode, paymentKey , orderTotal } from '../lib/orderFormat'
 import toast from 'react-hot-toast'
 
 export default function CourierDashboard() {
@@ -102,7 +102,7 @@ export default function CourierDashboard() {
                                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                                     <div>
                                         <p className="text-xs text-gray-500 mb-0.5">To'lov holati: <span className="font-medium text-gray-700">{t(paymentKey(order.paymentMethod) as any)}</span></p>
-                                        <p className="font-bold text-gray-900 text-lg">{formatPrice(order.items.reduce((s: number, i: any) => s + i.priceSnapshot * i.qty, 0))}</p>
+                                        <p className="font-bold text-gray-900 text-lg">{formatPrice(orderTotal(order))}</p>
                                     </div>
 
                                     <div className="flex gap-2">

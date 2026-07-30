@@ -152,7 +152,18 @@ export function toCsv(rows: Record<string, unknown>[]): string {
     if (rows.length === 0) return '﻿';
 
     const headers = Object.keys(rows[0]);
-    const escape = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+    /*
+     * Quoting is not enough on its own: Excel and Sheets treat a cell beginning
+     * =, +, - or @ as a formula, so a product name a worker submitted as
+     * `=HYPERLINK(...)` would execute when the accountant opened the export.
+     * Prefixing a tab neutralises it while leaving the text readable.
+     */
+    const escape = (v: unknown) => {
+        const raw = String(v ?? '');
+        const safe = /^[=+\-@\t\r]/.test(raw) ? `\t${raw}` : raw;
+        return `"${safe.replace(/"/g, '""')}"`;
+    };
 
     return '﻿'
         + headers.map(escape).join(',') + '\r\n'

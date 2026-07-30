@@ -5,7 +5,7 @@ import { getOrders, getProducts, createProduct, updateOrderStatus, formatPrice }
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import toast from 'react-hot-toast'
-import { orderCode } from '../lib/orderFormat'
+import { orderCode , orderTotal } from '../lib/orderFormat'
 
 interface ServiceForm {
     name: string
@@ -161,7 +161,7 @@ export default function WorkerDashboard() {
                                     </div>
 
                                     <div className="flex items-center justify-between mt-4">
-                                        <p className="font-bold text-gray-900">{formatPrice(order.items.reduce((s: number, i: any) => s + i.priceSnapshot * i.qty, 0))}</p>
+                                        <p className="font-bold text-gray-900">{formatPrice(orderTotal(order))}</p>
 
                                         {order.status !== 'delivered' && (
                                             <button

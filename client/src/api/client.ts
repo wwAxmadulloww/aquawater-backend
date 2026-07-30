@@ -192,6 +192,14 @@ export const deleteSubscription = (id: string) =>
 
 // ── Reports ──────────────────────────────────────────────────────────────
 
+/** Every standing order in the business, for the owner's overview. */
+export const getAllSubscriptions = () =>
+    api.get('/subscriptions/all').then(r => r.data)
+
+/** Runs the scheduled work now, on an admin's authority. */
+export const runSubscriptions = () =>
+    api.post('/subscriptions/run').then(r => r.data)
+
 export const getReport = (range: { from?: string; to?: string }) =>
     api.get('/reports', { params: range }).then(r => r.data)
 

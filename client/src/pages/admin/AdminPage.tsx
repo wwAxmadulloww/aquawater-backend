@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
-import { MapPin, LayoutDashboard, Package, ShoppingBag, Users, BarChart2, LogOut, Menu, X, Droplets, TrendingUp, Truck } from 'lucide-react'
+import { MapPin, LayoutDashboard, Package, ShoppingBag, Users, BarChart2, LogOut, Menu, X, Droplets, TrendingUp, Truck, Repeat } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguage } from '../../i18n/LanguageContext'
 import AdminStats from './AdminStats'
@@ -11,6 +11,7 @@ import AdminBranches from './AdminBranches'
 import AdminReports from './AdminReports'
 import AdminBottles from './AdminBottles'
 import AdminZones from './AdminZones'
+import AdminSubscriptions from './AdminSubscriptions'
 
 const NAV_ITEMS = [
     { path: '/admin', label: 'admin.stats', icon: BarChart2, exact: true },
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
     { path: '/admin/reports', label: 'Hisobotlar', icon: TrendingUp },
     { path: '/admin/bottles', label: 'Idishlar', icon: Droplets },
     { path: '/admin/zones', label: 'Yetkazish', icon: Truck },
+    { path: '/admin/subscriptions', label: 'Doimiy', icon: Repeat },
 ]
 
 export default function AdminPage() {
@@ -111,6 +113,7 @@ export default function AdminPage() {
                         <Route path="reports" element={<AdminReports />} />
                         <Route path="bottles" element={<AdminBottles />} />
                         <Route path="zones" element={<AdminZones />} />
+                        <Route path="subscriptions" element={<AdminSubscriptions />} />
                     </Routes>
                 </main>
             </div>

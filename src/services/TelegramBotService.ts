@@ -73,10 +73,24 @@ export class TelegramBotService {
         if (last && now - last < 60 * 60 * 1000) return;
         this.alertedAt.set(key, now);
 
+        /*
+         * Redacted before it leaves the process. A mongodb+srv URI carries its
+         * own password, and a connection failure puts that URI straight into the
+         * stack trace — which would then sit in an operators' group chat for
+         * anyone who ever joins it to scroll back and read.
+         */
+        const redact = (text: string) => text
+            .replace(/mongodb(\+srv)?:\/\/[^\s"']+/gi, 'mongodb://[redacted]')
+            .replace(/\b\d{6,}:[A-Za-z0-9_-]{30,}\b/g, '[bot-token-redacted]')
+            // Also catches env-var spellings: \b does not fire between `_` and
+            // `S`, so CRON_SECRET=… slipped through a plain \bsecret\b rule.
+            .replace(/[A-Za-z0-9_]*(?:SECRET|TOKEN|PASSWORD|APIKEY|API_KEY|PRIVATE_KEY)[A-Za-z0-9_]*\s*[:=]\s*\S+/gi, '[redacted]')
+            .replace(/\b(?:Bearer|token|secret|password)\b\s*[:=]?\s*\S+/gi, '[redacted]');
+
         const body = [
             `🚨 <b>Tizimda muammo</b>`,
-            escapeHtml(subject),
-            detail ? `\n<code>${escapeHtml(detail.slice(0, 500))}</code>` : '',
+            escapeHtml(redact(subject)),
+            detail ? `\n<code>${escapeHtml(redact(detail).slice(0, 500))}</code>` : '',
         ].filter(Boolean).join('\n');
 
         await this.sendToChat(this.adminChatId, body).catch(() => {});
@@ -332,7 +346,15 @@ export class TelegramBotService {
             }).join('\n')
             : '• —';
 
-        const total = items.reduce((sum, i) => sum + (i.priceSnapshot || 0) * (i.qty || 0), 0);
+        /*
+         * The operator card has to show what the customer owes, not what the
+         * goods cost. This summed the line items only, so after delivery fees
+         * were introduced every regional order was announced to the operators —
+         * and read out to the courier — short by the fee.
+         */
+        const goods = items.reduce((sum, i) => sum + (i.priceSnapshot || 0) * (i.qty || 0), 0);
+        const fee = Number(order.deliveryFee || 0);
+        const total = goods + fee;
 
         const a = order.addressSnapshot || {};
         const address = [

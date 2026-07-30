@@ -45,7 +45,13 @@ export const getOrders = async (req: AuthRequest, res: Response): Promise<void> 
             filter = { userId: req.user!._id };
         }
 
-        if (req.query.status) {
+        /*
+         * Only a known status, and only as a string. Express parses
+         * `?status[$ne]=x` into an object, which would have been handed straight
+         * to Mongo as a query operator rather than compared as a value.
+         */
+        const ALLOWED = ['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled'];
+        if (typeof req.query.status === 'string' && ALLOWED.includes(req.query.status)) {
             filter.status = req.query.status;
         }
 

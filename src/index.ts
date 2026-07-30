@@ -64,8 +64,17 @@ const allowedOrigins = (process.env.CORS_ORIGINS || '')
     .map((o) => o.trim())
     .filter(Boolean);
 
+// Express advertises itself and its version in every response otherwise.
+app.disable('x-powered-by');
+
 app.use(cors({
-    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    /*
+     * With no allow-list configured the API is same-origin with the site it
+     * serves, so it does not need to answer any other origin. `true` reflected
+     * whatever Origin was presented, which grants every website on the internet
+     * a credentialed cross-origin channel it has no reason to have.
+     */
+    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Telegram-Bot-Api-Secret-Token'],
 }));

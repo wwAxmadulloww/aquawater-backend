@@ -204,9 +204,20 @@ export async function createOrder(
  */
 export async function releaseStockFor(order: any): Promise<void> {
     for (const item of order?.items || []) {
+        /*
+         * Availability is only restored for a product that sold out because of
+         * stock. Setting inStock unconditionally put a product the owner had
+         * deliberately withdrawn back on sale the moment any order touching it
+         * was cancelled — the shop would start selling something it had chosen
+         * to stop selling.
+         */
         await Product.updateOne(
             { _id: item.productId, stockQty: { $ne: null } },
-            { $inc: { stockQty: item.qty }, $set: { inStock: true } },
+            { $inc: { stockQty: item.qty } },
+        );
+        await Product.updateOne(
+            { _id: item.productId, stockQty: { $gt: 0 }, inStock: false, stockCountedAt: null },
+            { $set: { inStock: true } },
         );
     }
 }

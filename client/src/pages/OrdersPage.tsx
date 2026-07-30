@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Package, Clock } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
-import { orderCode, paymentKey } from '../lib/orderFormat'
+import { orderCode, paymentKey, orderTotal } from '../lib/orderFormat'
 import { getOrders, formatPrice } from '../api/client'
 
 const STATUS_CLASSES: Record<string, string> = {
@@ -65,9 +65,7 @@ export default function OrdersPage() {
                 ) : (
                     <div className="space-y-4">
                         {orders?.map((order: any) => {
-                            const total = order.items.reduce(
-                                (s: number, i: any) => s + i.priceSnapshot * i.qty, 0
-                            )
+                            const total = orderTotal(order)
                             return (
                                 <div key={order._id} className="card p-5 flex items-center justify-between gap-4">
                                     <div className="flex-1 min-w-0">

@@ -145,9 +145,15 @@ export class GoogleSheetsService {
             ? `${order.addressSnapshot.region || ''}, ${order.addressSnapshot.city || ''}, ${order.addressSnapshot.street || ''} ${order.addressSnapshot.house || ''}`
             : '';
 
-        const totalPrice = Array.isArray(order.items)
+        /*
+         * The accountant's row has to reconcile with the cash the courier
+         * collected, so it is goods plus the delivery charge. Summing the line
+         * items alone understated every regional order by the fee.
+         */
+        const goods = Array.isArray(order.items)
             ? order.items.reduce((sum: number, i: any) => sum + (i.priceSnapshot * i.qty), 0)
             : 0;
+        const totalPrice = goods + Number(order.deliveryFee || 0);
 
         return this.appendRow('Orders', [
             order._id?.toString() || order.id || '',

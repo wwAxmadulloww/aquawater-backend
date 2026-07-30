@@ -15,6 +15,9 @@ import { TelegramBotService } from '../services/TelegramBotService';
 
 const router = Router();
 
+/** Per-customer ceiling on standing orders. */
+const MAX_SUBSCRIPTIONS = 10;
+
 // ── Delivery zones ───────────────────────────────────────────────────────
 
 /** Public: the checkout needs to show the fee before anyone is logged in. */
@@ -210,6 +213,20 @@ router.post('/subscriptions', auth, async (req: AuthRequest, res: Response) => {
         return;
     }
 
+    /*
+     * A ceiling per customer. Each standing order turns into a real order every
+     * week, complete with an operator notification and a Sheets row, so an
+     * account creating hundreds of them would flood the people running the
+     * business rather than just the database.
+     */
+    const existing = await Subscription.countDocuments({ userId: req.user!._id });
+    if (existing >= MAX_SUBSCRIPTIONS) {
+        res.status(429).json({
+            message: `Ko'pi bilan ${MAX_SUBSCRIPTIONS} ta doimiy buyurtma bo'lishi mumkin.`,
+        });
+        return;
+    }
+
     const sub = await Subscription.create({
         ...parsed.data,
         userId: req.user!._id,
@@ -253,6 +270,37 @@ router.delete('/subscriptions/:id', auth, async (req: AuthRequest, res: Response
     res.json({ message: 'Deleted' });
 });
 
+/**
+ * Every standing order in the business, so the owner can see what the scheduler
+ * is going to create before it happens rather than being surprised by orders
+ * appearing overnight.
+ */
+router.get('/subscriptions/all', auth, adminOnly, async (_req: AuthRequest, res: Response) => {
+    const subs = await Subscription.find()
+        .sort({ isActive: -1, nextRunAt: 1 })
+        .limit(500)
+        .populate('userId', 'name phone')
+        .lean();
+    res.json(subs);
+});
+
+/**
+ * Runs the scheduled work now, on an admin's authority.
+ *
+ * The same job the nightly cron performs. It exists so the owner can see the
+ * result immediately instead of waiting until morning to find out whether their
+ * standing orders work.
+ */
+router.post('/subscriptions/run', auth, adminOnly, async (_req: AuthRequest, res: Response) => {
+    try {
+        res.json(await SubscriptionService.runDueSubscriptions());
+    } catch (err: any) {
+        console.error('[Subscriptions] Manual run failed:', err);
+        await TelegramBotService.alertOperators('Doimiy buyurtmalarni qo\'lda ishga tushirish xato berdi', err?.message);
+        res.status(500).json({ message: 'Ishga tushirilmadi' });
+    }
+});
+
 // ── Reports ──────────────────────────────────────────────────────────────
 
 const range = (req: Request) => ({
@@ -284,9 +332,8 @@ router.get('/reports/export', auth, adminOnly, async (req: AuthRequest, res: Res
  * Runs the standing orders and the reorder nudges.
  *
  * Called by Vercel Cron, which sends no request body and cannot log in, so the
- * gate is a shared secret. Vercel's own scheduler presents
- * `Authorization: Bearer $CRON_SECRET`; the query parameter is there so the
- * owner can also trigger a run by hand from a browser when they need to.
+ * gate is a shared secret presented as `Authorization: Bearer $CRON_SECRET`.
+ * An admin can also trigger a run from the panel, which authenticates normally.
  */
 router.all('/cron/run', async (req: Request, res: Response) => {
     const secret = process.env.CRON_SECRET;
@@ -295,8 +342,12 @@ router.all('/cron/run', async (req: Request, res: Response) => {
         return;
     }
 
-    const presented = req.headers.authorization === `Bearer ${secret}`
-        || req.query.key === secret;
+    /*
+     * Header only. A secret in a query string is written into every access log
+     * and proxy trace it passes through, and the scheduler sends the header, so
+     * accepting `?key=` bought convenience at the price of leaking the key.
+     */
+    const presented = req.headers.authorization === `Bearer ${secret}`;
     if (!presented) {
         res.status(401).json({ message: 'Unauthorized' });
         return;

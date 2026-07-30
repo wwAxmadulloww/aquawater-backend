@@ -4,6 +4,7 @@ import { Trash2, UserPlus, Truck, Wrench } from 'lucide-react'
 import { getOrders, updateOrderStatus, deleteOrder, formatPrice, getAdminUsers, assignOrder } from '../../api/client'
 import { useLanguage } from '../../i18n/LanguageContext'
 import toast from 'react-hot-toast'
+import { orderTotal } from '../../lib/orderFormat'
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled']
 const STATUS_LABELS: Record<string, string> = {
@@ -108,9 +109,19 @@ export default function AdminOrders() {
                                                 {order.items.map((i: any, idx: number) => (
                                                     <div key={idx}>{i.nameSnapshot} <span className="text-gray-600">×{i.qty}</span></div>
                                                 ))}
+                                                {order.deliveryFee > 0 && (
+                                                    <div className="text-gray-600">
+                                                        + yetkazish {formatPrice(order.deliveryFee)}
+                                                    </div>
+                                                )}
                                                 <div className="font-semibold text-primary-700 mt-1">
-                                                    {formatPrice(order.items.reduce((s: number, i: any) => s + i.priceSnapshot * i.qty, 0))}
+                                                    {formatPrice(orderTotal(order))}
                                                 </div>
+                                                {order.status === 'delivered' && (
+                                                    <div className="text-accent">
+                                                        🫙 qaytdi: {order.emptiesCollected ?? 0}
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-xs text-gray-600">
