@@ -5,6 +5,16 @@ export interface IOrderItem {
     nameSnapshot: string;
     priceSnapshot: number;
     qty: number;
+    /**
+     * Whether the container goes back to the depot.
+     *
+     * True is the cheaper choice and puts the container on the customer's
+     * ledger; false charges `depositSnapshot` per unit and the customer keeps
+     * it, so nothing is owed back.
+     */
+    returnBottle: boolean;
+    /** Per-unit container charge captured at purchase. 0 when returning. */
+    depositSnapshot: number;
 }
 
 export interface IAddressSnapshot {
@@ -38,6 +48,8 @@ const OrderItemSchema = new Schema<IOrderItem>({
     nameSnapshot: { type: String, required: true },
     priceSnapshot: { type: Number, required: true },
     qty: { type: Number, required: true, min: 1 },
+    returnBottle: { type: Boolean, default: true },
+    depositSnapshot: { type: Number, default: 0, min: 0 },
 });
 
 const AddressSnapshotSchema = new Schema<IAddressSnapshot>({

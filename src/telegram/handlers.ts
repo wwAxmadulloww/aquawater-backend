@@ -374,6 +374,11 @@ export class BotHandlers {
                 return;
             }
             case 'cart': return o.showCart(chatId, lang, botUser);
+            case 'rb': {
+                const updated = await o.toggleReturnBottle(chatId, arg);
+                if (updated) await o.showCart(chatId, lang, updated);
+                return;
+            }
 
             case 'co': {
                 const ready = await o.beginCheckout(chatId, lang, botUser);

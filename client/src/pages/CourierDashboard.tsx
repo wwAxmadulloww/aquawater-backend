@@ -16,14 +16,14 @@ export default function CourierDashboard() {
 
     // Orders assigned to this courier (backend handles the filter based on token role)
     const { data: orders, isLoading } = useQuery({
-        queryKey: ['courier-orders'],
+        queryKey: ['courier-orders', user?._id],
         queryFn: () => getOrders(),
     })
 
     const statusMut = useMutation({
         mutationFn: ({ id, status, emptiesCollected }: { id: string; status: string; emptiesCollected?: number }) =>
             updateOrderStatus(id, status, emptiesCollected === undefined ? undefined : { emptiesCollected }),
-        onSuccess: () => { toast.success('Status yangilandi'); qc.invalidateQueries({ queryKey: ['courier-orders'] }) },
+        onSuccess: () => { toast.success('Status yangilandi'); qc.invalidateQueries({ queryKey: ['courier-orders', user?._id] }) },
         onError: () => toast.error('Xatolik yuz berdi')
     })
 

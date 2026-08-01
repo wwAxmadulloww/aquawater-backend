@@ -52,7 +52,10 @@ export default function ProductDetailPage() {
     const handleAddToCart = () => {
         const count = isService ? 1 : qty
         for (let i = 0; i < count; i++) {
-            addItem({ _id: product._id, name: product.name, price: product.price, imageUrl: product.imageUrl })
+            addItem({
+                _id: product._id, name: product.name, price: product.price, imageUrl: product.imageUrl,
+                returnable: product.returnable, depositPrice: product.depositPrice,
+            })
         }
         toast.success(`${product.name} savatga qo'shildi!`)
     }

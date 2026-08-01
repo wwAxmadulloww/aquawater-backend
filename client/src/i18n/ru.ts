@@ -223,4 +223,10 @@ export const ru = {
     'checkout.loginFirst': 'Войдите, чтобы оформить заказ.',
     'common.toProducts': 'Перейти к товарам',
     'checkout.summary': 'Заказ',
+
+    'cart.container': 'Тара',
+    'cart.container.return': 'Верну тару',
+    'cart.container.keep': 'Тара останется у меня',
+    'cart.container.returnNote': 'Дешевле. Пустая тара учитывается в разделе «Моя тара» и передаётся курьеру при следующей доставке.',
+    'cart.container.keepNote': 'Добавляется стоимость тары, но возвращать не нужно — бутыль остаётся вашей.',
 }

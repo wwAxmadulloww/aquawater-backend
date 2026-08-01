@@ -38,7 +38,7 @@ export interface IBotUser extends Document {
     /** Set when the bot is waiting for a specific reply, e.g. a shared contact. */
     awaiting?: AwaitingStep;
     /** Basket held in the chat, so ordering never has to leave Telegram. */
-    cart: { productId: mongoose.Types.ObjectId; qty: number }[];
+    cart: { productId: mongoose.Types.ObjectId; qty: number; returnBottle?: boolean }[];
     /** Checkout in progress. Cleared once the order is placed or abandoned. */
     draft?: OrderDraft;
     /** Last address used, offered as a one-tap answer on the next order. */
@@ -68,6 +68,7 @@ const BotUserSchema = new Schema<IBotUser>(
                 _id: false,
                 productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
                 qty: { type: Number, required: true, min: 1 },
+                returnBottle: { type: Boolean, default: true },
             }],
             default: [],
         },

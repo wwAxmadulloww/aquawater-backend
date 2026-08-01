@@ -61,7 +61,7 @@ export default function CheckoutPage() {
 
     const mutation = useMutation({
         mutationFn: () => createOrder({
-            items: items.map(i => ({ productId: i._id, qty: i.qty })),
+            items: items.map(i => ({ productId: i._id, qty: i.qty, returnBottle: i.returnBottle !== false })),
             addressSnapshot: { region, city, district, street, house, apartment: apartment || undefined },
             deliveryDate: date,
             deliveryTimeSlot: timeSlot,
@@ -235,8 +235,15 @@ export default function CheckoutPage() {
                                 <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
                                     {items.map(i => (
                                         <div key={i._id} className="flex justify-between text-sm">
-                                            <span className="text-gray-600 truncate mr-2">{i.name} × {i.qty}</span>
-                                            <span className="font-medium text-gray-900 flex-shrink-0">{formatPrice(i.price * i.qty)}</span>
+                                            <span className="text-gray-600 truncate mr-2">
+                                                {i.name} × {i.qty}
+                                                {i.returnable && i.returnBottle === false && (
+                                                    <span className="block text-[10px] text-sun">{t('cart.container.keep')}</span>
+                                                )}
+                                            </span>
+                                            <span className="font-medium text-gray-900 flex-shrink-0">
+                                                {formatPrice((i.price + (i.returnable && i.returnBottle === false ? (i.depositPrice || 0) : 0)) * i.qty)}
+                                            </span>
                                         </div>
                                     ))}
                                 </div>

@@ -56,6 +56,12 @@ export const orderSchema = z.object({
         // web basket — the API used to accept an order for 999999 bottles.
         qty: z.number().int().positive().max(MAX_QTY_PER_LINE,
             `Bitta mahsulotdan ko'pi bilan ${MAX_QTY_PER_LINE} dona buyurtma qilish mumkin`),
+        /**
+         * Whether the container comes back. Defaults to true because that is
+         * the cheaper option, and a customer who never chose should not be
+         * charged the higher price by omission.
+         */
+        returnBottle: z.boolean().optional().default(true),
     })).min(1).max(20, 'Buyurtmada 20 tadan ortiq tur mahsulot bo\'lishi mumkin emas'),
     addressSnapshot: z.object({
         region: z.string().min(1),
@@ -165,17 +171,37 @@ export async function createOrder(
             }
         }
 
+        /*
+         * The container charge is applied only where it means something: a
+         * returnable product whose container the customer is keeping, and only
+         * when a deposit price has been set. Everything else carries zero, so a
+         * dispenser or a service can never pick up a bottle charge.
+         *
+         * Priced from the database like every other figure — a client that sent
+         * its own deposit would otherwise decide what it pays for the bottle.
+         */
+        const keepsContainer = product.returnable && item.returnBottle === false;
+        const deposit = keepsContainer ? Number(product.depositPrice || 0) : 0;
+
+        if (keepsContainer && !product.depositPrice) {
+            return fail(400,
+                `"${product.name}" uchun idish narxi belgilanmagan — idishni qaytarish shart`);
+        }
+
         resolvedItems.push({
             productId: new mongoose.Types.ObjectId(item.productId),
             nameSnapshot: product.name,
             priceSnapshot: product.price,
             qty: item.qty,
+            returnBottle: !keepsContainer,
+            depositSnapshot: deposit,
         });
     }
 
     // Delivery is priced and checked after the basket is known, because the
     // minimum order for a zone is measured against the goods, not the total.
-    const itemsTotal = resolvedItems.reduce((sum, i) => sum + i.priceSnapshot * i.qty, 0);
+    const itemsTotal = resolvedItems.reduce(
+        (sum, i) => sum + (i.priceSnapshot + i.depositSnapshot) * i.qty, 0);
     const quote = await DeliveryService.quote(addressSnapshot.region, itemsTotal);
     if (!quote.ok) return fail(400, quote.message);
 
@@ -222,10 +248,11 @@ export async function releaseStockFor(order: any): Promise<void> {
     }
 }
 
-/** Goods only, from the prices captured at purchase. */
+/** Goods and any container charge, from the prices captured at purchase. */
 export const itemsTotal = (order: any): number =>
     (order?.items || []).reduce(
-        (sum: number, i: any) => sum + (i.priceSnapshot || 0) * (i.qty || 0),
+        (sum: number, i: any) =>
+            sum + ((i.priceSnapshot || 0) + (i.depositSnapshot || 0)) * (i.qty || 0),
         0,
     );
 

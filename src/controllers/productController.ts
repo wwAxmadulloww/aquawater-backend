@@ -17,6 +17,8 @@ export const productSchema = z.object({
     returnable: z.boolean().optional(),
     /** Units on hand, or null for anything not counted (services, made to order). */
     stockQty: z.number().int().min(0).max(1_000_000).nullable().optional(),
+    /** Charged per unit when the customer keeps a returnable container. */
+    depositPrice: z.number().int().min(0).max(10_000_000).nullable().optional(),
 });
 
 /**

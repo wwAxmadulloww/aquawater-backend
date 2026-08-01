@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 
 interface User {
@@ -32,6 +33,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const qc = useQueryClient()
     const [user, setUser] = useState<User | null>(null)
     const [token, setToken] = useState<string | null>(() => localStorage.getItem('aq_token'))
     const [loading, setLoading] = useState(true)
@@ -52,9 +54,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchMe()
     }, [token])
 
+    /**
+     * Drops everything the previous session cached.
+     *
+     * React Query keys personal data by a constant string — ['my-orders'],
+     * ['my-bottles'] — so a second account signing in on the same browser was
+     * served the first one's orders, delivery addresses and bottle balance out
+     * of memory before any request went out. On a shared computer that is one
+     * customer reading another's address book, not merely a stale screen.
+     *
+     * The basket goes too: it belongs to whoever filled it.
+     */
+    const resetSessionState = () => {
+        qc.clear()
+        localStorage.removeItem('aq_cart')
+    }
+
     const login = async (phone: string, password: string) => {
         const res = await api.post('/auth/login', { phone, password })
         const { token: t, user: u } = res.data
+        resetSessionState()
         localStorage.setItem('aq_token', t)
         setToken(t)
         setUser(u)
@@ -67,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const register = async (phone: string, name: string, password: string) => {
         const res = await api.post('/auth/register', { phone, name, password })
         const { token: t, user: u } = res.data
+        resetSessionState()
         localStorage.setItem('aq_token', t)
         setToken(t)
         setUser(u)
@@ -76,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await api.post('/auth/verify-otp', { phone, code })
         if (res.data.token) {
             const { token: t, user: u } = res.data
+            resetSessionState()
             localStorage.setItem('aq_token', t)
             setToken(t)
             setUser(u)
@@ -85,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = () => {
         localStorage.removeItem('aq_token')
+        resetSessionState()
         setToken(null)
         setUser(null)
     }

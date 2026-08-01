@@ -23,17 +23,17 @@ const WEEKDAY_KEYS = [
 
 export default function SubscriptionsPage() {
     const { t } = useLanguage()
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, user } = useAuth()
     const qc = useQueryClient()
 
     const { data: subs, isLoading } = useQuery({
-        queryKey: ['subscriptions'],
+        queryKey: ['subscriptions', user?._id],
         queryFn: getSubscriptions,
         enabled: isAuthenticated,
     })
 
     const { data: bottles } = useQuery({
-        queryKey: ['my-bottles'],
+        queryKey: ['my-bottles', user?._id],
         queryFn: getMyBottles,
         enabled: isAuthenticated,
     })
@@ -41,7 +41,7 @@ export default function SubscriptionsPage() {
     const toggle = useMutation({
         mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
             updateSubscription(id, { isActive }),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['subscriptions'] }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['subscriptions', user?._id] }),
         onError: (err) => toast.error(describeApiError(err)),
     })
 
@@ -49,7 +49,7 @@ export default function SubscriptionsPage() {
         mutationFn: (id: string) => deleteSubscription(id),
         onSuccess: () => {
             toast.success(t('subs.delete'))
-            qc.invalidateQueries({ queryKey: ['subscriptions'] })
+            qc.invalidateQueries({ queryKey: ['subscriptions', user?._id] })
         },
         onError: (err) => toast.error(describeApiError(err)),
     })

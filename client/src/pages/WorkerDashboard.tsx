@@ -38,19 +38,19 @@ export default function WorkerDashboard() {
 
     // Orders assigned to this worker
     const { data: orders, isLoading: loadingOrders } = useQuery({
-        queryKey: ['worker-orders'],
+        queryKey: ['worker-orders', user?._id],
         queryFn: () => getOrders(), // backend filters by workerId if role === worker
     })
 
     // Services proposed by this worker
     const { data: services, isLoading: loadingServices } = useQuery({
-        queryKey: ['worker-services'],
+        queryKey: ['worker-services', user?._id],
         queryFn: () => getProducts({ admin: 'true' }) // Gets all for this worker due to backend filter
     })
 
     const statusMut = useMutation({
         mutationFn: ({ id, status }: { id: string; status: string }) => updateOrderStatus(id, status),
-        onSuccess: () => { toast.success('Status yangilandi'); qc.invalidateQueries({ queryKey: ['worker-orders'] }) },
+        onSuccess: () => { toast.success('Status yangilandi'); qc.invalidateQueries({ queryKey: ['worker-orders', user?._id] }) },
         onError: () => toast.error('Xatolik yuz berdi')
     })
 
@@ -66,7 +66,7 @@ export default function WorkerDashboard() {
             toast.success('Xizmat admin tekshiruviga yuborildi')
             setShowForm(false)
             setForm(EMPTY_FORM)
-            qc.invalidateQueries({ queryKey: ['worker-services'] })
+            qc.invalidateQueries({ queryKey: ['worker-services', user?._id] })
         },
         onError: (err: any) => toast.error(err.response?.data?.message || 'Xato yuz berdi')
     })

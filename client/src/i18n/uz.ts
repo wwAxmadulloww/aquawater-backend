@@ -225,6 +225,12 @@ export const uz = {
     'checkout.loginFirst': 'Buyurtma berish uchun tizimga kiring.',
     'common.toProducts': 'Mahsulotlarga o\'tish',
     'checkout.summary': 'Buyurtma',
+
+    'cart.container': 'Idish',
+    'cart.container.return': 'Idishni qaytaraman',
+    'cart.container.keep': 'Idish menda qoladi',
+    'cart.container.returnNote': 'Arzonroq. Bo\'sh idish «Idishlarim» bo\'limida hisobga olinadi va keyingi yetkazishda kuryerga beriladi.',
+    'cart.container.keepNote': 'Idish narxi qo\'shiladi, lekin qaytarish shart emas — idish sizniki bo\'ladi.',
 }
 
 export type TranslationKey = keyof typeof uz

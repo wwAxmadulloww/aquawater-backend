@@ -151,6 +151,23 @@ export class Ordering {
         return botUser;
     }
 
+    /** Flips a line between returning the container and buying it outright. */
+    async toggleReturnBottle(chatId: string, productId: string): Promise<IBotUser | null> {
+        if (!mongoose.Types.ObjectId.isValid(productId)) return null;
+
+        const botUser = await BotUser.findOne({ chatId });
+        if (!botUser) return null;
+
+        botUser.cart = (botUser.cart || []).map(i =>
+            String(i.productId) === productId
+                ? { ...(i as any).toObject?.() ?? i, returnBottle: i.returnBottle === false }
+                : i,
+        ) as any;
+
+        await botUser.save();
+        return botUser;
+    }
+
     async removeFromCart(chatId: string, productId: string): Promise<void> {
         await BotUser.updateOne(
             { chatId },
@@ -179,10 +196,19 @@ export class Ordering {
             // fail validation at the very last step, after the customer has
             // typed out a full address.
             if (!p || !p.inStock) { changed = true; continue; }
-            lines.push({ id: String(p._id), name: p.name, price: p.price, qty: item.qty });
+            lines.push({
+                id: String(p._id), name: p.name, price: p.price, qty: item.qty,
+                returnable: !!p.returnable,
+                depositPrice: Number(p.depositPrice || 0),
+                // Missing on baskets created before the choice existed; those
+                // were sold as returnable, so that is what they stay.
+                returnBottle: item.returnBottle !== false,
+            });
         }
 
-        const total = lines.reduce((s, l) => s + l.price * l.qty, 0);
+        // A line the customer is keeping carries the container's price.
+        const unit = (l: any) => l.price + (l.returnable && !l.returnBottle ? l.depositPrice : 0);
+        const total = lines.reduce((s, l) => s + unit(l) * l.qty, 0);
         return { lines, total, changed };
     }
 
@@ -214,7 +240,13 @@ export class Ordering {
         const body = [
             x.cartTitle,
             '',
-            ...lines.map(l => `• <b>${escapeHtml(l.name)}</b>\n   ${l.qty} × ${money(l.price)} = <b>${money(l.qty * l.price)}</b>`),
+            ...lines.map(l => {
+                const u = l.price + (l.returnable && !l.returnBottle ? l.depositPrice : 0);
+                const tag = l.returnable
+                    ? `\n   ${l.returnBottle ? '♻️' : '📦'} ${l.returnBottle ? x.btnReturnBottle : x.btnKeepBottle}`
+                    : '';
+                return `• <b>${escapeHtml(l.name)}</b>${tag}\n   ${l.qty} × ${money(u)} = <b>${money(l.qty * u)}</b>`;
+            }),
             fee !== null ? `\n${x.deliveryFee}: <b>${fee === 0 ? x.freeDelivery : money(fee)}</b>` : '',
             x.cartTotal(money(total + (fee ?? 0))),
         ].filter(Boolean).join('\n');
@@ -225,6 +257,15 @@ export class Ordering {
             { text: '➕', callback_data: `inc:${l.id}` },
             { text: x.btnRemove, callback_data: `rm:${l.id}` },
         ]));
+
+        for (const l of lines.filter((l: any) => l.returnable && l.depositPrice > 0)) {
+            rows.push([{
+                text: l.returnBottle
+                    ? `${x.btnReturnBottle} · ${l.name}`.slice(0, 40)
+                    : `${x.btnKeepBottle} · ${l.name}`.slice(0, 40),
+                callback_data: `rb:${l.id}`,
+            }]);
+        }
 
         rows.push([{ text: x.btnCheckout, callback_data: 'co' }]);
         rows.push([{ text: x.btnSubscribe, callback_data: 'sub' }]);
@@ -433,7 +474,7 @@ export class Ordering {
         const result = await createOrder(
             botUser.userId,
             {
-                items: lines.map(l => ({ productId: l.id, qty: l.qty })),
+                items: lines.map(l => ({ productId: l.id, qty: l.qty, returnBottle: l.returnBottle })),
                 addressSnapshot: {
                     region: d.region, city: d.city, district: d.district,
                     street: d.street, house: d.house,

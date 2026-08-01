@@ -15,6 +15,8 @@ interface Product {
     category: string
     description: string
     stockQty?: number | null
+    returnable?: boolean
+    depositPrice?: number | null
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -24,7 +26,10 @@ export default function ProductCard({ product }: { product: Product }) {
     const handleAdd = (e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        addItem({ _id: product._id, name: product.name, price: product.price, imageUrl: product.imageUrl })
+        addItem({
+            _id: product._id, name: product.name, price: product.price, imageUrl: product.imageUrl,
+            returnable: product.returnable, depositPrice: product.depositPrice,
+        })
         toast.success(t('products.added'))
     }
 

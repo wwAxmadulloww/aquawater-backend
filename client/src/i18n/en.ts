@@ -223,4 +223,10 @@ export const en = {
     'checkout.loginFirst': 'Sign in to place an order.',
     'common.toProducts': 'Browse products',
     'checkout.summary': 'Order',
+
+    'cart.container': 'Container',
+    'cart.container.return': 'I will return it',
+    'cart.container.keep': 'I will keep it',
+    'cart.container.returnNote': 'Cheaper. The empty container is tracked under “My bottles” and handed to the courier on your next delivery.',
+    'cart.container.keepNote': 'The container is charged, but nothing to return — the bottle is yours.',
 }

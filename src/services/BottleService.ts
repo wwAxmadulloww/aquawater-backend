@@ -25,8 +25,21 @@ export async function countReturnables(order: any): Promise<number> {
         .lean();
 
     const returnable = new Set(products.map((p: any) => String(p._id)));
+
+    /*
+     * Only lines the customer agreed to return count. A line bought outright —
+     * the container paid for and kept — must never land on their ledger, or the
+     * business would chase them for a bottle they own.
+     *
+     * Orders placed before the choice existed have no `returnBottle` field;
+     * those are treated as returnable, which is what they were sold as.
+     */
     return items.reduce(
-        (sum: number, i: any) => sum + (returnable.has(String(i.productId)) ? (i.qty || 0) : 0),
+        (sum: number, i: any) => sum + (
+            returnable.has(String(i.productId)) && i.returnBottle !== false
+                ? (i.qty || 0)
+                : 0
+        ),
         0,
     );
 }

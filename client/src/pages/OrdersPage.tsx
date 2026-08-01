@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Package, Clock } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
+import { useAuth } from '../context/AuthContext'
 import { orderCode, paymentKey, orderTotal } from '../lib/orderFormat'
 import { getOrders, formatPrice } from '../api/client'
 
@@ -17,8 +18,10 @@ const STATUS_CLASSES: Record<string, string> = {
 
 export default function OrdersPage() {
     const { t } = useLanguage()
+    const { user } = useAuth()
+
     const { data: orders, isLoading } = useQuery({
-        queryKey: ['my-orders'],
+        queryKey: ['my-orders', user?._id],
         queryFn: () => getOrders(),
     })
 

@@ -15,6 +15,12 @@ export interface IProduct extends Document {
      */
     returnable: boolean;
     /**
+     * Charged per unit when the customer keeps the container instead of
+     * returning it. Only meaningful while `returnable` is true: it is the price
+     * of the bottle itself, which the deposit model otherwise lends out.
+     */
+    depositPrice?: number | null;
+    /**
      * Units on hand, or null when this product is not counted (services, and
      * anything ordered to order). `inStock` alone could not stop the shop
      * selling two hundred bottles on a day it had forty.
@@ -42,6 +48,7 @@ const ProductSchema = new Schema<IProduct>(
         imageUrl: { type: String, required: true },
         inStock: { type: Boolean, default: true },
         returnable: { type: Boolean, default: false },
+        depositPrice: { type: Number, default: null, min: 0 },
         stockQty: { type: Number, default: null, min: 0 },
         stockCountedAt: { type: Date, default: null },
         workerId: { type: Schema.Types.ObjectId, ref: 'User' },

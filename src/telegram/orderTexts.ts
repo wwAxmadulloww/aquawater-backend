@@ -92,6 +92,10 @@ export interface OrderTexts {
     weekdays: string[];
     deliveryFee: string;
     freeDelivery: string;
+
+    btnReturnBottle: string;
+    btnKeepBottle: string;
+    containerNote: string;
 }
 
 const PAY = { cash: '💵', click: '🔵', payme: '🟢' };
@@ -181,6 +185,9 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         weekdays: ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba'],
         deliveryFee: 'Yetkazish',
         freeDelivery: 'Bepul',
+        btnReturnBottle: '♻️ Idishni qaytaraman',
+        btnKeepBottle: '📦 Idish menda qoladi',
+        containerNote: 'Idishni qaytarsangiz arzonroq — u «Idishlarim» bo\'limida hisobga olinadi.',
     },
 
     ru: {
@@ -267,6 +274,9 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         weekdays: ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'],
         deliveryFee: 'Доставка',
         freeDelivery: 'Бесплатно',
+        btnReturnBottle: '♻️ Верну тару',
+        btnKeepBottle: '📦 Тара останется у меня',
+        containerNote: 'С возвратом тары дешевле — она учитывается в разделе «Моя тара».',
     },
 
     en: {
@@ -353,6 +363,9 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         weekdays: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
         deliveryFee: 'Delivery',
         freeDelivery: 'Free',
+        btnReturnBottle: '♻️ I will return it',
+        btnKeepBottle: '📦 I will keep it',
+        containerNote: 'Returning the container is cheaper — it is tracked under “My bottles”.',
     },
 };
 

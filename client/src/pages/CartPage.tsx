@@ -7,8 +7,11 @@ import { formatPrice } from '../api/client'
 
 const DELIVERY_FEE = 0
 
+/** True when this line is being bought outright rather than returned. */
+const keepsContainer = (i: any) => !!i.returnable && i.returnBottle === false
+
 export default function CartPage() {
-    const { items, updateQty, removeItem, totalPrice } = useCart()
+    const { items, updateQty, removeItem, setReturnBottle, totalPrice } = useCart()
     const { t } = useLanguage()
 
     if (items.length === 0) return (
@@ -32,11 +35,13 @@ export default function CartPage() {
                     {/* Items */}
                     <div className="lg:col-span-2 space-y-4">
                         {items.map(item => (
-                            <div key={item._id} className="card p-4 flex items-center gap-4">
+                            <div key={item._id} className="card p-4 flex flex-wrap items-center gap-4">
                                 <img src={item.imageUrl} alt={item.name} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">{item.name}</h3>
-                                    <p className="text-primary-600 font-bold">{formatPrice(item.price)}</p>
+                                    <p className="text-primary-600 font-bold">
+                                        {formatPrice(item.price + (keepsContainer(item) ? (item.depositPrice || 0) : 0))}
+                                    </p>
                                 </div>
                                 <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
                                     <button className="px-2 py-2 text-gray-500 hover:bg-gray-50" onClick={() => updateQty(item._id, item.qty - 1)}>
@@ -48,11 +53,40 @@ export default function CartPage() {
                                     </button>
                                 </div>
                                 <p className="text-gray-700 font-semibold text-sm hidden sm:block min-w-[80px] text-right">
-                                    {formatPrice(item.price * item.qty)}
+                                    {formatPrice((item.price + (keepsContainer(item) ? (item.depositPrice || 0) : 0)) * item.qty)}
                                 </p>
                                 <button onClick={() => removeItem(item._id)} className="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition-colors">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
+
+                                {item.returnable && (item.depositPrice || 0) > 0 && (
+                                    <div className="w-full border-t border-line pt-3">
+                                        <p className="eyebrow mb-2">{t('cart.container')}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setReturnBottle(item._id, true)}
+                                                className={`btn px-4 py-2 text-xs ${item.returnBottle !== false
+                                                    ? 'bg-brand text-white' : 'border border-line text-gray-700'}`}
+                                            >
+                                                {t('cart.container.return')}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setReturnBottle(item._id, false)}
+                                                className={`btn px-4 py-2 text-xs ${item.returnBottle === false
+                                                    ? 'bg-brand text-white' : 'border border-line text-gray-700'}`}
+                                            >
+                                                {t('cart.container.keep')} +{formatPrice(item.depositPrice || 0)}
+                                            </button>
+                                        </div>
+                                        <p className="mt-2 text-[11px] text-gray-600">
+                                            {item.returnBottle === false
+                                                ? t('cart.container.keepNote')
+                                                : t('cart.container.returnNote')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
