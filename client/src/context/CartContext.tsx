@@ -48,17 +48,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
      * answered — is not mistaken for a change of account and does not wipe the
      * basket of someone who simply reloaded the page.
      */
-    const { user } = useAuth()
+    const { user, loading } = useAuth()
     const lastUserId = useRef<string | null | undefined>(undefined)
 
     useEffect(() => {
+        /*
+         * Nothing is decided until the session has been established.
+         *
+         * On any page load `user` is null while /auth/me is in flight and then
+         * becomes the signed-in customer. Watching the id alone read that
+         * null -> id transition as a change of account and emptied the basket on
+         * every single reload — the customer filled it, navigated once, and it
+         * was gone.
+         */
+        if (loading) return
+
         const id = user?._id ?? null
         if (lastUserId.current !== undefined && lastUserId.current !== id) {
             setItems([])
             localStorage.removeItem('aq_cart')
         }
         lastUserId.current = id
-    }, [user?._id])
+    }, [loading, user?._id])
 
     /**
      * Every mutation goes through the functional updater form. Reading `items`
