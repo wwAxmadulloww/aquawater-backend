@@ -133,7 +133,15 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
             order.status = status;
         } else if (isCourier && isAssignedCourier) {
             if (status === 'delivered' || status === 'in_transit') {
-                if (status === 'delivered' && !['assigned', 'in_transit'].includes(order.status)) {
+                /*
+                 * `confirmed` counts. The courier is already known to be the one
+                 * assigned to this order, so the only thing this guard has to
+                 * stop is delivering something nobody was sent to deliver. An
+                 * admin confirming an order after assigning it used to leave the
+                 * courier standing at the door unable to close it — and the
+                 * empties on that stop were then never recorded.
+                 */
+                if (status === 'delivered' && !['assigned', 'confirmed', 'in_transit'].includes(order.status)) {
                     res.status(400).json({ message: 'Order must be assigned or in transit to be marked as delivered' });
                     return;
                 }
