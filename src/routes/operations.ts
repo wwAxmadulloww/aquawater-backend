@@ -202,11 +202,35 @@ router.post('/subscriptions', auth, async (req: AuthRequest, res: Response) => {
      * single week with the customer wondering where their water was.
      */
     const priced = await Product.find({ _id: { $in: parsed.data.items.map(i => i.productId) } })
-        .select('price')
+        .select('name price returnable depositPrice')
         .lean();
-    const priceById = new Map(priced.map((p: any) => [String(p._id), p.price]));
-    const basketTotal = parsed.data.items.reduce(
-        (sum, i) => sum + (priceById.get(i.productId) ?? 0) * i.qty, 0);
+    const byId = new Map(priced.map((p: any) => [String(p._id), p]));
+
+    /*
+     * The container charge counts towards the minimum, exactly as it does when
+     * the same basket is ordered once. Pricing on `price` alone meant a basket
+     * the checkout had just accepted was refused as a standing order, and the
+     * customer was told their order was too small while looking at a total that
+     * clearly cleared the threshold.
+     */
+    const basketTotal = parsed.data.items.reduce((sum, i) => {
+        const p: any = byId.get(i.productId);
+        const deposit = p?.returnable && i.returnBottle === false ? Number(p.depositPrice || 0) : 0;
+        return sum + ((p?.price ?? 0) + deposit) * i.qty;
+    }, 0);
+
+    // A line kept without a container price would be refused by the order path
+    // every week, so it is refused here instead — while the customer is present
+    // to do something about it.
+    for (const i of parsed.data.items) {
+        const p: any = byId.get(i.productId);
+        if (p?.returnable && i.returnBottle === false && !p.depositPrice) {
+            res.status(400).json({
+                message: `"${p.name || 'Mahsulot'}" uchun idish narxi belgilanmagan — idishni qaytarish shart`,
+            });
+            return;
+        }
+    }
 
     const quote = await DeliveryService.quote(parsed.data.addressSnapshot.region, basketTotal);
     if (!quote.ok) {
