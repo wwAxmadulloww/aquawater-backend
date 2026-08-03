@@ -315,7 +315,7 @@ export default function CheckoutPage() {
                                         <span className="text-gray-900">{formatPrice(totalPrice)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">{t('checkout.delivery')}</span>
+                                        <span className="text-gray-600">{t('checkout.deliveryFee')}</span>
                                         <span className="text-gray-900">
                                             {region
                                                 ? (deliveryFee > 0 ? formatPrice(deliveryFee) : t('checkout.free'))

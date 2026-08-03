@@ -195,6 +195,7 @@ export const en = {
     'footer.telegramBot': 'Telegram bot',
 
     'checkout.goods': 'Goods',
+    'checkout.deliveryFee': 'Delivery charge',
     'checkout.free': 'Free',
     'bottles.title': 'Returnable containers',
     'bottles.none': 'You have no containers to return.',

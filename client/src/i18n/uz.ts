@@ -197,6 +197,7 @@ export const uz = {
     'footer.telegramBot': 'Telegram bot',
 
     'checkout.goods': 'Mahsulotlar',
+    'checkout.deliveryFee': 'Yetkazib berish narxi',
     'checkout.free': 'Bepul',
     'bottles.title': 'Bo\'sh idishlar',
     'bottles.none': 'Sizda qaytarilishi kerak idish yo\'q.',

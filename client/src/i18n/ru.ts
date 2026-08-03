@@ -195,6 +195,7 @@ export const ru = {
     'footer.telegramBot': 'Telegram бот',
 
     'checkout.goods': 'Товары',
+    'checkout.deliveryFee': 'Стоимость доставки',
     'checkout.free': 'Бесплатно',
     'bottles.title': 'Возвратная тара',
     'bottles.none': 'За вами нет тары к возврату.',
