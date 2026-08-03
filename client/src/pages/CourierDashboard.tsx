@@ -136,13 +136,17 @@ export default function CourierDashboard() {
                                     )
                                 })()}
 
-                                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                                {/* Stacks on a phone. Side by side, the delivered button and
+                                    the empties box overflowed a 375px screen and sat on top of
+                                    the amount to collect — on the one device a courier uses. */}
+                                <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4
+                                                sm:flex-row sm:items-center sm:justify-between">
                                     <div>
                                         <p className="text-xs text-gray-500 mb-0.5">To'lov holati: <span className="font-medium text-gray-700">{t(paymentKey(order.paymentMethod) as any)}</span></p>
                                         <p className="font-bold text-gray-900 text-lg">{formatPrice(orderTotal(order))}</p>
                                     </div>
 
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         {['assigned', 'confirmed'].includes(order.status) && (
                                             <button
                                                 onClick={() => statusMut.mutate({ id: order._id, status: 'in_transit' })}
@@ -180,7 +184,7 @@ export default function CourierDashboard() {
                                                     }))}
                                                     placeholder={t('courier.empties')}
                                                     title={t('courier.empties')}
-                                                    className="input w-28 py-2.5 text-sm"
+                                                    className="input w-24 py-2.5 text-sm"
                                                 />
                                                 <button
                                                     onClick={() => statusMut.mutate({
