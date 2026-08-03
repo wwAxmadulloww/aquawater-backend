@@ -55,9 +55,14 @@ export const getOrders = async (req: AuthRequest, res: Response): Promise<void> 
             filter.status = req.query.status;
         }
 
+        /*
+         * The container balance rides along so the courier at the door knows
+         * how many empties to expect. Without it they were typing a number
+         * blind, and a wrong count is what makes the whole ledger untrustworthy.
+         */
         const orders = await Order.find(filter)
             .sort({ createdAt: -1 })
-            .populate('userId', 'name phone');
+            .populate('userId', 'name phone bottleBalance');
         res.json(orders);
     } catch {
         res.status(500).json({ message: 'Server error' });
@@ -71,7 +76,7 @@ export const getOrderById = async (req: AuthRequest, res: Response): Promise<voi
             return;
         }
 
-        const order = await Order.findById(req.params.id).populate('userId', 'name phone');
+        const order = await Order.findById(req.params.id).populate('userId', 'name phone bottleBalance');
         if (!order) {
             res.status(404).json({ message: 'Order not found' });
             return;

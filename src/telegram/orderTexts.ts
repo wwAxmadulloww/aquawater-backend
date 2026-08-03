@@ -95,7 +95,11 @@ export interface OrderTexts {
 
     btnReturnBottle: string;
     btnKeepBottle: string;
+    /** Action labels: what tapping does, not what is already chosen. */
+    switchToKeep: (name: string, price: string) => string;
+    switchToReturn: (name: string, price: string) => string;
     containerNote: string;
+    bottlesExplain: string;
 }
 
 const PAY = { cash: '💵', click: '🔵', payme: '🟢' };
@@ -166,11 +170,10 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         orderNotFound: '❌ Buyurtma topilmadi.',
 
         btnBottles: '🫙 Idishlarim',
-        bottlesTitle: '🫙 <b>Bo\'sh idishlar hisobi</b>',
-        bottlesNone: '✅ Sizda qaytarilishi kerak idish yo\'q.',
-        bottlesOwed: (n) => `Sizda <b>${n} ta</b> idish turibdi.`,
+        bottlesTitle: '🫙 <b>Idishlarim</b>',
+        bottlesNone: '✅ Sizda qaytariladigan idish yo\'q.',
+        bottlesOwed: (n) => `Qaytarishingiz kerak: <b>${n} ta idish</b>`,
         bottlesHint: 'Keyingi yetkazishda kuryerga bering — hisobdan chiqariladi.',
-
         btnSubscribe: '🔁 Doimiy buyurtma',
         subsTitle: '🔁 <b>Doimiy buyurtmalar</b>',
         subsNone: 'Sizda doimiy buyurtma yo\'q.\n\nSavatni to\'ldirib, "Doimiy buyurtma" ni tanlang — har hafta o\'zi yaratiladi.',
@@ -185,9 +188,12 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         weekdays: ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba'],
         deliveryFee: 'Yetkazish',
         freeDelivery: 'Bepul',
-        btnReturnBottle: '♻️ Idishni qaytaraman',
-        btnKeepBottle: '📦 Idish menda qoladi',
-        containerNote: 'Idishni qaytarsangiz arzonroq — u «Idishlarim» bo\'limida hisobga olinadi.',
+        btnReturnBottle: '♻️ Qaytaraman',
+        btnKeepBottle: '📦 Sotib olaman',
+        containerNote: '♻️ <b>Qaytaraman</b> — idish AquaWater\'niki, «Idishlarim»da hisoblanadi va keyingi yetkazishda kuryerga beriladi.\n📦 <b>Sotib olaman</b> — idish narxi qo\'shiladi, idish butunlay sizniki bo\'ladi.',
+        switchToKeep: (name, price) => `📦 Sotib olaman (${price}) · ${name}`,
+        switchToReturn: (name, price) => `♻️ Qaytaraman (${price}) · ${name}`,
+        bottlesExplain: 'Bu yerda faqat «Qaytaraman» deb olingan idishlar turadi. Sotib olingan idishlar hisobga tushmaydi.',
     },
 
     ru: {
@@ -255,11 +261,10 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         orderNotFound: '❌ Заказ не найден.',
 
         btnBottles: '🫙 Мои бутыли',
-        bottlesTitle: '🫙 <b>Учёт возвратной тары</b>',
+        bottlesTitle: '🫙 <b>Моя тара</b>',
         bottlesNone: '✅ За вами нет тары к возврату.',
-        bottlesOwed: (n) => `За вами <b>${n} шт.</b> тары.`,
+        bottlesOwed: (n) => `Нужно вернуть: <b>${n} шт. тары</b>`,
         bottlesHint: 'Передайте курьеру при следующей доставке — спишем.',
-
         btnSubscribe: '🔁 Регулярный заказ',
         subsTitle: '🔁 <b>Регулярные заказы</b>',
         subsNone: 'Регулярных заказов нет.\n\nНаполните корзину и выберите «Регулярный заказ» — он будет создаваться каждую неделю.',
@@ -274,9 +279,12 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         weekdays: ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'],
         deliveryFee: 'Доставка',
         freeDelivery: 'Бесплатно',
-        btnReturnBottle: '♻️ Верну тару',
-        btnKeepBottle: '📦 Тара останется у меня',
-        containerNote: 'С возвратом тары дешевле — она учитывается в разделе «Моя тара».',
+        btnReturnBottle: '♻️ Верну',
+        btnKeepBottle: '📦 Выкуплю',
+        containerNote: '♻️ <b>Верну</b> — тара остаётся собственностью AquaWater, числится в «Моей таре» и передаётся курьеру при следующей доставке.\n📦 <b>Выкуплю</b> — добавляется стоимость тары, она переходит в вашу собственность.',
+        switchToKeep: (name, price) => `📦 Выкуплю (${price}) · ${name}`,
+        switchToReturn: (name, price) => `♻️ Верну (${price}) · ${name}`,
+        bottlesExplain: 'Здесь учитывается только тара, взятая с возвратом. Выкупленная тара за вами не числится.',
     },
 
     en: {
@@ -344,11 +352,10 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         orderNotFound: '❌ Order not found.',
 
         btnBottles: '🫙 My bottles',
-        bottlesTitle: '🫙 <b>Returnable containers</b>',
+        bottlesTitle: '🫙 <b>My containers</b>',
         bottlesNone: '✅ You have no containers to return.',
-        bottlesOwed: (n) => `You are holding <b>${n}</b> container(s).`,
+        bottlesOwed: (n) => `To return: <b>${n} container(s)</b>`,
         bottlesHint: 'Hand them to the courier on your next delivery and they come off your balance.',
-
         btnSubscribe: '🔁 Standing order',
         subsTitle: '🔁 <b>Standing orders</b>',
         subsNone: 'You have no standing order.\n\nFill your cart and choose "Standing order" — it will be created every week.',
@@ -364,8 +371,11 @@ export const ORDER_TEXTS: Record<BotLang, OrderTexts> = {
         deliveryFee: 'Delivery',
         freeDelivery: 'Free',
         btnReturnBottle: '♻️ I will return it',
-        btnKeepBottle: '📦 I will keep it',
-        containerNote: 'Returning the container is cheaper — it is tracked under “My bottles”.',
+        btnKeepBottle: '📦 I will buy it',
+        containerNote: '♻️ <b>Return</b> — the container stays AquaWater property, is counted under “My containers” and goes back with the courier next time.\n📦 <b>Buy</b> — the container price is added and the container becomes yours.',
+        switchToKeep: (name, price) => `📦 Buy the container (${price}) · ${name}`,
+        switchToReturn: (name, price) => `♻️ Return the container (${price}) · ${name}`,
+        bottlesExplain: 'Only containers taken on the return option are counted here. Bought containers are not.',
     },
 };
 

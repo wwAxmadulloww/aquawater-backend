@@ -39,6 +39,12 @@ export interface IOrder extends Document {
     deliveryFee: number;
     /** Empty containers the courier took back on this delivery. */
     emptiesCollected?: number;
+    /**
+     * Returnable containers this order handed over, snapshotted when it was
+     * placed. Absent on orders from before it was recorded; those fall back to
+     * counting the items.
+     */
+    bottlesIssued?: number;
     status: 'pending' | 'confirmed' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled';
     createdAt: Date;
 }
@@ -73,6 +79,7 @@ const OrderSchema = new Schema<IOrder>(
         paymentMethod: { type: String, enum: ['cash', 'click', 'payme'], required: true },
         deliveryFee: { type: Number, default: 0, min: 0 },
         emptiesCollected: { type: Number, default: 0, min: 0 },
+        bottlesIssued: { type: Number, min: 0 },
         status: { type: String, enum: ['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled'], default: 'pending' },
     },
     { timestamps: true }

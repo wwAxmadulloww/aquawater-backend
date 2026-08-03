@@ -124,6 +124,8 @@ export async function createOrder(
      * stock nobody bought.
      */
     const claimed: { productId: mongoose.Types.ObjectId; qty: number }[] = [];
+    /** Containers this basket hands over and expects back. */
+    let bottlesIssued = 0;
 
     const releaseClaims = async () => {
         for (const c of claimed) {
@@ -188,6 +190,12 @@ export async function createOrder(
                 `"${product.name}" uchun idish narxi belgilanmagan — idishni qaytarish shart`);
         }
 
+        // What this order puts on the customer's ledger, decided here and
+        // stored on the order. Re-deriving it at delivery read the product's
+        // CURRENT `returnable` flag, so unticking that flag later silently
+        // rewrote what old orders had handed over.
+        if (product.returnable && !keepsContainer) bottlesIssued += item.qty;
+
         resolvedItems.push({
             productId: new mongoose.Types.ObjectId(item.productId),
             nameSnapshot: product.name,
@@ -213,6 +221,7 @@ export async function createOrder(
         deliveryTimeSlot,
         paymentMethod,
         deliveryFee: quote.fee,
+        bottlesIssued,
         status: 'pending',
     });
 

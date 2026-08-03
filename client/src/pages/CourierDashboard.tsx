@@ -4,7 +4,7 @@ import { CheckCircle2, MapPin, Phone, Package, Calendar } from 'lucide-react'
 import { getOrders, updateOrderStatus, formatPrice } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
-import { orderCode, paymentKey , orderTotal } from '../lib/orderFormat'
+import { orderCode, paymentKey, orderTotal, orderBottles } from '../lib/orderFormat'
 import toast from 'react-hot-toast'
 
 export default function CourierDashboard() {
@@ -93,11 +93,48 @@ export default function CourierDashboard() {
                                 <div className="space-y-1 mb-4 text-sm text-gray-600 border-t border-gray-50 pt-4">
                                     {order.items.map((i: any, idx: number) => (
                                         <div key={idx} className="flex justify-between">
-                                            <span>{i.nameSnapshot}</span>
+                                            <span>
+                                                {i.nameSnapshot}
+                                                {(i.depositSnapshot || 0) > 0 && (
+                                                    <span className="ml-1.5 text-[10px] text-gray-500">📦</span>
+                                                )}
+                                            </span>
                                             <span className="font-medium text-gray-900">×{i.qty}</span>
                                         </div>
                                     ))}
                                 </div>
+
+                                {/*
+                                  * What to expect at the door, before the count is typed. The
+                                  * courier used to be shown an empty number box and nothing
+                                  * else — no idea how many containers this delivery carries,
+                                  * nor how many the customer is already holding — and a guessed
+                                  * count is what makes the whole ledger untrustworthy.
+                                  */}
+                                {(() => {
+                                    const b = orderBottles(order)
+                                    const held = Number(order.userId?.bottleBalance || 0)
+                                    if (!b.toReturn && !b.bought && !held) return null
+                                    return (
+                                        <div className="mb-4 space-y-1 rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs">
+                                            {!!b.toReturn && (
+                                                <p className="text-gray-900">
+                                                    ♻️ {t('courier.expect').replace('{n}', String(b.toReturn))}
+                                                </p>
+                                            )}
+                                            {b.bought > 0 && (
+                                                <p className="text-gray-600">
+                                                    📦 {t('orders.bottles.bought').replace('{n}', String(b.bought))}
+                                                </p>
+                                            )}
+                                            <p className={held > 0 ? 'font-medium text-gray-900' : 'text-gray-600'}>
+                                                {held > 0
+                                                    ? `🫙 ${t('courier.holds').replace('{n}', String(held))}`
+                                                    : `🫙 ${t('courier.holdsNone')}`}
+                                            </p>
+                                        </div>
+                                    )
+                                })()}
 
                                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                                     <div>

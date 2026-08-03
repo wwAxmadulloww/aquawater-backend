@@ -260,6 +260,7 @@ export class Ordering {
             }),
             fee !== null ? `\n${x.deliveryFee}: <b>${fee === 0 ? x.freeDelivery : money(fee)}</b>` : '',
             x.cartTotal(money(total + (fee ?? 0))),
+            lines.some((l: any) => l.returnable && l.depositPrice > 0) ? `\n${x.containerNote}` : '',
         ].filter(Boolean).join('\n');
 
         const rows = lines.map(l => ([
@@ -269,13 +270,17 @@ export class Ordering {
             { text: x.btnRemove, callback_data: `rm:${l.id}` },
         ]));
 
+        /*
+         * The button says what tapping it will do and what the line will then
+         * cost. It used to be labelled with the choice already in force, so a
+         * customer reading "I will return it" tapped it to confirm that and was
+         * switched to buying the container instead.
+         */
         for (const l of lines.filter((l: any) => l.returnable && l.depositPrice > 0)) {
-            rows.push([{
-                text: l.returnBottle
-                    ? `${x.btnReturnBottle} · ${l.name}`.slice(0, 40)
-                    : `${x.btnKeepBottle} · ${l.name}`.slice(0, 40),
-                callback_data: `rb:${l.id}`,
-            }]);
+            const text = l.returnBottle
+                ? x.switchToKeep(l.name, money(l.price + l.depositPrice))
+                : x.switchToReturn(l.name, money(l.price));
+            rows.push([{ text: text.slice(0, 60), callback_data: `rb:${l.id}` }]);
         }
 
         rows.push([{ text: x.btnCheckout, callback_data: 'co' }]);
@@ -630,6 +635,7 @@ export class Ordering {
             '',
             balance > 0 ? x.bottlesOwed(balance) : x.bottlesNone,
             balance > 0 ? x.bottlesHint : '',
+            '\n' + x.bottlesExplain,
             history.length ? '\n' + history.join('\n') : '',
         ].filter(Boolean).join('\n');
 

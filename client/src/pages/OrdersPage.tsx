@@ -1,11 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Package, Clock } from 'lucide-react'
+import { Package, Clock, Droplets } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
 import { useAuth } from '../context/AuthContext'
-import { orderCode, paymentKey, orderTotal } from '../lib/orderFormat'
-import { getOrders, formatPrice } from '../api/client'
+import { orderCode, paymentKey, orderTotal, orderBottles } from '../lib/orderFormat'
+import { getOrders, getMyBottles, formatPrice } from '../api/client'
 
 const STATUS_CLASSES: Record<string, string> = {
     pending: 'badge-pending',
@@ -23,6 +23,16 @@ export default function OrdersPage() {
     const { data: orders, isLoading } = useQuery({
         queryKey: ['my-orders', user?._id],
         queryFn: () => getOrders(),
+    })
+
+    /*
+     * The container balance belongs on this page, not only on the standing-order
+     * page. This is the screen a customer opens after buying, and it was the one
+     * place that said nothing at all about the bottles they are holding.
+     */
+    const { data: bottles } = useQuery({
+        queryKey: ['my-bottles', user?._id],
+        queryFn: getMyBottles,
     })
 
     const getStatusLabel = (status: string) => {
@@ -44,6 +54,21 @@ export default function OrdersPage() {
                     <Package className="w-8 h-8 text-primary-600" />
                     {t('orders.title')}
                 </h1>
+
+                {(bottles?.balance ?? 0) > 0 && (
+                    <Link
+                        to="/subscriptions"
+                        className="card mb-6 flex items-center gap-4 p-5 transition-colors hover:border-accent"
+                    >
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center
+                                         rounded-full border border-line text-accent">
+                            <Droplets className="h-5 w-5" />
+                        </span>
+                        <span className="text-sm text-gray-900">
+                            {t('orders.bottles.hold').replace('{n}', String(bottles.balance))}
+                        </span>
+                    </Link>
+                )}
 
                 {isLoading ? (
                     <div className="space-y-4">
@@ -69,6 +94,8 @@ export default function OrdersPage() {
                     <div className="space-y-4">
                         {orders?.map((order: any) => {
                             const total = orderTotal(order)
+                            const b = orderBottles(order)
+                            const delivered = order.status === 'delivered'
                             return (
                                 <div key={order._id} className="card p-5 flex items-center justify-between gap-4">
                                     <div className="flex-1 min-w-0">
@@ -87,6 +114,27 @@ export default function OrdersPage() {
                                                 {new Date(order.createdAt).toLocaleDateString('uz-UZ')}
                                             </span>
                                             <span>{order.deliveryDate} • {order.deliveryTimeSlot}</span>
+                                        </div>
+
+                                        {/* What this particular order did to the bottle count,
+                                            so the running balance above is explainable rather
+                                            than a number the customer has to trust. */}
+                                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                                            {!!b.toReturn && (
+                                                <span className="text-accent">
+                                                    ♻️ {t('orders.bottles.toReturn').replace('{n}', String(b.toReturn))}
+                                                </span>
+                                            )}
+                                            {b.bought > 0 && (
+                                                <span className="text-gray-600">
+                                                    📦 {t('orders.bottles.bought').replace('{n}', String(b.bought))}
+                                                </span>
+                                            )}
+                                            {delivered && b.collected > 0 && (
+                                                <span className="text-[#7ff0c0]">
+                                                    ✅ {t('orders.bottles.collected').replace('{n}', String(b.collected))}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="text-right flex-shrink-0">

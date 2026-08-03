@@ -92,7 +92,16 @@ export async function record(opts: {
 
 /** Called when an order reaches `delivered`. Issues out, collects empties back. */
 export async function settleDelivery(order: any, recordedBy?: string): Promise<void> {
-    const issued = await countReturnables(order);
+    /*
+     * The figure decided when the order was placed wins. Counting the items
+     * again here asked the products what they are *today*, so a product the
+     * owner stopped treating as returnable changed what an order delivered
+     * weeks earlier had put into the customer's hands. Orders from before the
+     * snapshot existed still fall back to counting.
+     */
+    const issued = typeof order?.bottlesIssued === 'number'
+        ? order.bottlesIssued
+        : await countReturnables(order);
     if (issued > 0) {
         await record({
             userId: order.userId,

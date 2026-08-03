@@ -49,3 +49,21 @@ export const itemsTotal = (order: any): number =>
  */
 export const orderTotal = (order: any): number =>
     itemsTotal(order) + (order?.deliveryFee || 0);
+
+/**
+ * What an order does to the customer's container balance.
+ *
+ * One rule, read by the customer's order list and by the courier at the door,
+ * so the two can never describe the same delivery differently.
+ *
+ * `toReturn` is the count the order recorded when it was placed. Orders from
+ * before that was stored report null rather than zero: the client cannot tell
+ * which of their lines were returnable, and inventing a zero would tell a
+ * customer holding four bottles that they owe nothing.
+ */
+export const orderBottles = (order: any): { toReturn: number | null; bought: number; collected: number } => ({
+    toReturn: typeof order?.bottlesIssued === 'number' ? order.bottlesIssued : null,
+    bought: (order?.items || []).reduce(
+        (n: number, i: any) => n + ((i.depositSnapshot || 0) > 0 ? (i.qty || 0) : 0), 0),
+    collected: Number(order?.emptiesCollected || 0),
+});

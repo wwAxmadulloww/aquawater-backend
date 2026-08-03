@@ -59,28 +59,43 @@ export default function CartPage() {
                                     <Trash2 className="w-4 h-4" />
                                 </button>
 
+                                {/*
+                                  * Each option carries its own per-unit price, so the choice is
+                                  * between two amounts rather than between a policy and a
+                                  * surcharge the customer has to add up themselves.
+                                  */}
                                 {item.returnable && (item.depositPrice || 0) > 0 && (
                                     <div className="w-full border-t border-line pt-3">
                                         <p className="eyebrow mb-2">{t('cart.container')}</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setReturnBottle(item._id, true)}
-                                                className={`btn px-4 py-2 text-xs ${item.returnBottle !== false
-                                                    ? 'bg-brand text-white' : 'border border-line text-gray-700'}`}
-                                            >
-                                                {t('cart.container.return')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setReturnBottle(item._id, false)}
-                                                className={`btn px-4 py-2 text-xs ${item.returnBottle === false
-                                                    ? 'bg-brand text-white' : 'border border-line text-gray-700'}`}
-                                            >
-                                                {t('cart.container.keep')} +{formatPrice(item.depositPrice || 0)}
-                                            </button>
+                                        <div className="grid gap-2 sm:grid-cols-2">
+                                            {([true, false] as const).map(returns => {
+                                                const chosen = returns
+                                                    ? item.returnBottle !== false
+                                                    : item.returnBottle === false
+                                                const unit = item.price + (returns ? 0 : (item.depositPrice || 0))
+                                                return (
+                                                    <button
+                                                        key={String(returns)}
+                                                        type="button"
+                                                        onClick={() => setReturnBottle(item._id, returns)}
+                                                        className={`rounded-xl border p-3 text-left transition-colors ${chosen
+                                                            ? 'border-accent bg-accent/10' : 'border-line hover:border-gray-400'}`}
+                                                    >
+                                                        <span className="flex items-center gap-1.5 text-xs font-medium text-gray-900">
+                                                            {returns ? '♻️' : '📦'}
+                                                            {returns ? t('cart.container.return') : t('cart.container.keep')}
+                                                        </span>
+                                                        <span className="mt-1 block text-sm font-bold text-accent">
+                                                            {formatPrice(unit)}
+                                                            <span className="ml-1 text-[10px] font-normal text-gray-600">
+                                                                {t('cart.container.each')}
+                                                            </span>
+                                                        </span>
+                                                    </button>
+                                                )
+                                            })}
                                         </div>
-                                        <p className="mt-2 text-[11px] text-gray-600">
+                                        <p className="mt-2 text-[11px] leading-relaxed text-gray-600">
                                             {item.returnBottle === false
                                                 ? t('cart.container.keepNote')
                                                 : t('cart.container.returnNote')}
