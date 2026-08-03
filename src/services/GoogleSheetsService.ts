@@ -151,7 +151,8 @@ export class GoogleSheetsService {
          * items alone understated every regional order by the fee.
          */
         const goods = Array.isArray(order.items)
-            ? order.items.reduce((sum: number, i: any) => sum + (i.priceSnapshot * i.qty), 0)
+            ? order.items.reduce(
+                (sum: number, i: any) => sum + ((i.priceSnapshot || 0) + (i.depositSnapshot || 0)) * i.qty, 0)
             : 0;
         const totalPrice = goods + Number(order.deliveryFee || 0);
 

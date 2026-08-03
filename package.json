@@ -1,13 +1,16 @@
 {
-  "name": "aquawater-backend",
+  "name": "aquawater",
   "version": "1.0.0",
-  "description": "AquaWater Uzbekistan Backend API",
+  "description": "AquaWater Uzbekistan — unified API + web client",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "seed": "ts-node src/seed.ts"
+    "seed": "ts-node src/seed.ts",
+    "client:dev": "npm run dev --prefix client",
+    "client:build": "npm run build --prefix client",
+    "postinstall": "npm install --prefix client"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

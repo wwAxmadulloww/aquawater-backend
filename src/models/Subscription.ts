@@ -18,6 +18,13 @@ import { IOrderItem, IAddressSnapshot } from './Order';
 export interface ISubscriptionItem {
     productId: mongoose.Types.ObjectId;
     qty: number;
+    /**
+     * Whether the container goes back, carried from the basket the standing
+     * order was created from. Without it every weekly order reverted to
+     * returning, and a customer who had bought their bottles outright would be
+     * chased each week for containers they own.
+     */
+    returnBottle?: boolean;
 }
 
 export interface ISubscription extends Document {
@@ -39,6 +46,7 @@ const SubscriptionItemSchema = new Schema<ISubscriptionItem>({
     _id: false,
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     qty: { type: Number, required: true, min: 1, max: 100 },
+    returnBottle: { type: Boolean, default: true },
 } as any);
 
 const SubscriptionSchema = new Schema<ISubscription>(

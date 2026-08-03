@@ -212,6 +212,10 @@ export const uz = {
     'subs.active': 'Faol',
     'subs.paused': 'To\'xtatilgan',
     'subs.create': 'Doimiy buyurtma yaratish',
+    'subs.repeat': 'Har hafta shu buyurtma takrorlansin',
+    'subs.repeatHint': 'Har {day} kuni shu savat, shu manzil va shu vaqt oralig\'ida avtomatik buyurtma yaratiladi. Istalgan payt to\'xtatasiz.',
+    'subs.repeatOn': 'Doimiy buyurtma ham yaratildi.',
+    'subs.repeatFailed': 'Buyurtma qabul qilindi, lekin doimiy buyurtma yaratilmadi.',
     'courier.empties': 'Qaytarilgan bo\'sh idish',
 
     'trust.eyebrow': 'Raqamlar',

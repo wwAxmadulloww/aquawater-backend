@@ -341,7 +341,7 @@ export class TelegramBotService {
         const items: any[] = Array.isArray(order.items) ? order.items : [];
         const itemLines = items.length > 0
             ? items.map((i) => {
-                const line = (i.priceSnapshot || 0) * (i.qty || 0);
+                const line = ((i.priceSnapshot || 0) + (i.depositSnapshot || 0)) * (i.qty || 0);
                 return `• <b>${escapeHtml(i.nameSnapshot || 'Mahsulot')}</b> × ${i.qty} — ${fmt(line)}`;
             }).join('\n')
             : '• —';
@@ -352,7 +352,8 @@ export class TelegramBotService {
          * were introduced every regional order was announced to the operators —
          * and read out to the courier — short by the fee.
          */
-        const goods = items.reduce((sum, i) => sum + (i.priceSnapshot || 0) * (i.qty || 0), 0);
+        const goods = items.reduce(
+            (sum, i) => sum + ((i.priceSnapshot || 0) + (i.depositSnapshot || 0)) * (i.qty || 0), 0);
         const fee = Number(order.deliveryFee || 0);
         const total = goods + fee;
 

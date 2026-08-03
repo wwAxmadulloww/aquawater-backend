@@ -219,7 +219,18 @@ export class Ordering {
         if (changed) {
             await BotUser.updateOne(
                 { chatId },
-                { $set: { cart: lines.map(l => ({ productId: new mongoose.Types.ObjectId(l.id), qty: l.qty })) } },
+                {
+                    $set: {
+                        // The choice has to be written back too; rebuilding the basket
+                        // without it reset every line to returnable behind the
+                        // customer's back the moment one product went out of stock.
+                        cart: lines.map(l => ({
+                            productId: new mongoose.Types.ObjectId(l.id),
+                            qty: l.qty,
+                            returnBottle: l.returnBottle,
+                        })),
+                    },
+                },
             );
         }
 
@@ -554,7 +565,7 @@ export class Ordering {
             `${statusLabel(order.status, lang)}`,
             '',
             ...(order.items || []).map((i: any) =>
-                `• ${escapeHtml(i.nameSnapshot)} × ${i.qty} — <b>${money(i.priceSnapshot * i.qty)}</b>`),
+                `• ${escapeHtml(i.nameSnapshot)} × ${i.qty} — <b>${money(((i.priceSnapshot || 0) + (i.depositSnapshot || 0)) * i.qty)}</b>`),
             '',
             `${x.confirmAddress}: ${escapeHtml(addressLine(order.addressSnapshot || {}))}`,
             `${x.confirmWhen}: ${escapeHtml(order.deliveryDate || '')} ${escapeHtml(order.deliveryTimeSlot || '')}`,
@@ -661,7 +672,11 @@ export class Ordering {
         const slot = TIME_SLOTS[1];
         await Subscription.create({
             userId: botUser.userId,
-            items: lines.map(l => ({ productId: new mongoose.Types.ObjectId(l.id), qty: l.qty })),
+            items: lines.map(l => ({
+                productId: new mongoose.Types.ObjectId(l.id),
+                qty: l.qty,
+                returnBottle: l.returnBottle,
+            })),
             addressSnapshot: address,
             weekday,
             deliveryTimeSlot: slot,
@@ -734,7 +749,14 @@ export class Ordering {
             return;
         }
 
-        const cart = (order.items || []).map((i: any) => ({ productId: i.productId, qty: i.qty }));
+        // Repeating an order repeats the container choice too, otherwise a
+        // customer who buys their bottles outright silently reverts to
+        // returnable — and pays a different price than the order they copied.
+        const cart = (order.items || []).map((i: any) => ({
+            productId: i.productId,
+            qty: i.qty,
+            returnBottle: i.returnBottle !== false,
+        }));
         await BotUser.updateOne({ chatId }, { $set: { cart } });
 
         await this.client.sendMessage(chatId, x.repeatAdded);

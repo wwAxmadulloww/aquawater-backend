@@ -5,13 +5,26 @@ import { CheckCircle, MapPin, Calendar, CreditCard, ChevronRight } from 'lucide-
 import { useLanguage } from '../i18n/LanguageContext'
 import { orderCode } from '../lib/orderFormat'
 import { useCart } from '../context/CartContext'
-import { createOrder, formatPrice, getDeliveryQuote, getDeliveryZones } from '../api/client'
+import {
+    createOrder, createSubscription, formatPrice, getDeliveryQuote, getDeliveryZones,
+} from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
 const TIME_SLOTS = ['09:00–11:00', '11:00–13:00', '13:00–15:00', '15:00–17:00', '17:00–19:00']
 
+const WEEKDAYS = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba']
+
 type PayMethod = 'cash' | 'click' | 'payme'
+
+/** ISO weekday (1 = Monday … 7 = Sunday) of a YYYY-MM-DD string. */
+function isoWeekday(dateStr: string): number {
+    // Parsed as local, not UTC, so the weekday matches the date the customer
+    // picked in their own calendar rather than shifting a day either side.
+    const [y, m, d] = dateStr.split('-').map(Number)
+    const day = new Date(y, (m || 1) - 1, d || 1).getDay()
+    return day === 0 ? 7 : day
+}
 
 /**
  * Today's date in the user's own timezone, as YYYY-MM-DD.
@@ -41,6 +54,7 @@ export default function CheckoutPage() {
     const [date, setDate] = useState(getTodayStr())
     const [timeSlot, setTimeSlot] = useState(TIME_SLOTS[0])
     const [payment, setPayment] = useState<PayMethod>('cash')
+    const [repeat, setRepeat] = useState(false)
     const [orderId, setOrderId] = useState<string | null>(null)
 
     /*
@@ -67,7 +81,33 @@ export default function CheckoutPage() {
             deliveryTimeSlot: timeSlot,
             paymentMethod: payment,
         }),
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
+            /*
+             * The standing order is created after the one-off order, and its
+             * failure is reported without losing the order: the delivery the
+             * customer just paid attention to is the part that matters, and a
+             * subscription they can retry from their own page is not worth
+             * rolling that back.
+             */
+            if (repeat) {
+                try {
+                    await createSubscription({
+                        items: items.map(i => ({
+                            productId: i._id, qty: i.qty, returnBottle: i.returnBottle !== false,
+                        })),
+                        addressSnapshot: {
+                            region, city, district, street, house,
+                            apartment: apartment || undefined,
+                        },
+                        weekday: isoWeekday(date),
+                        deliveryTimeSlot: timeSlot,
+                        paymentMethod: payment,
+                    })
+                    toast.success(t('subs.repeatOn'))
+                } catch {
+                    toast.error(t('subs.repeatFailed'))
+                }
+            }
             setOrderId(data._id)
             clearCart()
         },
@@ -201,6 +241,28 @@ export default function CheckoutPage() {
                                         </select>
                                     </div>
                                 </div>
+
+                                {/* Water is bought on a rhythm, so the moment the
+                                    customer has already chosen a day and a slot is
+                                    the cheapest possible place to offer the repeat. */}
+                                <label className="mt-4 flex cursor-pointer gap-3 rounded-xl border border-line p-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={repeat}
+                                        onChange={e => setRepeat(e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                                    />
+                                    <span>
+                                        <span className="block text-sm font-medium text-gray-900">
+                                            {t('subs.repeat')}
+                                        </span>
+                                        <span className="mt-1 block text-xs text-gray-600">
+                                            {t('subs.repeatHint').replace(
+                                                '{day}', WEEKDAYS[isoWeekday(date) - 1],
+                                            )}
+                                        </span>
+                                    </span>
+                                </label>
                             </div>
 
                             {/* Payment */}

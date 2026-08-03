@@ -35,7 +35,9 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
                 $group: {
                     _id: null,
                     totalRevenue: {
-                        $sum: { $multiply: ['$items.priceSnapshot', '$items.qty'] },
+                        $sum: { $multiply: [
+                            { $add: ['$items.priceSnapshot', { $ifNull: ['$items.depositSnapshot', 0] }] },
+                            '$items.qty'] },
                     },
                 },
             },
@@ -58,7 +60,9 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
                             $reduce: {
                                 input: '$items',
                                 initialValue: 0,
-                                in: { $add: ['$$value', { $multiply: ['$$this.priceSnapshot', '$$this.qty'] }] },
+                                in: { $add: ['$$value', { $multiply: [
+                                    { $add: ['$$this.priceSnapshot', { $ifNull: ['$$this.depositSnapshot', 0] }] },
+                                    '$$this.qty'] }] },
                             },
                         },
                     },

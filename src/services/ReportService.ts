@@ -29,9 +29,10 @@ function match(range: Range) {
 
 /*
  * Revenue is recomputed from the line items rather than read from a stored
- * total: `priceSnapshot` is what the customer was actually charged, so a later
- * price change cannot rewrite history. The delivery fee is added per order,
- * which is why it is summed with $first inside the per-order grouping.
+ * total: `priceSnapshot` and `depositSnapshot` are what the customer was
+ * actually charged, so a later price change cannot rewrite history. The
+ * delivery fee is added per order, which is why it is summed with $first inside
+ * the per-order grouping.
  */
 const REVENUE_STAGES = [
     { $unwind: '$items' },
@@ -41,7 +42,9 @@ const REVENUE_STAGES = [
             createdAt: { $first: '$createdAt' },
             courierId: { $first: '$courierId' },
             deliveryFee: { $first: '$deliveryFee' },
-            goods: { $sum: { $multiply: ['$items.priceSnapshot', '$items.qty'] } },
+            goods: { $sum: { $multiply: [
+                { $add: ['$items.priceSnapshot', { $ifNull: ['$items.depositSnapshot', 0] }] },
+                '$items.qty'] } },
         },
     },
     { $addFields: { total: { $add: ['$goods', { $ifNull: ['$deliveryFee', 0] }] } } },
@@ -101,7 +104,9 @@ export async function byProduct(range: Range) {
                 _id: '$items.productId',
                 name: { $last: '$items.nameSnapshot' },
                 qty: { $sum: '$items.qty' },
-                revenue: { $sum: { $multiply: ['$items.priceSnapshot', '$items.qty'] } },
+                revenue: { $sum: { $multiply: [
+                    { $add: ['$items.priceSnapshot', { $ifNull: ['$items.depositSnapshot', 0] }] },
+                    '$items.qty'] } },
             },
         },
         { $sort: { revenue: -1 } },

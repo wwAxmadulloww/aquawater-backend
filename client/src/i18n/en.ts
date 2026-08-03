@@ -210,6 +210,10 @@ export const en = {
     'subs.active': 'Active',
     'subs.paused': 'Paused',
     'subs.create': 'Create a standing order',
+    'subs.repeat': 'Repeat this order every week',
+    'subs.repeatHint': 'Every {day} the same basket, address and time slot will be ordered automatically. Cancel whenever you like.',
+    'subs.repeatOn': 'Standing order created as well.',
+    'subs.repeatFailed': 'Order placed, but the standing order could not be created.',
     'courier.empties': 'Empties collected',
 
     'trust.eyebrow': 'Numbers',

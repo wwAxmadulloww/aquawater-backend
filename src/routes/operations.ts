@@ -161,6 +161,7 @@ const subSchema = z.object({
     items: z.array(z.object({
         productId: z.string().min(1),
         qty: z.number().int().positive().max(100),
+        returnBottle: z.boolean().optional().default(true),
     })).min(1).max(20),
     addressSnapshot: z.object({
         region: z.string().min(1), city: z.string().min(1), district: z.string().min(1),

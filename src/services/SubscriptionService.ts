@@ -53,7 +53,13 @@ export async function runDueSubscriptions(now = new Date()): Promise<RunResult> 
         const created = await createOrder(
             sub.userId,
             {
-                items: sub.items.map(i => ({ productId: String(i.productId), qty: i.qty })),
+                items: sub.items.map(i => ({
+                    productId: String(i.productId),
+                    qty: i.qty,
+                    // Absent on standing orders created before the choice existed;
+                    // those were set up as returnable, so that is what they stay.
+                    returnBottle: i.returnBottle !== false,
+                })),
                 addressSnapshot: sub.addressSnapshot,
                 deliveryDate,
                 deliveryTimeSlot: sub.deliveryTimeSlot,

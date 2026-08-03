@@ -24,10 +24,17 @@ export const paymentKey = (method: string): string => {
     return known.includes(m) ? `checkout.payment.${m}` : 'orders.payment';
 };
 
-/** Goods only, from the prices captured at the time of purchase. */
+/**
+ * Goods, including any container charge, at the prices captured at purchase.
+ *
+ * `depositSnapshot` is what the customer paid to keep a returnable container.
+ * Leaving it out repeated the delivery-fee mistake exactly: the courier at the
+ * door would be shown less than the customer owes.
+ */
 export const itemsTotal = (order: any): number =>
     (order?.items || []).reduce(
-        (sum: number, i: any) => sum + (i.priceSnapshot || 0) * (i.qty || 0),
+        (sum: number, i: any) =>
+            sum + ((i.priceSnapshot || 0) + (i.depositSnapshot || 0)) * (i.qty || 0),
         0,
     );
 
