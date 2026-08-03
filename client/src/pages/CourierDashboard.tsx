@@ -64,12 +64,12 @@ export default function CourierDashboard() {
                                     </div>
                                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
                                         order.status === 'in_transit' ? 'bg-orange-100 text-orange-700' :
-                                            order.status === 'assigned' ? 'bg-blue-100 text-blue-700' :
+                                            ['assigned', 'confirmed'].includes(order.status) ? 'bg-blue-100 text-blue-700' :
                                                 'bg-yellow-100 text-yellow-700'
                                         }`}>
                                         {order.status === 'delivered' ? 'Yetkazilgan' :
                                             order.status === 'in_transit' ? 'Yo\'lda' :
-                                                order.status === 'assigned' ? 'Biriktirilgan' :
+                                                ['assigned', 'confirmed'].includes(order.status) ? 'Biriktirilgan' :
                                                     'Kutilmoqda'}
                                     </span>
                                 </div>
@@ -143,7 +143,7 @@ export default function CourierDashboard() {
                                     </div>
 
                                     <div className="flex gap-2">
-                                        {order.status === 'assigned' && (
+                                        {['assigned', 'confirmed'].includes(order.status) && (
                                             <button
                                                 onClick={() => statusMut.mutate({ id: order._id, status: 'in_transit' })}
                                                 disabled={statusMut.isPending}
@@ -152,7 +152,14 @@ export default function CourierDashboard() {
                                                 Yo'lga chiqdim
                                             </button>
                                         )}
-                                        {['assigned', 'in_transit'].includes(order.status) && (
+                                        {/*
+                                          * `confirmed` counts too. Assigning a courier sets the
+                                          * status to `assigned`, but an admin setting it back to
+                                          * `confirmed` afterwards left the courier holding an
+                                          * order with no buttons at all — so the delivery could
+                                          * never be marked done and the empties never came back.
+                                          */}
+                                        {['assigned', 'confirmed', 'in_transit'].includes(order.status) && (
                                             <>
                                                 {/*
                                                   * The empties count is captured here rather than on a
