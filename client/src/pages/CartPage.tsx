@@ -5,7 +5,6 @@ import { useCart } from '../context/CartContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { formatPrice } from '../api/client'
 
-const DELIVERY_FEE = 0
 
 /** True when this line is being bought outright rather than returned. */
 const keepsContainer = (i: any) => !!i.returnable && i.returnBottle === false
@@ -38,7 +37,7 @@ export default function CartPage() {
                             <div key={item._id} className="card p-4 flex flex-wrap items-center gap-4">
                                 <img src={item.imageUrl} alt={item.name} className="w-20 h-20 object-cover rounded-xl flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">{item.name}</h3>
+                                    <h3 className="font-semibold text-gray-900 text-sm mb-1">{item.name}</h3>
                                     <p className="text-primary-600 font-bold">
                                         {formatPrice(item.price + (keepsContainer(item) ? (item.depositPrice || 0) : 0))}
                                     </p>
@@ -115,13 +114,19 @@ export default function CartPage() {
                                     <span>{t('cart.subtotal')}</span>
                                     <span>{formatPrice(totalPrice)}</span>
                                 </div>
+                                {/*
+                                  * The basket has no address yet, so it cannot know the charge.
+                                  * It used to print "free" from a hardcoded zero and show a
+                                  * total the checkout then added 15,000 to — the customer was
+                                  * quoted one figure and charged another.
+                                  */}
                                 <div className="flex justify-between text-gray-600">
                                     <span>{t('cart.delivery')}</span>
-                                    <span className="text-green-600 font-medium">{DELIVERY_FEE === 0 ? t('cart.free') : formatPrice(DELIVERY_FEE)}</span>
+                                    <span className="text-xs">{t('cart.deliveryAtCheckout')}</span>
                                 </div>
                                 <div className="border-t border-gray-100 pt-3 flex justify-between font-bold text-gray-900 text-base">
                                     <span>{t('cart.total')}</span>
-                                    <span className="text-primary-700">{formatPrice(totalPrice + DELIVERY_FEE)}</span>
+                                    <span className="text-primary-700">{formatPrice(totalPrice)}</span>
                                 </div>
                             </div>
                             <Link to="/checkout" className="btn-primary w-full py-3 text-base justify-center">

@@ -57,6 +57,7 @@ export const uz = {
     'cart.total': 'Jami',
     'cart.checkout': 'Buyurtma rasmiylashtirish',
     'cart.free': 'Bepul',
+    'cart.deliveryAtCheckout': 'Manzilga qarab hisoblanadi',
     'cart.remove': 'O\'chirish',
 
     // Checkout

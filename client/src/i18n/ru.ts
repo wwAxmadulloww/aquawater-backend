@@ -57,6 +57,7 @@ export const ru = {
     'cart.total': 'Итого',
     'cart.checkout': 'Оформить заказ',
     'cart.free': 'Бесплатно',
+    'cart.deliveryAtCheckout': 'Рассчитается по адресу',
     'cart.remove': 'Удалить',
 
     // Checkout

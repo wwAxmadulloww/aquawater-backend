@@ -57,6 +57,7 @@ export const en = {
     'cart.total': 'Total',
     'cart.checkout': 'Proceed to Checkout',
     'cart.free': 'Free',
+    'cart.deliveryAtCheckout': 'Calculated from your address',
     'cart.remove': 'Remove',
 
     // Checkout
