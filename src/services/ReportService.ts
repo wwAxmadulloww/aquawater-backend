@@ -160,7 +160,7 @@ export function toCsv(rows: Record<string, unknown>[]): string {
 
     /*
      * Quoting is not enough on its own: Excel and Sheets treat a cell beginning
-     * =, +, - or @ as a formula, so a product name a worker submitted as
+     * =, +, - or @ as a formula, so a product name entered as
      * `=HYPERLINK(...)` would execute when the accountant opened the export.
      * Prefixing a tab neutralises it while leaving the text readable.
      */

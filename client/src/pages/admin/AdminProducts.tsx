@@ -1,18 +1,17 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Edit2, Trash2, X, Check, Package, Wrench, ImageOff } from 'lucide-react'
+import { Plus, Edit2, Trash2, X, Check, Package, ImageOff } from 'lucide-react'
 import { getProducts, createProduct, updateProduct, deleteProduct, stocktakeProduct, formatPrice } from '../../api/client'
 import { useLanguage } from '../../i18n/LanguageContext'
 import toast from 'react-hot-toast'
 
 interface ProductForm {
-    name: string; category: string; productType: 'product' | 'service'
+    name: string
     description: string; price: string; imageUrl: string; inStock: boolean
 }
 
 const EMPTY: ProductForm = {
-    name: '', category: 'water', productType: 'product',
-    description: '', price: '', imageUrl: '', inStock: true
+    name: '', description: '', price: '', imageUrl: '', inStock: true
 }
 
 interface FormPanelProps {
@@ -44,40 +43,6 @@ function ProductFormPanel({ form, editing, isPending, onChange, onSubmit, onCanc
             </div>
             <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                {/* Mahsulot turi — birinchi savol */}
-                <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-2">Mahsulot turi *</label>
-                    <div className="flex gap-3">
-                        <button
-                            type="button"
-                            onClick={() => onChange({ ...form, productType: 'product' })}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all text-sm font-medium ${form.productType === 'product'
-                                ? 'border-primary-500 bg-primary-50 text-primary-700'
-                                : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                                }`}
-                        >
-                            <Package className="w-4 h-4" />
-                            Mahsulot (suv, idish...)
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => onChange({ ...form, productType: 'service' })}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 transition-all text-sm font-medium ${form.productType === 'service'
-                                ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                : 'border-gray-200 text-gray-500 hover:border-gray-300'
-                                }`}
-                        >
-                            <Wrench className="w-4 h-4" />
-                            Xizmat (o'rnatish, ta'mirlash...)
-                        </button>
-                    </div>
-                    {form.productType === 'service' && (
-                        <p className="text-xs text-orange-600 mt-1.5">
-                            ℹ️ Xizmatlar uchun miqdor tanlash ko'rinmaydi
-                        </p>
-                    )}
-                </div>
-
                 <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Nomi *</label>
                     <input
@@ -87,19 +52,6 @@ function ProductFormPanel({ form, editing, isPending, onChange, onSubmit, onCanc
                         className="input text-sm"
                         placeholder="Mahsulot nomi"
                     />
-                </div>
-                <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Kategoriya *</label>
-                    <select
-                        value={form.category}
-                        onChange={e => onChange({ ...form, category: e.target.value })}
-                        className="input text-sm"
-                    >
-                        <option value="water">Suv</option>
-                        <option value="equipment">Jihozlar</option>
-                        <option value="accessories">Aksessuarlar</option>
-                        <option value="service">Xizmat</option>
-                    </select>
                 </div>
                 <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Tavsif *</label>
@@ -221,17 +173,10 @@ export default function AdminProducts() {
         onError: (err: any) => toast.error(err.response?.data?.message || 'Xatolik'),
     })
 
-    const approveMut = useMutation({
-        mutationFn: ({ id, status }: { id: string; status: 'approved' | 'rejected' }) => import('../../api/client').then(m => m.approveProduct(id, status)),
-        onSuccess: () => { toast.success('Status yangilandi'); refresh() },
-        onError: () => toast.error('Xatolik yuz berdi')
-    })
-
     const openEdit = (p: any) => {
         setEditing(p._id)
         setForm({
-            name: p.name, category: p.category,
-            productType: p.productType || 'product',
+            name: p.name,
             description: p.description, price: String(p.price),
             imageUrl: p.imageUrl, inStock: p.inStock
         })
@@ -277,11 +222,9 @@ export default function AdminProducts() {
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nomi</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Turi</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Narx</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qoldiq</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Holat</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tasdiq</th>
                                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amallar</th>
                             </tr>
                         </thead>
@@ -322,14 +265,6 @@ export default function AdminProducts() {
                                             </div>
                                             <span className="font-medium text-gray-900">{p.name}</span>
                                         </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${p.productType === 'service'
-                                            ? 'bg-orange-100 text-orange-700'
-                                            : 'bg-blue-100 text-blue-700'
-                                            }`}>
-                                            {p.productType === 'service' ? '🔧 Xizmat' : '📦 Mahsulot'}
-                                        </span>
                                     </td>
                                     <td className="px-4 py-3 text-primary-700 font-medium">{formatPrice(p.price)}</td>
                                     {/*
@@ -401,30 +336,6 @@ export default function AdminProducts() {
                                                 <span className="text-[10px] text-accent">idish qaytariladi</span>
                                             )}
                                         </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {p.status === 'pending' ? (
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={() => approveMut.mutate({ id: p._id, status: 'approved' })}
-                                                    title="Tasdiqlash"
-                                                    className="p-1 text-green-600 hover:bg-green-50 rounded"
-                                                >
-                                                    <Check className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => approveMut.mutate({ id: p._id, status: 'rejected' })}
-                                                    title="Rad etish"
-                                                    className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <span className={`text-xs font-semibold ${p.status === 'rejected' ? 'text-red-500' : 'text-green-600'}`}>
-                                                {p.status === 'rejected' ? 'Rad etilgan' : 'Tasdiqlangan'}
-                                            </span>
-                                        )}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex justify-end gap-2">

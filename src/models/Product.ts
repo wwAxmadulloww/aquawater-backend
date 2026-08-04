@@ -1,9 +1,16 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+/**
+ * Something the shop sells. Which, now, is water.
+ *
+ * The catalogue used to carry a category ('water' | 'equipment' | 'accessories'
+ * | 'service') and a type ('product' | 'service') so one storefront could offer
+ * bottles, dispensers, pumps and a fitter's visit. All of that is gone: with a
+ * single kind of thing on sale, a category filter with one button and a type
+ * that is always the same are controls that decide nothing.
+ */
 export interface IProduct extends Document {
     name: string;
-    category: 'water' | 'equipment' | 'accessories' | 'service';
-    productType: 'product' | 'service';
     description: string;
     price: number;
     imageUrl: string;
@@ -21,9 +28,9 @@ export interface IProduct extends Document {
      */
     depositPrice?: number | null;
     /**
-     * Units on hand, or null when this product is not counted (services, and
-     * anything ordered to order). `inStock` alone could not stop the shop
-     * selling two hundred bottles on a day it had forty.
+     * Units on hand, or null when this product is not counted. `inStock` alone
+     * could not stop the shop selling two hundred bottles on a day it had
+     * forty.
      */
     stockQty?: number | null;
     /**
@@ -34,15 +41,11 @@ export interface IProduct extends Document {
      * panel shows those as uncounted rather than presenting a guess as fact.
      */
     stockCountedAt?: Date | null;
-    workerId?: mongoose.Types.ObjectId;
-    status: 'pending' | 'approved' | 'rejected';
 }
 
 const ProductSchema = new Schema<IProduct>(
     {
         name: { type: String, required: true },
-        category: { type: String, enum: ['water', 'equipment', 'accessories', 'service'], required: true },
-        productType: { type: String, enum: ['product', 'service'], default: 'product' },
         description: { type: String, required: true },
         price: { type: Number, required: true, min: 0 },
         imageUrl: { type: String, required: true },
@@ -51,8 +54,6 @@ const ProductSchema = new Schema<IProduct>(
         depositPrice: { type: Number, default: null, min: 0 },
         stockQty: { type: Number, default: null, min: 0 },
         stockCountedAt: { type: Date, default: null },
-        workerId: { type: Schema.Types.ObjectId, ref: 'User' },
-        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
     },
     { timestamps: true }
 );

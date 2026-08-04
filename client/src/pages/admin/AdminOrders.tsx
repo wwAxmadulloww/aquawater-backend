@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Trash2, UserPlus, Truck, Wrench } from 'lucide-react'
+import { Trash2, UserPlus, Truck } from 'lucide-react'
 import { getOrders, updateOrderStatus, deleteOrder, formatPrice, getAdminUsers, assignOrder } from '../../api/client'
 import { useLanguage } from '../../i18n/LanguageContext'
 import toast from 'react-hot-toast'
@@ -35,7 +35,6 @@ export default function AdminOrders() {
     })
 
     const couriers = users?.filter((u: any) => u.role === 'courier') || []
-    const workers = users?.filter((u: any) => u.role === 'worker') || []
 
     const statusMut = useMutation({
         mutationFn: ({ id, status }: { id: string; status: string }) => updateOrderStatus(id, status),
@@ -44,7 +43,7 @@ export default function AdminOrders() {
     })
 
     const assignMut = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: { courierId?: string, workerId?: string } }) => assignOrder(id, data),
+        mutationFn: ({ id, data }: { id: string; data: { courierId?: string } }) => assignOrder(id, data),
         onSuccess: () => { toast.success('Biriktirildi'); qc.invalidateQueries({ queryKey: ['admin-orders'] }) },
         onError: () => toast.error('Xatolik yuz berdi'),
     })
@@ -144,18 +143,6 @@ export default function AdminOrders() {
                                                     >
                                                         <option value="">Kuryer tanlang</option>
                                                         {couriers.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
-                                                    </select>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Wrench className="w-4 h-4 text-orange-600 flex-shrink-0" />
-                                                    <select
-                                                        value={order.workerId || ''}
-                                                        onChange={e => assignMut.mutate({ id: order._id, data: { workerId: e.target.value } })}
-                                                        disabled={assignMut.isPending}
-                                                        className="input text-xs py-1 px-2 h-auto"
-                                                    >
-                                                        <option value="">Ishchi tanlang</option>
-                                                        {workers.map((w: any) => <option key={w._id} value={w._id}>{w.name} {w.workerType ? `(${w.workerType})` : ''}</option>)}
                                                     </select>
                                                 </div>
                                             </div>

@@ -7,18 +7,6 @@
 // standalone `google-auth-library` import produces against it.
 import { sheets as sheetsApi, auth as googleAuth } from 'googleapis/build/src/apis/sheets';
 
-export interface SheetProductRow {
-    id: string;
-    name: string;
-    category: string;
-    productType: string;
-    description: string;
-    price: number;
-    imageUrl: string;
-    inStock: boolean;
-    status: string;
-}
-
 export interface SheetOrderRow {
     id: string;
     customerPhone: string;
@@ -44,16 +32,12 @@ export function productRow(p: any): (string | number)[] {
     return [
         String(p?._id ?? ''),
         p?.name || '',
-        p?.category || '',
-        p?.productType || 'product',
         p?.price ?? 0,
         p?.depositPrice ?? '',
-        // A null stock means this product is not counted — a service, or
-        // anything made to order. An empty cell says that; a 0 would claim
-        // the shelf is empty.
+        // A null stock means this product is not counted. An empty cell says
+        // that; a 0 would claim the shelf is empty.
         p?.stockQty ?? '',
         p?.inStock !== false ? 'Bor' : 'Yo\'q',
-        p?.status || 'approved',
         new Date().toISOString().slice(0, 19).replace('T', ' '),
     ];
 }
@@ -87,8 +71,7 @@ export class GoogleSheetsService {
     /** Column titles written above the first row of each tab. */
     private static readonly HEADERS: Record<string, string[]> = {
         Products: [
-            'ID', 'Nomi', 'Kategoriya', 'Turi', 'Narxi', 'Idish narxi',
-            'Qoldiq', 'Sotuvda', 'Holati', 'Yangilangan',
+            'ID', 'Nomi', 'Narxi', 'Idish narxi', 'Qoldiq', 'Sotuvda', 'Yangilangan',
         ],
         Orders: [
             'ID', 'Telefon', 'Mijoz', 'Mahsulotlar', 'Jami summa', 'Manzil',
@@ -245,24 +228,6 @@ export class GoogleSheetsService {
             console.error('[GoogleSheetsService] Products mirror failed:', err?.message || err);
             return false;
         }
-    }
-
-    /**
-     * Syncs a new Product to Google Sheets "Products" tab
-     */
-    public static async syncProduct(product: any): Promise<boolean> {
-        return this.appendRow('Products', [
-            product._id?.toString() || product.id || '',
-            product.name || '',
-            product.category || '',
-            product.productType || 'product',
-            product.description || '',
-            product.price || 0,
-            product.imageUrl || '',
-            product.inStock !== false ? 'Xa' : 'Yo\'q',
-            product.status || 'approved',
-            new Date().toISOString(),
-        ], 'products');
     }
 
     /**

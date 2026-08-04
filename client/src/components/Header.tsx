@@ -37,7 +37,6 @@ export default function Header() {
                     {isAuthenticated && <NavLink to="/orders">{t('nav.orders')}</NavLink>}
                     {isAuthenticated && <NavLink to="/subscriptions">{t('subs.title')}</NavLink>}
                     {isAdmin && <NavLink to="/admin">{t('nav.admin')}</NavLink>}
-                    {user?.role === 'worker' && <NavLink to="/worker">Ishchi Paneli</NavLink>}
                     {user?.role === 'courier' && <NavLink to="/courier">Kuryer Paneli</NavLink>}
                 </nav>
 
@@ -99,7 +98,6 @@ export default function Header() {
                     {isAuthenticated && <MobileNav to="/orders" onClick={() => setMenuOpen(false)}>{t('nav.orders')}</MobileNav>}
                     {isAuthenticated && <MobileNav to="/subscriptions" onClick={() => setMenuOpen(false)}>{t('subs.title')}</MobileNav>}
                     {isAdmin && <MobileNav to="/admin" onClick={() => setMenuOpen(false)}>{t('nav.admin')}</MobileNav>}
-                    {user?.role === 'worker' && <MobileNav to="/worker" onClick={() => setMenuOpen(false)}>Ishchi Paneli</MobileNav>}
                     {user?.role === 'courier' && <MobileNav to="/courier" onClick={() => setMenuOpen(false)}>Kuryer Paneli</MobileNav>}
                     {isAuthenticated ? (
                         <>

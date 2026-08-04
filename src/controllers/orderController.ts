@@ -39,8 +39,6 @@ export const getOrders = async (req: AuthRequest, res: Response): Promise<void> 
             filter = {};
         } else if (req.user!.role === 'courier') {
             filter = { courierId: req.user!._id };
-        } else if (req.user!.role === 'worker') {
-            filter = { workerId: req.user!._id };
         } else {
             filter = { userId: req.user!._id };
         }
@@ -89,8 +87,7 @@ export const getOrderById = async (req: AuthRequest, res: Response): Promise<voi
         const isOwner = String(ownerId) === String(req.user!._id);
 
         const isStaff = ['admin', 'super_admin'].includes(req.user!.role)
-            || (req.user!.role === 'courier' && String(order.courierId ?? '') === String(req.user!._id))
-            || (req.user!.role === 'worker' && String(order.workerId ?? '') === String(req.user!._id));
+            || (req.user!.role === 'courier' && String(order.courierId ?? '') === String(req.user!._id));
 
         if (!isOwner && !isStaff) {
             res.status(403).json({ message: 'Access denied' });
@@ -241,23 +238,19 @@ export const assignOrder = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
 
-        const { courierId, workerId } = req.body;
-        const update: Record<string, unknown> = {};
+        const { courierId } = req.body;
 
         // A malformed id previously threw a CastError and surfaced as a generic 500.
-        for (const [field, value] of [['courierId', courierId], ['workerId', workerId]] as const) {
-            if (value === undefined) continue;
-            if (value && !mongoose.Types.ObjectId.isValid(value)) {
-                res.status(400).json({ message: `Invalid ${field}` });
-                return;
-            }
-            update[field] = value || null;
-        }
-
-        if (Object.keys(update).length === 0) {
+        if (courierId === undefined) {
             res.status(400).json({ message: 'Nothing to assign' });
             return;
         }
+        if (courierId && !mongoose.Types.ObjectId.isValid(courierId)) {
+            res.status(400).json({ message: 'Invalid courierId' });
+            return;
+        }
+
+        const update: Record<string, unknown> = { courierId: courierId || null };
 
         // Assigning someone makes the order actionable for them.
         if (update.courierId) update.status = 'assigned';

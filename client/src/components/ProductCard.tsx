@@ -12,7 +12,6 @@ interface Product {
     price: number
     imageUrl: string
     inStock: boolean
-    category: string
     description: string
     stockQty?: number | null
     returnable?: boolean
@@ -50,11 +49,6 @@ export default function ProductCard({ product }: { product: Product }) {
                         <span className="rounded-full border border-line bg-ink px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-gray-900">
                             Sotuvda yo'q
                         </span>
-                    </div>
-                )}
-                {product.category === 'water' && (
-                    <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-ink/70 px-2.5 py-1 text-[10px] uppercase tracking-wider text-gray-900 backdrop-blur-sm">
-                        Asosiy
                     </div>
                 )}
             </div>

@@ -6,8 +6,7 @@ interface User {
     _id: string
     name: string
     phone: string
-    role: 'customer' | 'admin' | 'worker' | 'courier' | 'super_admin'
-    workerType?: string
+    role: 'customer' | 'admin' | 'courier' | 'super_admin'
     isPhoneVerified: boolean
     preferredLanguage: 'uz' | 'ru' | 'en'
     addresses: Array<{

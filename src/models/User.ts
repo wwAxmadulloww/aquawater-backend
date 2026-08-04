@@ -19,11 +19,10 @@ export interface IUser extends Document {
      * the ledger remains the source of truth.
      */
     bottleBalance: number;
-    role: 'customer' | 'admin' | 'worker' | 'courier' | 'super_admin';
+    role: 'customer' | 'admin' | 'courier' | 'super_admin';
     preferredLanguage: 'uz' | 'ru' | 'en';
     addresses: IAddress[];
     isPhoneVerified: boolean;
-    workerType?: string;
 }
 
 const AddressSchema = new Schema<IAddress>({
@@ -41,11 +40,10 @@ const UserSchema = new Schema<IUser>(
         phone: { type: String, required: true, unique: true },
         passwordHash: { type: String, required: false }, // Made optional for multi-step registration
         bottleBalance: { type: Number, default: 0 },
-        role: { type: String, enum: ['customer', 'admin', 'worker', 'courier', 'super_admin'], default: 'customer' },
+        role: { type: String, enum: ['customer', 'admin', 'courier', 'super_admin'], default: 'customer' },
         preferredLanguage: { type: String, enum: ['uz', 'ru', 'en'], default: 'uz' },
         addresses: [AddressSchema],
         isPhoneVerified: { type: Boolean, default: false },
-        workerType: { type: String },
     },
     { timestamps: true }
 );

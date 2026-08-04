@@ -109,11 +109,11 @@ export const getUsers = async (_req: AuthRequest, res: Response): Promise<void> 
 
 export const updateUserRole = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { role, workerType } = req.body;
+        const { role } = req.body;
         const targetId = req.params.id;
         const actor = req.user!;
 
-        if (!['customer', 'admin', 'worker', 'courier', 'super_admin'].includes(role)) {
+        if (!['customer', 'admin', 'courier', 'super_admin'].includes(role)) {
             res.status(400).json({ message: 'Invalid role' });
             return;
         }
@@ -152,12 +152,9 @@ export const updateUserRole = async (req: AuthRequest, res: Response): Promise<v
             }
         }
 
-        const updateData: any = { role };
-        if (role === 'worker') {
-            updateData.workerType = workerType || '';
-        } else {
-            updateData.$unset = { workerType: 1 };
-        }
+        // `workerType` went with the fitter role; any left on old documents is
+        // cleared as those users are touched.
+        const updateData: any = { role, $unset: { workerType: 1 } };
 
         const user = await User.findByIdAndUpdate(targetId, updateData, { new: true }).select('-passwordHash');
 

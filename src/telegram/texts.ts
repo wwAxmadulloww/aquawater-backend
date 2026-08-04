@@ -69,7 +69,7 @@ const TEXTS: Record<BotLang, BotTexts> = {
         btnSharePhone: '📱 Telefon raqamni yuborish',
         btnBack: '⬅️ Orqaga',
 
-        productsTitle: '💧 <b>Mahsulotlar va xizmatlar</b>',
+        productsTitle: '💧 <b>Suv mahsulotlari</b>',
         productsEmpty: 'Hozircha mahsulotlar mavjud emas. Keyinroq urinib ko\'ring.',
         productsFooter: 'Buyurtma berish uchun saytimizga o\'ting 👇',
 
@@ -114,7 +114,7 @@ const TEXTS: Record<BotLang, BotTexts> = {
         btnSharePhone: '📱 Отправить номер',
         btnBack: '⬅️ Назад',
 
-        productsTitle: '💧 <b>Товары и услуги</b>',
+        productsTitle: '💧 <b>Питьевая вода</b>',
         productsEmpty: 'Товары пока недоступны. Попробуйте позже.',
         productsFooter: 'Для заказа перейдите на сайт 👇',
 
@@ -159,7 +159,7 @@ const TEXTS: Record<BotLang, BotTexts> = {
         btnSharePhone: '📱 Share phone number',
         btnBack: '⬅️ Back',
 
-        productsTitle: '💧 <b>Products and services</b>',
+        productsTitle: '💧 <b>Drinking water</b>',
         productsEmpty: 'No products available yet. Please try later.',
         productsFooter: 'Visit our site to order 👇',
 

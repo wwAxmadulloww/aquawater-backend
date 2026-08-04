@@ -5,30 +5,24 @@ import { getProducts } from '../api/client'
 import ProductCard from '../components/ProductCard'
 import { SlidersHorizontal } from 'lucide-react'
 
-type Category = 'all' | 'water' | 'equipment' | 'accessories' | 'service'
 type Sort = 'default' | 'price_asc' | 'price_desc'
 
+/*
+ * The category buttons — water, equipment, accessories, services — went with
+ * the products they filtered. A row of tabs where every tab shows the same
+ * list is a control that decides nothing, so only the sort remains.
+ */
 export default function ProductsPage() {
     const { t } = useLanguage()
-    const [category, setCategory] = useState<Category>('all')
     const [sort, setSort] = useState<Sort>('default')
 
     const params: Record<string, string> = {}
-    if (category !== 'all') params.category = category
     if (sort !== 'default') params.sort = sort
 
     const { data: products, isLoading } = useQuery({
-        queryKey: ['products', category, sort],
+        queryKey: ['products', sort],
         queryFn: () => getProducts(params),
     })
-
-    const categories: { val: Category; label: string }[] = [
-        { val: 'all', label: 'Barchasi' },
-        { val: 'water', label: '💧 Suv' },
-        { val: 'equipment', label: '⚙️ Jihozlar' },
-        { val: 'accessories', label: '🔩 Aksessuarlar' },
-        { val: 'service', label: '🔧 Xizmatlar' },
-    ]
 
     return (
         <div className="py-10">
@@ -39,21 +33,7 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Filters + Sort */}
-                <div className="flex flex-col sm:flex-row gap-4 mb-8 items-start sm:items-center justify-between">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        {categories.map(c => (
-                            <button
-                                key={c.val}
-                                onClick={() => setCategory(c.val)}
-                                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${category === c.val
-                                        ? 'bg-primary-600 text-white shadow-sm'
-                                        : 'bg-surface border border-gray-200 text-gray-600 hover:border-primary-300 hover:text-primary-600'
-                                    }`}
-                            >
-                                {c.label}
-                            </button>
-                        ))}
-                    </div>
+                <div className="flex flex-col sm:flex-row gap-4 mb-8 items-start sm:items-center justify-end">
                     <div className="flex items-center gap-2">
                         <SlidersHorizontal className="w-4 h-4 text-gray-600" />
                         <select

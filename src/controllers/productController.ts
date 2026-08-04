@@ -18,15 +18,13 @@ const mirrorToSheets = (): void => {
 
 export const productSchema = z.object({
     name: z.string().min(1).max(100),
-    category: z.enum(['water', 'equipment', 'accessories', 'service']),
-    productType: z.enum(['product', 'service']).optional(),
     description: z.string().min(1),
     price: z.number().positive(),
     imageUrl: z.string().url(),
     inStock: z.boolean().optional().default(true),
     /** True for containers the customer keeps and owes back. */
     returnable: z.boolean().optional(),
-    /** Units on hand, or null for anything not counted (services, made to order). */
+    /** Units on hand, or null for anything not counted. */
     stockQty: z.number().int().min(0).max(1_000_000).nullable().optional(),
     /** Charged per unit when the customer keeps a returnable container. */
     depositPrice: z.number().int().min(0).max(10_000_000).nullable().optional(),
@@ -45,13 +43,8 @@ export const stocktakeSchema = z.object({
 
 export const getProducts = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { category, sort } = req.query;
+        const { sort } = req.query;
         const filter: Record<string, unknown> = {};
-        if (category && ['water', 'equipment', 'accessories', 'service'].includes(category as string)) {
-            filter.category = category;
-        }
-
-        filter.status = 'approved';
 
         let sortObj: Record<string, 1 | -1> = {};
         if (sort === 'price_asc') sortObj = { price: 1 };
@@ -91,18 +84,7 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const data: any = { ...parsed.data };
-
-        if (req.user?.role === 'worker') {
-            data.status = 'pending';
-            data.workerId = req.user._id;
-            data.category = 'service';
-            data.productType = 'service';
-        } else {
-            data.status = 'approved';
-        }
-
-        const product = await Product.create(data);
+        const product = await Product.create(parsed.data);
 
         mirrorToSheets();
 
@@ -199,39 +181,10 @@ export const deleteProduct = async (req: AuthRequest, res: Response): Promise<vo
     }
 };
 
-export const getAdminProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getAdminProducts = async (_req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const filter: any = {};
-        if (req.user?.role === 'worker') {
-            filter.workerId = req.user._id;
-        }
-        const products = await Product.find(filter).sort({ createdAt: -1 });
+        const products = await Product.find().sort({ createdAt: -1 });
         res.json(products);
-    } catch {
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-export const approveProduct = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            res.status(400).json({ message: 'Invalid id' });
-            return;
-        }
-
-        const { status } = req.body;
-        if (!['approved', 'rejected'].includes(status)) {
-            res.status(400).json({ message: 'Invalid status' });
-            return;
-        }
-        const product = await Product.findByIdAndUpdate(req.params.id, { status }, { new: true });
-        if (!product) {
-            res.status(404).json({ message: 'Product not found' });
-            return;
-        }
-
-        mirrorToSheets();
-        res.json(product);
     } catch {
         res.status(500).json({ message: 'Server error' });
     }

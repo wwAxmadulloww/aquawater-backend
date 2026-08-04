@@ -15,10 +15,9 @@ function RoleEditModal({ user, onClose }: RoleModalProps) {
     const qc = useQueryClient()
     const { isSuperAdmin } = useAuth()
     const [role, setRole] = useState(user.role)
-    const [workerType, setWorkerType] = useState(user.workerType || '')
 
     const { mutate, isPending } = useMutation({
-        mutationFn: () => updateUserRole(user._id, role, workerType),
+        mutationFn: () => updateUserRole(user._id, role),
         onSuccess: () => {
             toast.success('Rol yangilandi')
             qc.invalidateQueries({ queryKey: ['admin-users'] })
@@ -53,7 +52,6 @@ function RoleEditModal({ user, onClose }: RoleModalProps) {
                             className="input text-sm"
                         >
                             <option value="customer">Mijoz (Customer)</option>
-                            <option value="worker">Ishchi (Worker)</option>
                             <option value="courier">Kuryer (Courier)</option>
                             {isSuperAdmin && <option value="admin">Admin</option>}
                             {isSuperAdmin && <option value="super_admin">⚡️ Super Admin</option>}
@@ -63,18 +61,6 @@ function RoleEditModal({ user, onClose }: RoleModalProps) {
                         )}
                     </div>
 
-                    {role === 'worker' && (
-                        <div className="animate-in fade-in slide-in-from-top-2">
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Mutaxassisligi (ixtiyoriy)</label>
-                            <input
-                                value={workerType}
-                                onChange={e => setWorkerType(e.target.value)}
-                                placeholder="Masalan: Santexnik, Nasos ustasi..."
-                                className="input text-sm"
-                            />
-                            <p className="text-xs text-gray-600 mt-1">Bu ishchining qanday xizmat ko'rsatishini bildiradi.</p>
-                        </div>
-                    )}
                 </div>
 
                 <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
@@ -123,7 +109,6 @@ export default function AdminUsers() {
         switch (u.role) {
             case 'super_admin': return <span className="bg-primary-100 text-primary-700 px-2 py-1 rounded text-xs font-bold ring-1 ring-primary-200">⚡️ Super Admin</span>
             case 'admin': return <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">👑 Admin</span>
-            case 'worker': return <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-semibold">🔧 Ishchi{u.workerType ? ` (${u.workerType})` : ''}</span>
             case 'courier': return <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-semibold">🚚 Kuryer</span>
             default: return <span className="badge-accepted">👤 Mijoz</span>
         }

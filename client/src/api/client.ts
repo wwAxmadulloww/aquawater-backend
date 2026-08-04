@@ -108,9 +108,6 @@ export const deleteProduct = (id: string) =>
 export const stocktakeProduct = (id: string, stockQty: number | null) =>
     api.patch(`/products/${id}/stocktake`, { stockQty }).then(r => r.data)
 
-export const approveProduct = (id: string, status: 'approved' | 'rejected') =>
-    api.patch(`/products/${id}/approve`, { status }).then(r => r.data)
-
 // Order helpers
 export const createOrder = (data: unknown) =>
     api.post('/orders', data).then(r => r.data)
@@ -124,7 +121,7 @@ export const getOrder = (id: string) =>
 export const updateOrderStatus = (id: string, status: string, extra?: { emptiesCollected?: number }) =>
     api.patch(`/orders/${id}/status`, { status, ...extra }).then(r => r.data)
 
-export const assignOrder = (id: string, data: { courierId?: string, workerId?: string }) =>
+export const assignOrder = (id: string, data: { courierId?: string }) =>
     api.patch(`/orders/${id}/assign`, data).then(r => r.data)
 
 export const deleteOrder = (id: string) =>
@@ -138,8 +135,8 @@ export const getAdminStats = () =>
 export const getAdminUsers = () =>
     api.get('/admin/users').then(r => r.data)
 
-export const updateUserRole = (id: string, role: string, workerType?: string) =>
-    api.patch(`/admin/users/${id}/role`, { role, workerType }).then(r => r.data)
+export const updateUserRole = (id: string, role: string) =>
+    api.patch(`/admin/users/${id}/role`, { role }).then(r => r.data)
 
 export const deleteAdminUser = (id: string) =>
     api.delete(`/admin/users/${id}`).then(r => r.data)

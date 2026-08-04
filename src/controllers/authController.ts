@@ -33,7 +33,6 @@ const publicUser = (user: any) => ({
     name: user.name,
     phone: user.phone,
     role: user.role,
-    workerType: user.workerType,
     preferredLanguage: user.preferredLanguage ?? 'uz',
     addresses: user.addresses ?? [],
     isPhoneVerified: user.isPhoneVerified ?? true,

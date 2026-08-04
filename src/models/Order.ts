@@ -31,7 +31,6 @@ export interface IOrder extends Document {
     items: IOrderItem[];
     addressSnapshot: IAddressSnapshot;
     courierId?: mongoose.Types.ObjectId;
-    workerId?: mongoose.Types.ObjectId;
     deliveryDate: string;
     deliveryTimeSlot: string;
     paymentMethod: 'cash' | 'click' | 'payme';
@@ -73,7 +72,6 @@ const OrderSchema = new Schema<IOrder>(
         items: [OrderItemSchema],
         addressSnapshot: { type: AddressSnapshotSchema, required: true },
         courierId: { type: Schema.Types.ObjectId, ref: 'User' },
-        workerId: { type: Schema.Types.ObjectId, ref: 'User' },
         deliveryDate: { type: String, required: true },
         deliveryTimeSlot: { type: String, required: true },
         paymentMethod: { type: String, enum: ['cash', 'click', 'payme'], required: true },

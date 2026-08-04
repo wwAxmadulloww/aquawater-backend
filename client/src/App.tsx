@@ -16,7 +16,6 @@ import ProfilePage from './pages/ProfilePage'
 import OrdersPage from './pages/OrdersPage'
 import SubscriptionsPage from './pages/SubscriptionsPage'
 import AdminPage from './pages/admin/AdminPage'
-import WorkerDashboard from './pages/WorkerDashboard'
 import CourierDashboard from './pages/CourierDashboard'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -65,7 +64,6 @@ function AppRoutes() {
             <Route path="/orders" element={<ProtectedRoute><Layout><OrdersPage /></Layout></ProtectedRoute>} />
             <Route path="/subscriptions" element={<ProtectedRoute><Layout><SubscriptionsPage /></Layout></ProtectedRoute>} />
             <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
-            <Route path="/worker/*" element={<RoleRoute allowedRoles={['worker']}><Layout><WorkerDashboard /></Layout></RoleRoute>} />
             <Route path="/courier/*" element={<RoleRoute allowedRoles={['courier']}><Layout><CourierDashboard /></Layout></RoleRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

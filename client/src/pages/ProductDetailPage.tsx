@@ -25,7 +25,8 @@ export default function ProductDetailPage() {
         enabled: !!product,
     })
 
-    const similar = allProducts?.filter((p: any) => p._id !== id && p.category === product?.category).slice(0, 4) || []
+    // Everything on sale is water now, so "similar" is simply the rest of it.
+    const similar = allProducts?.filter((p: any) => p._id !== id).slice(0, 4) || []
 
     if (isLoading) return (
         <div className="container-custom py-10">
@@ -47,10 +48,8 @@ export default function ProductDetailPage() {
         </div>
     )
 
-    const isService = product?.productType === 'service'
-
     const handleAddToCart = () => {
-        const count = isService ? 1 : qty
+        const count = qty
         for (let i = 0; i < count; i++) {
             addItem({
                 _id: product._id, name: product.name, price: product.price, imageUrl: product.imageUrl,
@@ -79,9 +78,6 @@ export default function ProductDetailPage() {
                     {/* Details */}
                     <div className="flex flex-col justify-center">
                         <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full font-medium capitalize">
-                                {product.category}
-                            </span>
                             {product.inStock ? (
                                 <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
                                     <CheckCircle className="w-3.5 h-3.5" />
@@ -97,8 +93,7 @@ export default function ProductDetailPage() {
 
                         <div className="text-3xl font-bold text-primary-700 mb-6">{formatPrice(product.price)}</div>
 
-                        {/* Qty selector — faqat mahsulot uchun, xizmatda ko'rinmaydi */}
-                        {!isService && (
+                        {(
                             <div className="flex items-center gap-4 mb-6">
                                 <span className="text-sm font-medium text-gray-700">{t('product.qty')}:</span>
                                 <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
