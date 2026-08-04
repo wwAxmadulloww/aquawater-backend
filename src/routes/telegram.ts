@@ -69,7 +69,12 @@ router.post('/webhook', async (req: Request, res: Response): Promise<void> => {
  */
 router.post('/sync', auth, adminOnly, async (_req: AuthRequest, res: Response): Promise<void> => {
     await TelegramBotService.syncConfiguration();
-    res.json({ message: 'Bot sozlamalari yangilandi' });
+    // Read back, so the answer is what Telegram is serving rather than what we
+    // asked it to serve.
+    res.json({
+        message: 'Bot sozlamalari yangilandi',
+        live: await TelegramBotService.readProfileText(),
+    });
 });
 
 export default router;

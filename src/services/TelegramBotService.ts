@@ -177,6 +177,31 @@ export class TelegramBotService {
     }
 
     /**
+     * What Telegram is actually serving right now.
+     *
+     * Read back rather than assumed, so the operator can see the spam is gone
+     * without hunting for the bot in a client — and without the token ever
+     * leaving the server to make the check.
+     */
+    public static async readProfileText(): Promise<{ description: string; short: string } | null> {
+        try {
+            const client = this.getClient();
+            if (!client) return null;
+            const [desc, short] = await Promise.all([
+                client.call('getMyDescription', {}),
+                client.call('getMyShortDescription', {}),
+            ]);
+            return {
+                description: (desc as any)?.description ?? '',
+                short: (short as any)?.short_description ?? '',
+            };
+        } catch (err) {
+            console.error('[Telegram] Could not read the profile text:', (err as Error).message);
+            return null;
+        }
+    }
+
+    /**
      * Points the composer's Mini App button at the current deployment.
      *
      * Set once through BotFather it silently rots: this button still opened a
