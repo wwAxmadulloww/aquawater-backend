@@ -20,7 +20,17 @@ export const productSchema = z.object({
     name: z.string().min(1).max(100),
     description: z.string().min(1),
     price: z.number().positive(),
-    imageUrl: z.string().url(),
+    /*
+     * An uploaded photo lives on this site and is referenced by path, so a bare
+     * `.url()` — which demands a scheme and a host — rejected every image the
+     * shop had put up itself. A single leading slash is required so a
+     * protocol-relative "//evil.example" cannot slip through as a path, and
+     * anything absolute must be http(s): no javascript: or data: in an src.
+     */
+    imageUrl: z.string().min(1).max(2000).refine(
+        v => (v.startsWith('/') && !v.startsWith('//')) || /^https?:\/\//i.test(v),
+        'Rasm manzili noto\'g\'ri',
+    ),
     inStock: z.boolean().optional().default(true),
     /** True for containers the customer keeps and owes back. */
     returnable: z.boolean().optional(),

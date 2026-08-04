@@ -95,6 +95,18 @@ export const getProduct = (id: string) =>
 export const createProduct = (data: unknown) =>
     api.post('/products', data).then(r => r.data)
 
+/**
+ * Sends a prepared photo and returns the path it can be shown at.
+ *
+ * The blob goes up as the request body rather than inside a form: it is one
+ * file with nothing alongside it, so there is nothing for multipart to keep
+ * apart.
+ */
+export const uploadProductImage = (blob: Blob): Promise<{ url: string }> =>
+    api.post('/products/image', blob, {
+        headers: { 'Content-Type': blob.type || 'image/jpeg' },
+    }).then(r => r.data)
+
 export const updateProduct = (id: string, data: unknown) =>
     api.put(`/products/${id}`, data).then(r => r.data)
 

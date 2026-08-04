@@ -1,7 +1,11 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Edit2, Trash2, X, Check, Package, ImageOff } from 'lucide-react'
-import { getProducts, createProduct, updateProduct, deleteProduct, stocktakeProduct, formatPrice } from '../../api/client'
+import { Plus, Edit2, Trash2, X, Check, Package, ImageOff, Upload, Loader2 } from 'lucide-react'
+import {
+    getProducts, createProduct, updateProduct, deleteProduct, stocktakeProduct,
+    formatPrice, uploadProductImage,
+} from '../../api/client'
+import { shrinkImage, NotAnImageError } from '../../lib/image'
 import { useLanguage } from '../../i18n/LanguageContext'
 import toast from 'react-hot-toast'
 
@@ -26,11 +30,32 @@ interface FormPanelProps {
 
 function ProductFormPanel({ form, editing, isPending, onChange, onSubmit, onCancel, t }: FormPanelProps) {
     const [imgError, setImgError] = useState(false)
+    const [uploading, setUploading] = useState(false)
 
-    // Rasm URL o'zgarganda error state reset
-    const handleImageUrlChange = (url: string) => {
+    /*
+     * The photo is taken from the device and uploaded straight away, so by the
+     * time the form is submitted the image is already on the site. Typing a URL
+     * meant every product picture was a link to someone else's server, which
+     * went blank the day that server rearranged its files — and there was no
+     * way to put up a photo of the actual bottle without publishing it
+     * elsewhere first.
+     */
+    const handleFile = async (file: File | undefined) => {
+        if (!file) return
+        setUploading(true)
         setImgError(false)
-        onChange({ ...form, imageUrl: url })
+        try {
+            const { url } = await uploadProductImage(await shrinkImage(file))
+            onChange({ ...form, imageUrl: url })
+        } catch (err: any) {
+            toast.error(
+                err instanceof NotAnImageError
+                    ? 'Faqat rasm tanlang (JPG, PNG, WEBP)'
+                    : err?.response?.data?.message || 'Rasm yuklanmadi',
+            )
+        } finally {
+            setUploading(false)
+        }
     }
 
     return (
@@ -74,35 +99,45 @@ function ProductFormPanel({ form, editing, isPending, onChange, onSubmit, onCanc
                         className="input text-sm"
                     />
                 </div>
-                <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Rasm URL *</label>
-                    <input
-                        value={form.imageUrl}
-                        onChange={e => handleImageUrlChange(e.target.value)}
-                        required
-                        className="input text-sm"
-                        placeholder="https://..."
-                    />
-                </div>
-
-                {/* Rasm preview */}
                 <div className="sm:col-span-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-2">Rasm ko'rinishi</label>
-                    {form.imageUrl && !imgError ? (
-                        <img
-                            src={form.imageUrl}
-                            alt="preview"
-                            className="w-28 h-28 object-cover rounded-xl border border-gray-200 bg-gray-50"
-                            onError={() => setImgError(true)}
-                        />
-                    ) : (
-                        <div className="w-28 h-28 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-1">
-                            <ImageOff className="w-6 h-6 text-gray-600" />
-                            <span className="text-xs text-gray-600">
-                                {form.imageUrl && imgError ? 'URL noto\'g\'ri' : 'URL kiriting'}
-                            </span>
+                    <label className="block text-xs font-medium text-gray-600 mb-2">Mahsulot rasmi *</label>
+                    <div className="flex items-center gap-4">
+                        {form.imageUrl && !imgError ? (
+                            <img
+                                src={form.imageUrl}
+                                alt="Tanlangan rasm"
+                                className="w-28 h-28 object-cover rounded-xl border border-gray-200 bg-gray-50"
+                                onError={() => setImgError(true)}
+                            />
+                        ) : (
+                            <div className="w-28 h-28 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center gap-1">
+                                <ImageOff className="w-6 h-6 text-gray-600" />
+                                <span className="text-xs text-gray-600">Rasm yo'q</span>
+                            </div>
+                        )}
+
+                        <div>
+                            {/* A plain file input styled as a button. `accept` points the
+                                phone's picker straight at the photo library. */}
+                            <label className={`btn-secondary inline-flex cursor-pointer items-center gap-2 text-sm
+                                               ${uploading ? 'pointer-events-none opacity-60' : ''}`}>
+                                {uploading
+                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                    : <Upload className="w-4 h-4" />}
+                                {uploading ? 'Yuklanmoqda...' : form.imageUrl ? 'Rasmni almashtirish' : 'Rasm tanlash'}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    disabled={uploading}
+                                    onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }}
+                                />
+                            </label>
+                            <p className="mt-2 text-xs text-gray-600">
+                                Telefon yoki kompyuter xotirasidan. Faqat rasm — JPG, PNG, WEBP.
+                            </p>
                         </div>
-                    )}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -187,6 +222,13 @@ export default function AdminProducts() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        // The URL box carried `required`; a file picker cannot, so the check
+        // moves here rather than letting a product through with no photo and
+        // failing on the server's own validation.
+        if (!form.imageUrl) {
+            toast.error('Mahsulot rasmini tanlang')
+            return
+        }
         if (editing) updateMut.mutate()
         else createMut.mutate()
     }

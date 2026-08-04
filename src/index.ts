@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
+import imageRoutes from './routes/images';
 import orderRoutes from './routes/orders';
 import adminRoutes from './routes/admin';
 import branchRoutes from './routes/branches';
@@ -151,6 +152,7 @@ app.use('/api', (req, res, next) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/images', imageRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/branches', branchRoutes);
