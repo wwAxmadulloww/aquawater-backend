@@ -33,6 +33,31 @@ export interface SheetOrderRow {
     createdAt: string;
 }
 
+/**
+ * One catalogue row, in the order the Products header declares.
+ *
+ * Split out so it can be checked without a Google account: this is the part
+ * that decides what the owner reads in the availability column, and getting
+ * "not counted" confused with "none left" is the easy mistake to make.
+ */
+export function productRow(p: any): (string | number)[] {
+    return [
+        String(p?._id ?? ''),
+        p?.name || '',
+        p?.category || '',
+        p?.productType || 'product',
+        p?.price ?? 0,
+        p?.depositPrice ?? '',
+        // A null stock means this product is not counted — a service, or
+        // anything made to order. An empty cell says that; a 0 would claim
+        // the shelf is empty.
+        p?.stockQty ?? '',
+        p?.inStock !== false ? 'Bor' : 'Yo\'q',
+        p?.status || 'approved',
+        new Date().toISOString().slice(0, 19).replace('T', ' '),
+    ];
+}
+
 export class GoogleSheetsService {
     private static getAuthClient() {
         const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -62,8 +87,8 @@ export class GoogleSheetsService {
     /** Column titles written above the first row of each tab. */
     private static readonly HEADERS: Record<string, string[]> = {
         Products: [
-            'ID', 'Nomi', 'Kategoriya', 'Turi', 'Tavsif', 'Narxi',
-            'Rasm', 'Sotuvda', 'Holati', 'Qo\'shilgan vaqti',
+            'ID', 'Nomi', 'Kategoriya', 'Turi', 'Narxi', 'Idish narxi',
+            'Qoldiq', 'Sotuvda', 'Holati', 'Yangilangan',
         ],
         Orders: [
             'ID', 'Telefon', 'Mijoz', 'Mahsulotlar', 'Jami summa', 'Manzil',
@@ -166,6 +191,59 @@ export class GoogleSheetsService {
         } catch (err) {
             console.error(`[GoogleSheetsService] Error reading from ${sheetName}:`, err);
             return null;
+        }
+    }
+
+    /**
+     * Rewrites the Products tab so it mirrors the catalogue.
+     *
+     * Appending a row per change was wrong for products: the sheet only ever
+     * heard about a product the moment it was created, so the availability
+     * column froze at whatever was true that day, and every later edit — a
+     * price change, a stocktake, selling the last bottle — left the sheet
+     * saying something the shop no longer believed. Repeated appends would also
+     * have grown a pile of stale duplicates for one product.
+     *
+     * The site is the source of truth here, so anything typed into these cells
+     * by hand is overwritten on the next change. Orders are the opposite and
+     * stay an append-only log: each one is genuinely a new line.
+     */
+    public static async syncAllProducts(): Promise<boolean> {
+        try {
+            const auth = this.getAuthClient();
+            const spreadsheetId = this.getSpreadsheetId('products');
+            if (!auth || !spreadsheetId) return false;
+
+            // Imported here rather than at module scope: this file is pulled in
+            // by the order path, and a circular import through the model layer
+            // is not worth risking for a best-effort mirror.
+            const Product = (await import('../models/Product')).default;
+            const products = await Product.find().sort({ name: 1 }).lean();
+
+            const rows = products.map((p: any) => productRow(p));
+
+            const sheets = sheetsApi({ version: 'v4', auth });
+            await this.ensureSheet(sheets, spreadsheetId, 'Products');
+
+            // Cleared first, so deleting a product removes its line instead of
+            // leaving it behind under the shorter list that replaces it.
+            await sheets.spreadsheets.values.clear({
+                spreadsheetId,
+                range: 'Products!A1:Z10000',
+            });
+
+            await sheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: 'Products!A1',
+                valueInputOption: 'USER_ENTERED',
+                requestBody: { values: [this.HEADERS.Products, ...rows] },
+            });
+
+            console.log(`[GoogleSheetsService] Products tab mirrored (${rows.length} rows).`);
+            return true;
+        } catch (err: any) {
+            console.error('[GoogleSheetsService] Products mirror failed:', err?.message || err);
+            return false;
         }
     }
 

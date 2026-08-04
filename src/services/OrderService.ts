@@ -94,6 +94,12 @@ function dispatchOrderSideEffects(order: any, phone: string, name: string): void
 
     void TelegramBotService.sendOrderNotification(order, phone, name)
         .catch((err) => console.error('[Order] Telegram notification failed:', err?.message || err));
+
+    // The order just took stock off the shelf, and selling the last unit takes
+    // the product off sale. Without this the sheet's availability column kept
+    // saying "Bor" for something the shop had run out of.
+    void GoogleSheetsService.syncAllProducts()
+        .catch((err) => console.error('[Order] Sheets product mirror failed:', err?.message || err));
 }
 
 export async function createOrder(
@@ -255,6 +261,10 @@ export async function releaseStockFor(order: any): Promise<void> {
             { $set: { inStock: true } },
         );
     }
+
+    // A cancellation puts stock back, which can put a product back on sale.
+    void GoogleSheetsService.syncAllProducts()
+        .catch((err) => console.error('[Order] Sheets product mirror failed:', err?.message || err));
 }
 
 /** Goods and any container charge, from the prices captured at purchase. */

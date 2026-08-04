@@ -5,6 +5,17 @@ import Product from '../models/Product';
 import { AuthRequest } from '../middleware/auth';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 
+/**
+ * Pushes the catalogue to Google Sheets without making the caller wait.
+ *
+ * Best effort by design: a Sheets outage, or no Sheets configured at all, must
+ * never turn a successful product change into a failed request.
+ */
+const mirrorToSheets = (): void => {
+    void GoogleSheetsService.syncAllProducts()
+        .catch((err) => console.error('[Product] Sheets mirror failed:', err?.message || err));
+};
+
 export const productSchema = z.object({
     name: z.string().min(1).max(100),
     category: z.enum(['water', 'equipment', 'accessories', 'service']),
@@ -93,9 +104,7 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
 
         const product = await Product.create(data);
 
-        // Best-effort mirror; a Sheets outage must not fail product creation.
-        void GoogleSheetsService.syncProduct(product)
-            .catch((err) => console.error('[Product] Sheets sync failed:', err?.message || err));
+        mirrorToSheets();
 
         res.status(201).json(product);
     } catch (err) {
@@ -121,6 +130,8 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
             res.status(404).json({ message: 'Product not found' });
             return;
         }
+
+        mirrorToSheets();
         res.json(product);
     } catch {
         res.status(500).json({ message: 'Server error' });
@@ -159,6 +170,8 @@ export const stocktake = async (req: AuthRequest, res: Response): Promise<void> 
             res.status(404).json({ message: 'Product not found' });
             return;
         }
+
+        mirrorToSheets();
         res.json(product);
     } catch (err) {
         console.error('[Product] stocktake error:', err);
@@ -178,6 +191,8 @@ export const deleteProduct = async (req: AuthRequest, res: Response): Promise<vo
             res.status(404).json({ message: 'Product not found' });
             return;
         }
+
+        mirrorToSheets();
         res.json({ message: 'Product deleted' });
     } catch {
         res.status(500).json({ message: 'Server error' });
@@ -214,6 +229,8 @@ export const approveProduct = async (req: AuthRequest, res: Response): Promise<v
             res.status(404).json({ message: 'Product not found' });
             return;
         }
+
+        mirrorToSheets();
         res.json(product);
     } catch {
         res.status(500).json({ message: 'Server error' });
