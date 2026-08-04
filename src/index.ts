@@ -12,7 +12,7 @@ import telegramRoutes from './routes/telegram';
 import operationsRoutes from './routes/operations';
 import { DeliveryService } from './services/DeliveryService';
 import { TelegramBotService } from './services/TelegramBotService';
-import { waitForDb } from './config/db';
+import { waitForDb, initDb } from './config/db';
 
 dotenv.config();
 
@@ -98,14 +98,11 @@ app.use((_req, res, next) => {
     next();
 });
 
-// Connect MongoDB Atlas in background. Guarded so a missing URI on serverless
-// (already logged above) degrades to "never connects" instead of mongoose
-// throwing on a non-string argument.
+// Connecting is owned by config/db, which keeps retrying. Guarded so a missing
+// URI on serverless (already logged above) degrades to "never connects" instead
+// of mongoose throwing on a non-string argument.
 if (MONGODB_URI) {
-    mongoose
-        .connect(MONGODB_URI, { serverSelectionTimeoutMS: 10000 })
-        .then(() => console.log('✅ MongoDB Atlas connected successfully'))
-        .catch((err) => console.error('❌ MongoDB connection error:', err.message));
+    initDb(MONGODB_URI);
 }
 
 mongoose.connection.once('connected', () => {
