@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { TelegramBotService } from '../services/TelegramBotService';
 import { waitForDb } from '../config/db';
+import { auth, AuthRequest } from '../middleware/auth';
+import { adminOnly } from '../middleware/role';
 
 const router = Router();
 
@@ -51,6 +53,23 @@ router.post('/webhook', async (req: Request, res: Response): Promise<void> => {
     // Always 200, even after a failure: a non-2xx makes Telegram redeliver the
     // same update on a schedule, which turns one broken message into a loop.
     res.sendStatus(200);
+});
+
+/**
+ * Pushes the bot's commands, Mini App button and profile text to Telegram.
+ *
+ * `syncConfiguration` existed but nothing ever called it, so none of this was
+ * being applied: the description a stranger reads before pressing start was
+ * whatever had last been typed into BotFather — which turned out to be an
+ * advertisement somebody else had put there using a leaked token.
+ *
+ * Deliberately on demand rather than at startup. This host starts a fresh
+ * container for almost every request, and re-pushing the same settings on each
+ * one would be thousands of pointless calls into a rate-limited API.
+ */
+router.post('/sync', auth, adminOnly, async (_req: AuthRequest, res: Response): Promise<void> => {
+    await TelegramBotService.syncConfiguration();
+    res.json({ message: 'Bot sozlamalari yangilandi' });
 });
 
 export default router;

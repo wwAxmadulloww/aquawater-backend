@@ -105,12 +105,74 @@ export class TelegramBotService {
     private static async ensureConfigured(): Promise<void> {
         if (this.configured) return;
         this.configured = true;
+        await this.syncConfiguration();
+    }
 
+    /**
+     * Pushes commands, the Mini App button and the profile text to Telegram.
+     *
+     * Separate from `ensureConfigured` so an operator can force it without
+     * waiting for a fresh container: after the profile text has been tampered
+     * with, "next time some process happens to be cold" is not a repair anyone
+     * can act on.
+     */
+    public static async syncConfiguration(): Promise<void> {
         try {
             await this.getClient()?.setMyCommands(BOT_COMMANDS);
             await this.syncMenuButton();
+            await this.syncProfileText();
         } catch (err) {
             console.error('[Telegram] Configuration sync failed:', (err as Error).message);
+        }
+    }
+
+    /**
+     * Writes the shop's own words into the bot's profile.
+     *
+     * These two texts are what a stranger reads before they ever press start —
+     * the "What can this bot do?" panel and the line under the bot's name — and
+     * they had been rewritten to advertise somebody else's service. Whoever did
+     * it needed only the bot token, which had been committed to a public
+     * repository, so the real repair is rotating that token; keeping the text in
+     * the repository is what stops a change like it from sticking, because the
+     * next deploy puts the shop's version back.
+     */
+    public static async syncProfileText(): Promise<void> {
+        const site = this.siteUrl;
+
+        const description = [
+            'AquaWater — toza ichimlik suvini uyingiz va ofisingizga yetkazib beramiz.',
+            '',
+            '💧 19L va 10L suv idishlari',
+            '🚚 Toshkent shahri va viloyatlarga yetkazish',
+            '🫙 Idishlar hisobi — nechtasi sizda turgani doim ko\'rinib turadi',
+            '🔁 Doimiy buyurtma: har hafta o\'zi takrorlanadi',
+            '',
+            `Saytimiz: ${site}`,
+            '',
+            'Buyurtma berish uchun «Botni boshlash» tugmasini bosing.',
+        ].join('\n');
+
+        const short = `Toza ichimlik suvi yetkazib berish. Buyurtma va idishlar hisobi — ${site.replace(/^https:\/\//, '')}`;
+
+        /*
+         * Telegram rejects anything longer, and rejecting the whole call would
+         * leave the spam in place — so the limits are enforced here rather than
+         * discovered at the API.
+         */
+        const clamp = (text: string, max: number) =>
+            text.length <= max ? text : `${text.slice(0, max - 1)}…`;
+
+        try {
+            await this.getClient()?.call('setMyDescription', {
+                description: clamp(description, 512),
+            });
+            await this.getClient()?.call('setMyShortDescription', {
+                short_description: clamp(short, 120),
+            });
+            console.log('[Telegram] Profile text restored to the shop\'s own.');
+        } catch (err) {
+            console.error('[Telegram] Failed to set the profile text:', (err as Error).message);
         }
     }
 
