@@ -59,6 +59,58 @@ export class GoogleSheetsService {
         return process.env.GOOGLE_SHEET_ID || null;
     }
 
+    /** Column titles written above the first row of each tab. */
+    private static readonly HEADERS: Record<string, string[]> = {
+        Products: [
+            'ID', 'Nomi', 'Kategoriya', 'Turi', 'Tavsif', 'Narxi',
+            'Rasm', 'Sotuvda', 'Holati', 'Qo\'shilgan vaqti',
+        ],
+        Orders: [
+            'ID', 'Telefon', 'Mijoz', 'Mahsulotlar', 'Jami summa', 'Manzil',
+            'Yetkazish sanasi', 'Vaqt', 'To\'lov', 'Holati', 'Yaratilgan vaqti',
+        ],
+    };
+
+    /**
+     * Makes sure the tab exists and carries its column titles.
+     *
+     * A spreadsheet handed over for this has one default tab, so appending to
+     * `Products!A:Z` failed on every single order and the only sign was a line
+     * in a server log nobody reads — the owner saw a connected integration that
+     * silently wrote nothing. Creating the tab makes setup one step: paste the
+     * ids, share the file, done.
+     *
+     * A failure here is swallowed: a tab that already exists is the normal case
+     * and reports as an error, and the append that follows is the real test.
+     */
+    private static async ensureSheet(sheets: any, spreadsheetId: string, sheetName: string): Promise<void> {
+        try {
+            const meta = await sheets.spreadsheets.get({ spreadsheetId });
+            const exists = (meta.data.sheets || []).some(
+                (s: any) => s.properties?.title === sheetName,
+            );
+            if (exists) return;
+
+            await sheets.spreadsheets.batchUpdate({
+                spreadsheetId,
+                requestBody: { requests: [{ addSheet: { properties: { title: sheetName } } }] },
+            });
+
+            const headers = this.HEADERS[sheetName];
+            if (headers) {
+                await sheets.spreadsheets.values.update({
+                    spreadsheetId,
+                    range: `${sheetName}!A1`,
+                    valueInputOption: 'RAW',
+                    requestBody: { values: [headers] },
+                });
+            }
+            console.log(`[GoogleSheetsService] Created the "${sheetName}" tab.`);
+        } catch (err: any) {
+            console.warn(`[GoogleSheetsService] Could not prepare "${sheetName}":`, err?.message || err);
+        }
+    }
+
     /**
      * Appends a row of values to a specific sheet (tab)
      */
@@ -73,6 +125,8 @@ export class GoogleSheetsService {
             }
 
             const sheets = sheetsApi({ version: 'v4', auth });
+            await this.ensureSheet(sheets, spreadsheetId, sheetName);
+
             await sheets.spreadsheets.values.append({
                 spreadsheetId,
                 range: `${sheetName}!A:Z`,
