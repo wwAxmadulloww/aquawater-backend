@@ -11,9 +11,6 @@
 /** Longest edge of the stored image. Well above any size the site displays. */
 const MAX_EDGE = 1200;
 
-/** Anything larger than this is re-encoded as JPEG even if it arrived as PNG. */
-const PNG_BUDGET = 400 * 1024;
-
 export class NotAnImageError extends Error {}
 
 /**
@@ -66,22 +63,56 @@ export async function shrinkImage(file: File): Promise<Blob> {
 
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new NotAnImageError('canvas unavailable')
-
-    /*
-     * A transparent PNG drawn straight to JPEG comes out with black behind it,
-     * which on a dark product card looks like a hole. White is what a product
-     * photo is shot against anyway.
-     */
-    const keepPng = file.type === 'image/png' && file.size <= PNG_BUDGET
-    if (!keepPng) {
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
-    }
     ctx.drawImage(source, 0, 0, canvas.width, canvas.height)
 
+    /*
+     * Transparency decides the format, not the file extension.
+     *
+     * A see-through PNG re-encoded as JPEG comes out with a solid block behind
+     * it, which on a dark product card reads as a hole where the bottle should
+     * be. Anything opaque goes to JPEG, which for a photograph is far smaller
+     * than PNG at the same visible quality.
+     */
+    const transparent = hasAlpha(ctx, canvas.width, canvas.height)
+    if (!transparent) {
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(source, 0, 0, canvas.width, canvas.height)
+    }
+
     const blob = await new Promise<Blob | null>(resolve =>
-        canvas.toBlob(resolve, keepPng ? 'image/png' : 'image/jpeg', 0.85),
+        canvas.toBlob(resolve, transparent ? 'image/png' : 'image/jpeg', 0.85),
     )
     if (!blob) throw new NotAnImageError('encode failed')
+
+    /*
+     * Never send more than arrived. Re-encoding a PNG that was already
+     * optimised makes it bigger — a 161KB drawing came back out at 222KB — and
+     * there is nothing to gain by storing the worse of the two when the photo
+     * did not even need scaling down.
+     */
+    if (scale === 1 && blob.size >= file.size) return file
     return blob
+}
+
+/**
+ * Whether any pixel is less than fully opaque.
+ *
+ * Sampled rather than exhaustive: a transparent image is transparent across
+ * large areas, so every hundredth pixel finds it, and a full scan of a
+ * 1200×1200 canvas is work done on every upload for no extra certainty.
+ */
+function hasAlpha(ctx: CanvasRenderingContext2D, w: number, h: number): boolean {
+    let data: Uint8ClampedArray
+    try {
+        data = ctx.getImageData(0, 0, w, h).data
+    } catch {
+        // A cross-origin source taints the canvas. Assume opaque; the worst
+        // case is a white background behind a picture that had none.
+        return false
+    }
+    for (let i = 3; i < data.length; i += 4 * 100) {
+        if (data[i] < 255) return true
+    }
+    return false
 }
