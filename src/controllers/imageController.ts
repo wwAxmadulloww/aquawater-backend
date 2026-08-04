@@ -87,16 +87,29 @@ export const getProductImage = async (req: Request, res: Response): Promise<void
         }
 
         /*
+         * `.lean()` hands back the raw BSON value rather than a Node Buffer, and
+         * `res.send` treats anything that is not a Buffer as text: the bytes came
+         * back UTF-8 encoded, so a 70-byte PNG arrived as 98 bytes of nonsense
+         * that no browser would draw. Normalised here, and written with `end` so
+         * express cannot decide it is a string and append a charset.
+         */
+        const raw = (image as any).data;
+        const bytes: Buffer = Buffer.isBuffer(raw)
+            ? raw
+            : Buffer.from(raw?.buffer ?? raw?.value?.() ?? raw);
+
+        /*
          * An image's bytes never change — a new photo is a new document with a
          * new id — so it can be cached hard. Without this every catalogue view
          * would pull every photo out of the database again.
          */
         res.setHeader('Content-Type', (image as any).contentType);
+        res.setHeader('Content-Length', String(bytes.length));
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         // The stored bytes are only ever served, never interpreted as markup.
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Content-Disposition', 'inline');
-        res.send((image as any).data);
+        res.end(bytes);
     } catch (err) {
         console.error('[Image] fetch failed:', err);
         res.status(500).json({ message: 'Server error' });
