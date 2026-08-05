@@ -5,8 +5,11 @@ import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
  * customer's bottle ledger alone.
  */
 import { MongoClient, ObjectId } from 'mongodb';
-const URI='mongodb+srv://axmadullo101_db_user:ISoggQjSXm6EciMh@cluster0.r1dckrn.mongodb.net/aquawater?retryWrites=true&w=majority&appName=Cluster0';
-const B='https://aquawater-backend.vercel.app/api';
+// Never hardcoded. Committing this once is what put the database password
+// into a public repository — the secret scan in CI caught it on its first run.
+const URI = process.env.MONGODB_URI;
+if (!URI) { console.error('MONGODB_URI kerak'); process.exit(1); }
+const B = (process.env.BASE_URL || 'https://aquawater-backend.vercel.app') + '/api';
 const R=[];const rec=(n,ok,d)=>{R.push({n,ok});console.log(`${ok?'PASS':'FAIL'}  ${n}${d?'  — '+d:''}`)};
 const c=async(m,p,o={})=>{const r=await fetch(B+p,{method:m,headers:{'Content-Type':'application/json',...(o.token?{Authorization:'Bearer '+o.token}:{})},...(o.body?{body:JSON.stringify(o.body)}:{})});const t=await r.text();let j;try{j=JSON.parse(t)}catch{j=t};return{s:r.status,j}};
 
