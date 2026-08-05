@@ -57,7 +57,10 @@ export class Ordering {
         const x = ot(lang);
         await this.client.sendChatAction(chatId);
 
-        const products = await Product.find({ status: 'approved', inStock: true })
+        // `status` was the fitter-approval state and no longer exists. Left in
+        // this filter it matched nothing, so the bot's catalogue answered
+        // "empty" while the site showed four products.
+        const products = await Product.find({ inStock: true })
             .sort({ price: 1 })
             .limit(MAX_CATALOG)
             .lean();
