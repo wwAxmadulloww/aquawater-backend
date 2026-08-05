@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Order from '../models/Order';
 import bcrypt from 'bcryptjs';
 import User from '../models/User';
+import { BottleService } from '../services/BottleService';
 import { pageParams, paged } from '../lib/pagination';
 import Product from '../models/Product';
 import { AuthRequest } from '../middleware/auth';
@@ -208,7 +209,7 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
          * acknowledgement rather than happening as a side effect of tidying up
          * a user list.
          */
-        const owed = Number((targetUser as any).bottleBalance || 0);
+        const owed = await BottleService.balanceFor(targetId);
         if (owed > 0 && req.body?.forgiveBottles !== true) {
             res.status(400).json({
                 message: `Bu mijozda ${owed} ta qaytarilmagan idish bor. `

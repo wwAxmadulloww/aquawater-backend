@@ -126,17 +126,42 @@ export async function settleDelivery(order: any, recordedBy?: string): Promise<v
     }
 }
 
-/** A customer's balance and their recent movements, for the bot and the site. */
+/**
+ * A customer's balance and their recent movements, for the bot and the site.
+ *
+ * The figure is summed from the ledger, not read from the cached column.
+ * `record()` writes the row and then increments the cache as a second
+ * operation, so anything that interrupts it between the two — a dropped
+ * connection, a deleted user — leaves the two disagreeing. That mattered:
+ * the chase list reads the ledger and this reads the cache, so a customer
+ * could be shown nothing owed while the shop was chasing them for three,
+ * and could close their account on the strength of it.
+ *
+ * The cache stays for list screens, where one number per row is worth more
+ * than exactness; anywhere a decision is made, the rows decide.
+ */
 export async function statementFor(userId: mongoose.Types.ObjectId | string, limit = 10) {
-    const [user, movements] = await Promise.all([
-        User.findById(userId).select('bottleBalance').lean(),
+    const [totals, movements] = await Promise.all([
+        BottleMovement.aggregate([
+            { $match: { userId: new mongoose.Types.ObjectId(String(userId)) } },
+            { $group: { _id: null, balance: { $sum: '$delta' } } },
+        ]),
         BottleMovement.find({ userId }).sort({ createdAt: -1 }).limit(limit).lean(),
     ]);
 
     return {
-        balance: (user as any)?.bottleBalance ?? 0,
+        balance: totals[0]?.balance ?? 0,
         movements,
     };
+}
+
+/** The ledger's own answer for one customer, for decisions that must be right. */
+export async function balanceFor(userId: mongoose.Types.ObjectId | string): Promise<number> {
+    const [row] = await BottleMovement.aggregate([
+        { $match: { userId: new mongoose.Types.ObjectId(String(userId)) } },
+        { $group: { _id: null, balance: { $sum: '$delta' } } },
+    ]);
+    return row?.balance ?? 0;
 }
 
 /**
@@ -206,5 +231,6 @@ export async function depotSummary() {
 }
 
 export const BottleService = {
-    countReturnables, record, settleDelivery, statementFor, outstandingHolders, depotSummary,
+    countReturnables, record, settleDelivery, statementFor, balanceFor,
+    outstandingHolders, depotSummary,
 };

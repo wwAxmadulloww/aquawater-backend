@@ -8,6 +8,7 @@ import { OtpService } from '../services/OtpService';
 import { getJwtSecret } from '../config/jwt';
 import BotUser from '../models/BotUser';
 import Subscription from '../models/Subscription';
+import { BottleService } from '../services/BottleService';
 
 const phoneRegex = /^\+998\d{9}$/;
 
@@ -252,7 +253,9 @@ export const deleteOwnAccount = async (req: AuthRequest, res: Response): Promise
             return;
         }
 
-        const outstanding = Number((user as any).bottleBalance || 0);
+        // From the ledger: the cached column can lag, and letting somebody
+        // close an account on a stale zero loses the containers for good.
+        const outstanding = await BottleService.balanceFor(user._id as any);
         if (outstanding > 0) {
             res.status(400).json({
                 message: `Sizda ${outstanding} ta qaytarilmagan idish bor. Avval ularni topshiring.`,
