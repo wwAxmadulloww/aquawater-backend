@@ -76,7 +76,7 @@ export default function AdminOrders() {
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID / Mijoz</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mahsulotlar</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manzil</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kuryer / Ishchi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kuryer</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amal</th>
                             </tr>
@@ -130,7 +130,7 @@ export default function AdminOrders() {
                                             <p className="text-gray-600 mt-1">{order.deliveryDate} | {order.deliveryTimeSlot}</p>
                                         </td>
 
-                                        {/* Kuryer & Ishchi biriktirish */}
+                                        {/* Kuryer biriktirish */}
                                         <td className="px-4 py-3">
                                             <div className="space-y-2">
                                                 <div className="flex items-center gap-2">
