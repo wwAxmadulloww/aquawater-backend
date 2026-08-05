@@ -71,11 +71,16 @@ export default function CourierDashboard() {
             {!isLoading && mine.length > 0 && (
                 <div className="mb-8 grid grid-cols-2 gap-3 sm:max-w-md">
                     <div className="card p-4">
-                        <p className="text-2xl font-bold text-gray-900">{mine.length}</p>
+                        <p className="text-2xl font-bold tabular-nums text-gray-900">{mine.length}</p>
                         <p className="mt-1 text-xs text-gray-600">jami manzil</p>
                     </div>
                     <div className="card p-4">
-                        <p className="text-2xl font-bold text-gray-900">{formatPrice(cashToHand)}</p>
+                        {/* Smaller on a narrow phone: at 24px a six-figure sum broke
+                            onto a second line and the card grew a step taller than
+                            the one beside it. */}
+                        <p className="text-lg font-bold tabular-nums text-gray-900 sm:text-2xl">
+                            {formatPrice(cashToHand)}
+                        </p>
                         <p className="mt-1 text-xs text-gray-600">kassaga topshiriladi</p>
                     </div>
                 </div>
