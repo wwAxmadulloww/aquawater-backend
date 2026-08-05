@@ -70,15 +70,15 @@
     .btn-primary {
         @apply btn bg-brand font-semibold text-white;
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, .22),
-            0 10px 30px -10px rgba(3, 86, 197, .75);
+            inset 0 1px 0 rgba(255, 255, 255, .25),
+            0 10px 24px -10px rgba(27, 124, 245, .55);
     }
 
     .btn-primary:hover:not(:disabled) {
         @apply -translate-y-0.5 bg-primary-500;
         box-shadow:
             inset 0 1px 0 rgba(255, 255, 255, .3),
-            0 18px 42px -12px rgba(3, 86, 197, .9);
+            0 16px 34px -12px rgba(27, 124, 245, .7);
     }
 
     .btn-primary:active:not(:disabled) {
@@ -126,14 +126,16 @@
     }
 
     /*
-     * Panels: a hairline, a lit top edge, and a wide pool of shadow. No blur —
-     * against a surface this dark it does nothing but cost a filter pass.
+     * Panels: a hairline and a soft shadow tinted with the page's own hue, so
+     * elevation reads without the card turning grey. The dark theme lit the top
+     * edge instead, because on a canvas with nothing darker than it a shadow
+     * has nothing to cast onto.
      */
     .card {
         @apply relative rounded-3xl border border-line bg-surface;
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, .06),
-            0 20px 50px -24px rgba(1, 4, 12, .95);
+            0 1px 2px rgba(11, 37, 69, .04),
+            0 12px 28px -12px rgba(11, 37, 69, .12);
     }
 
     /* Objects you could pick up: tilt away from the pointer, edge lights up. */
@@ -144,11 +146,11 @@
     }
 
     .card-3d:hover {
-        @apply border-gray-400;
+        @apply border-primary-200;
         transform: perspective(1000px) rotateX(3deg) rotateY(-3deg) translateY(-6px) scale(1.012);
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, .12),
-            0 34px 70px -26px rgba(1, 4, 12, 1);
+            0 2px 4px rgba(11, 37, 69, .06),
+            0 28px 56px -20px rgba(27, 124, 245, .22);
     }
 
     /* A specular sweep crossing the face on hover. */
@@ -204,14 +206,12 @@
     .glass {
         @apply relative rounded-3xl border border-line bg-surface/80 backdrop-blur-xl;
         box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, .08),
             0 24px 60px -22px rgba(1, 4, 12, 1);
     }
 
     .pill {
         @apply flex flex-col items-center gap-2 rounded-3xl border border-line bg-surface
                px-4 py-4 text-center;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
     }
 
     /* Small uppercase label with wide tracking — the reference's section marks. */

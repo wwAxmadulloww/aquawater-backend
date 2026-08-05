@@ -219,9 +219,19 @@ export default function WireDrop({ className = '' }: { className?: string }) {
                 const depth = (b + 0.5) / DEPTH_BUCKETS
                 // Fades as the hero leaves, so the object dissolves into the
                 // canvas instead of being clipped by the section edge.
-                const alpha = (0.06 + depth * 0.8) * cam.fade
+                /*
+                 * Drawn in the brand blue, not white.
+                 *
+                 * The whole object was white lines on a black canvas; against
+                 * the daylight theme it vanished completely — the hero rendered
+                 * an empty rectangle where the bottle had been. Blue also needs
+                 * more of itself to read on white than white did on black, so
+                 * the near end of the depth ramp is stronger while the far end
+                 * stays faint enough to still say "further away".
+                 */
+                const alpha = (0.10 + depth * 0.85) * cam.fade
                 if (alpha <= 0.01) continue
-                ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`
+                ctx.strokeStyle = `rgba(27,124,245,${alpha.toFixed(3)})`
                 ctx.lineWidth = 0.4 + depth * 0.9
                 ctx.stroke(buckets[b])
             }
