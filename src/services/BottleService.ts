@@ -153,11 +153,19 @@ export async function outstandingHolders(limit = 100) {
         { $sort: { balance: -1 } },
         { $limit: limit },
         { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
-        { $unwind: '$user' },
+        /*
+         * A plain $unwind drops holders whose account no longer exists, and the
+         * depot summary counts them regardless — so deleting a customer who was
+         * holding four bottles left the dashboard saying four are out with
+         * nobody named against them. The bottles are physically still out; the
+         * list has to say so.
+         */
+        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
         {
             $project: {
                 _id: 1, balance: 1, lastMovement: 1,
-                name: '$user.name', phone: '$user.phone',
+                name: { $ifNull: ['$user.name', "O'chirilgan mijoz"] },
+                phone: { $ifNull: ['$user.phone', null] },
             },
         },
     ]);

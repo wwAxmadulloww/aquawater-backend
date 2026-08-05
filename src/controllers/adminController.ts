@@ -202,6 +202,22 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
             }
         }
 
+        /*
+         * Containers are the shop's property. Removing the only record of who
+         * has them makes them unrecoverable, so it takes an explicit
+         * acknowledgement rather than happening as a side effect of tidying up
+         * a user list.
+         */
+        const owed = Number((targetUser as any).bottleBalance || 0);
+        if (owed > 0 && req.body?.forgiveBottles !== true) {
+            res.status(400).json({
+                message: `Bu mijozda ${owed} ta qaytarilmagan idish bor. `
+                    + 'O\'chirish uchun idishlar hisobdan chiqarilishini tasdiqlang.',
+                bottleBalance: owed,
+            });
+            return;
+        }
+
         await User.findByIdAndDelete(targetId);
 
         console.log(`[AUDIT] User DELETED: User ${targetId} (${targetUser.phone}) deleted by super_admin ${req.user?._id}`);

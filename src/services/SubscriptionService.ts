@@ -45,9 +45,29 @@ export async function runDueSubscriptions(now = new Date()): Promise<RunResult> 
     };
 
     for (const sub of due) {
+        /*
+         * Claimed before any work is done, not after.
+         *
+         * The due list was read, orders were created, and only then was
+         * `nextRunAt` moved on — and every await in between is a point where
+         * Node can start serving another run of this same function. Two
+         * overlapping runs therefore both saw the same subscription as due and
+         * both ordered for it: firing eight at once produced four deliveries
+         * from one weekly standing order, all on a single container, so this
+         * needs no second server to happen — a retried cron is enough.
+         *
+         * Advancing the date conditionally on it not having moved is the claim.
+         * Whoever's update matches owns this run; everybody else moves on.
+         */
+        const claim = await Subscription.findOneAndUpdate(
+            { _id: sub._id, nextRunAt: sub.nextRunAt },
+            { $set: { nextRunAt: nextOccurrence(sub.weekday, now), lastRunAt: now } },
+        );
+        if (!claim) continue;
+
         const customer: any = await User.findById(sub.userId).lean();
 
-        // The delivery lands on the day the subscription fires.
+        // The delivery lands on the day the subscription was due.
         const deliveryDate = new Date(sub.nextRunAt).toISOString().slice(0, 10);
 
         const created = await createOrder(
@@ -68,11 +88,10 @@ export async function runDueSubscriptions(now = new Date()): Promise<RunResult> 
             { phone: customer?.phone, name: customer?.name },
         ).catch((err: any) => ({ ok: false as const, status: 500, message: err?.message || 'xato' }));
 
-        sub.lastRunAt = now;
-        sub.nextRunAt = nextOccurrence(sub.weekday, now);
-
         if (created.ok) {
-            sub.createdOrders += 1;
+            // Counted with an increment rather than by saving the document we
+            // read: that copy is stale the moment the claim above rewrote it.
+            await Subscription.updateOne({ _id: sub._id }, { $inc: { createdOrders: 1 } });
             result.ordersCreated += 1;
             await notify(sub.userId, `🔁 <b>Doimiy buyurtmangiz yaratildi</b>\n\nYetkazish: ${deliveryDate} ${sub.deliveryTimeSlot}`);
         } else {
@@ -82,8 +101,6 @@ export async function runDueSubscriptions(now = new Date()): Promise<RunResult> 
                 `⚠️ <b>Doimiy buyurtmangiz yaratilmadi</b>\n\n${created.message}\n\nIltimos, buyurtmani qo'lda bering yoki sozlamalarni tekshiring.`,
             );
         }
-
-        await sub.save();
     }
 
     result.remindersSent = await sendReorderReminders(now);

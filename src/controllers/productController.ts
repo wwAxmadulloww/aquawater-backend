@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { z } from 'zod';
 import Product from '../models/Product';
+import ProductImage from '../models/ProductImage';
 import { AuthRequest } from '../middleware/auth';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 
@@ -182,6 +183,17 @@ export const deleteProduct = async (req: AuthRequest, res: Response): Promise<vo
         if (!product) {
             res.status(404).json({ message: 'Product not found' });
             return;
+        }
+
+        /*
+         * The photo goes with it. Uploads live in the database, so a catalogue
+         * that is edited over years would otherwise accumulate every picture
+         * ever attached to a product nobody sells any more.
+         */
+        const imageId = String(product.imageUrl || '').replace('/api/images/', '');
+        if (/^[a-f0-9]{24}$/.test(imageId)) {
+            await ProductImage.findByIdAndDelete(imageId)
+                .catch(err => console.error('[Product] image cleanup failed:', err?.message));
         }
 
         mirrorToSheets();
