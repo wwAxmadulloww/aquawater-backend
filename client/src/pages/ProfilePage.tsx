@@ -115,7 +115,7 @@ export default function ProfilePage() {
                             closeAccount.mutate()
                         }}
                         disabled={closeAccount.isPending}
-                        className="mb-3 w-full justify-center rounded-xl border border-[#ff9ea1]/40 py-3 text-sm text-[#ff9ea1] hover:bg-[#ff9ea1]/10"
+                        className="mb-3 w-full justify-center rounded-xl border border-[#d92d20]/40 py-3 text-sm text-[#d92d20] hover:bg-[#d92d20]/10"
                     >
                         Akkauntni o'chirish
                     </button>

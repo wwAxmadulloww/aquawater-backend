@@ -99,7 +99,7 @@ export default function SubscriptionsPage() {
                                 <span className="text-gray-600">
                                     {new Date(m.createdAt).toLocaleDateString()} · {m.note || m.direction}
                                 </span>
-                                <span className={m.delta > 0 ? 'text-[#ff9ea1]' : 'text-[#7ff0c0]'}>
+                                <span className={m.delta > 0 ? 'text-[#d92d20]' : 'text-[#039855]'}>
                                     {m.delta > 0 ? '+' : ''}{m.delta}
                                 </span>
                             </li>
@@ -157,7 +157,7 @@ export default function SubscriptionsPage() {
                                 <button
                                     onClick={() => remove.mutate(s._id)}
                                     disabled={remove.isPending}
-                                    className="btn-secondary px-3 py-2.5 text-xs text-[#ff9ea1]"
+                                    className="btn-secondary px-3 py-2.5 text-xs text-[#d92d20]"
                                     title={t('subs.delete')}
                                 >
                                     <Trash2 className="h-3.5 w-3.5" />

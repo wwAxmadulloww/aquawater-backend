@@ -161,7 +161,7 @@ export default function AdminZones() {
                                     </button>
                                     <button
                                         onClick={() => remove.mutate(z._id)}
-                                        className="btn-secondary px-3 py-2 text-xs text-[#ff9ea1]"
+                                        className="btn-secondary px-3 py-2 text-xs text-[#d92d20]"
                                         title="O'chirish"
                                     >
                                         <Trash2 className="h-3.5 w-3.5" />

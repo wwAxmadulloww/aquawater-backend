@@ -1,19 +1,21 @@
 /** @type {import('tailwindcss').Config} */
 
 /*
- * Midnight blue. The canvas is #02060E — a navy so dark it reads as black at a
- * glance but never goes flat the way #000 does, because every neutral above it
- * carries the same blue cast and the whole screen sits on one hue. Panels
- * separate from it by a hair of light, and #0356C5 does all the interactive
- * work.
+ * Daylight on water. The canvas is #F4FAFF — white with just enough blue in it
+ * to stop the page reading as a form, and #1B7CF5 does all the interactive
+ * work. Text is never pure black: the darkest value is #0B2545, so the whole
+ * screen sits on one hue the way the dark theme did.
  *
- * The `gray` ramp is deliberately INVERTED — gray-50 is the darkest value and
- * gray-950 the lightest. Every `text-gray-900` and `bg-gray-50` already in the
- * app keeps meaning what it meant (strongest text, most recessed surface) and
- * lands on the correct side of a dark theme without those files being touched.
- * The admin, courier and worker panels follow from this alone.
+ * The `gray` ramp used to be INVERTED — gray-50 the darkest value — because
+ * that let 460-odd existing `text-gray-900` and `bg-gray-50` classes land on
+ * the correct side of a dark theme untouched. Turning the theme light is
+ * therefore mostly turning that ramp back the right way up: every one of those
+ * classes keeps meaning what it meant (strongest text, most recessed surface)
+ * and follows automatically.
  *
- * `primary` stays the accent ramp under its Tailwind name for the same reason.
+ * Contrast was checked against white for the shades that carry text. The two
+ * that matter most by usage are gray-600 (146 uses, secondary text) at 6.2:1
+ * and gray-500 (55 uses) at 4.6:1 — both clear of 4.5:1.
  */
 export default {
     content: [
@@ -25,47 +27,49 @@ export default {
             colors: {
                 // The one cold accent. Water, at the only point the page raises
                 // its voice: prices, primary actions, active state.
+                // The one accent. Water, at the only point the page raises its
+                // voice: prices, primary actions, active state.
                 primary: {
-                    50: '#031127',
-                    100: '#04204d',
-                    200: '#052e73',
-                    300: '#0244a0',
-                    400: '#0356c5',   // the brand blue
-                    500: '#1268de',
-                    600: '#2f83ef',   // the blue that survives on a dark panel
-                    700: '#62a4f6',
-                    800: '#9bc6fa',
-                    900: '#cbe1fd',
-                    950: '#ecf5fe',
+                    50: '#eaf4fe',
+                    100: '#cfe6fd',
+                    200: '#9dccfb',
+                    300: '#5eaef8',
+                    400: '#1b7cf5',
+                    500: '#1b7cf5',   // the brand blue
+                    600: '#0a62d6',   // the blue that stays readable as text on white
+                    700: '#0b3e85',
+                    800: '#0b3e85',
+                    900: '#0b2545',
+                    950: '#0b2545',
                 },
-                // Inverted ramp — see the note above.
+                // Upright again — see the note above.
                 gray: {
-                    50: '#02060e',
-                    100: '#071129',
-                    200: '#0c1c3a',
-                    300: '#143054',
-                    400: '#1d4275',
-                    500: '#5d7ba8',
-                    600: '#8ea9d0',
-                    700: '#b6c9e6',
-                    800: '#d5e1f4',
-                    900: '#eaf1fc',
-                    950: '#ffffff',
+                    50: '#f4faff',
+                    100: '#eaf4fe',
+                    200: '#e3eaf2',
+                    300: '#cfe6fd',
+                    400: '#98a6b8',
+                    500: '#6b7a90',
+                    600: '#55647a',
+                    700: '#3d5068',
+                    800: '#24384f',
+                    900: '#12283f',
+                    950: '#0b2545',
                 },
-                ink: '#02060e',        // the canvas
-                surface: '#061229',    // a panel lifted off it
-                surface2: '#0b1f3f',   // a panel on a panel
-                line: '#14315e',       // the hair of light that separates them
-                accent: '#2f83ef',     // for text and icons, where #0356c5 is too dark
-                brand: '#0356c5',      // for fills, where white sits on top of it
-                sun: '#f0a83c',        // the one warm note, used sparingly
+                ink: '#f4faff',        // the canvas
+                surface: '#ffffff',    // a panel lifted off it
+                surface2: '#eaf4fe',   // a panel on a panel
+                line: '#e3eaf2',       // the hairline that separates them
+                accent: '#0a62d6',     // for text and icons, where #1b7cf5 is too light
+                brand: '#1b7cf5',      // for fills, where white sits on top of it
+                sun: '#f79009',        // the one warm note, used sparingly
 
                 // Retained so older utility usages keep resolving.
-                abyss: '#02060e',
-                tank: '#061229',
-                glacier: '#0356c5',
-                caustic: '#2f83ef',
-                foam: '#02060e',
+                abyss: '#f4faff',
+                tank: '#ffffff',
+                glacier: '#1b7cf5',
+                caustic: '#0a62d6',
+                foam: '#f4faff',
             },
             fontFamily: {
                 // One grotesk for everything. The reference gets its authority

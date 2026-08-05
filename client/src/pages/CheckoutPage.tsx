@@ -194,7 +194,7 @@ export default function CheckoutPage() {
                                             ))}
                                         </select>
                                         {quote && !quote.ok && (
-                                            <p className="mt-1.5 text-xs text-[#ff9ea1]">{quote.message}</p>
+                                            <p className="mt-1.5 text-xs text-[#d92d20]">{quote.message}</p>
                                         )}
                                         {quote?.ok && quote.eta && (
                                             <p className="mt-1.5 text-xs text-gray-600">{quote.eta}</p>

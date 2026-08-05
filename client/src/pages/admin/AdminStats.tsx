@@ -109,7 +109,7 @@ export default function AdminStats() {
                         <h2 className="font-semibold text-gray-900 mb-4 text-sm">Kunlik buyurtmalar (so'nggi 7 kun)</h2>
                         <ResponsiveContainer width="100%" height={220}>
                             <BarChart data={stats.ordersPerDay} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e3eaf2" />
                                 <XAxis dataKey="_id" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
                                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                                 <Tooltip
@@ -126,14 +126,14 @@ export default function AdminStats() {
                         <h2 className="font-semibold text-gray-900 mb-4 text-sm">Kunlik daromad (so'm)</h2>
                         <ResponsiveContainer width="100%" height={220}>
                             <LineChart data={stats.ordersPerDay} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e3eaf2" />
                                 <XAxis dataKey="_id" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
                                 <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                                 <Tooltip
                                     formatter={(value: number) => [formatPrice(value), 'Daromad']}
                                     labelFormatter={(label) => `Sana: ${label}`}
                                 />
-                                <Line type="monotone" dataKey="revenue" stroke="#7c3aed" strokeWidth={2} dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="revenue" stroke="#1b7cf5" strokeWidth={2} dot={{ r: 4 }} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>

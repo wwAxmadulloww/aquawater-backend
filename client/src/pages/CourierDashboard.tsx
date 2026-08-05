@@ -186,6 +186,17 @@ export default function CourierDashboard() {
                                                     ? `🫙 ${t('courier.holds').replace('{n}', String(held))}`
                                                     : `🫙 ${t('courier.holdsNone')}`}
                                             </p>
+                                            {/* What was actually taken back, once the stop is
+                                                closed. The courier typed the number and then had
+                                                nothing to check it against — the one figure that
+                                                settles a dispute about a customer's balance. */}
+                                            {order.status === 'delivered' && (
+                                                <p className={b.collected > 0 ? 'font-medium text-[#039855]' : 'text-gray-600'}>
+                                                    {b.collected > 0
+                                                        ? `✅ ${t('orders.bottles.collected').replace('{n}', String(b.collected))}`
+                                                        : '✅ Bo\'sh idish olinmadi'}
+                                                </p>
+                                            )}
                                         </div>
                                     )
                                 })()}
@@ -204,7 +215,7 @@ export default function CourierDashboard() {
                                             ({t(paymentKey(order.paymentMethod) as any)})
                                         </span>
                                     </span>
-                                    <span className={`text-xl font-bold ${order.paymentStatus === 'paid' ? 'text-[#7ff0c0]' : 'text-gray-900'}`}>
+                                    <span className={`text-xl font-bold ${order.paymentStatus === 'paid' ? 'text-[#039855]' : 'text-gray-900'}`}>
                                         {order.paymentStatus === 'paid' ? "To'langan" : formatPrice(orderTotal(order))}
                                     </span>
                                 </div>
@@ -245,7 +256,7 @@ export default function CourierDashboard() {
                                                 type="checkbox"
                                                 checked={!!unpaid[order._id]}
                                                 onChange={e => setUnpaid(p => ({ ...p, [order._id]: e.target.checked }))}
-                                                className="h-5 w-5 accent-[#ff9ea1]"
+                                                className="h-5 w-5 accent-[#d92d20]"
                                             />
                                             Pul olinmadi
                                         </label>

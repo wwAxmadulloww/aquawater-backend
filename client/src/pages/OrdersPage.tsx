@@ -148,7 +148,7 @@ export default function OrdersPage() {
                                                 </span>
                                             )}
                                             {delivered && b.collected > 0 && (
-                                                <span className="text-[#7ff0c0]">
+                                                <span className="text-[#039855]">
                                                     ✅ {t('orders.bottles.collected').replace('{n}', String(b.collected))}
                                                 </span>
                                             )}
@@ -161,7 +161,7 @@ export default function OrdersPage() {
                                             <button
                                                 onClick={() => cancel.mutate(order._id)}
                                                 disabled={cancel.isPending}
-                                                className="mt-2 text-xs text-[#ff9ea1] underline underline-offset-2 hover:opacity-80"
+                                                className="mt-2 text-xs text-[#d92d20] underline underline-offset-2 hover:opacity-80"
                                             >
                                                 {t('orders.cancel')}
                                             </button>

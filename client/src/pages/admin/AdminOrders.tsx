@@ -105,7 +105,7 @@ export default function AdminOrders() {
 
                         <div className="mt-2 flex items-center justify-between">
                             <b className="text-gray-900">{formatPrice(orderTotal(order))}</b>
-                            <span className={`text-xs ${order.paymentStatus === 'paid' ? 'text-[#7ff0c0]' : 'text-[#ff9ea1]'}`}>
+                            <span className={`text-xs ${order.paymentStatus === 'paid' ? 'text-[#039855]' : 'text-[#d92d20]'}`}>
                                 {order.paymentStatus === 'paid' ? "✓ To'langan" : "To'lanmagan"}
                             </span>
                         </div>

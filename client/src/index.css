@@ -26,11 +26,11 @@
 
     body {
         @apply bg-ink text-gray-900 font-sans antialiased;
-        /* A pool of deep blue at the top, so the canvas is not a flat void and
-           the header has something to sit against. The gradient runs to the
-           darkest navy rather than to black, which is what keeps the page on
-           one hue instead of fading to grey. */
-        background-image: radial-gradient(120% 65% at 50% -12%, #072045 0%, #041642 32%, #02060e 72%);
+        /* A wash of pale blue at the top, so the canvas is not flat white and
+           the header has something to sit against. It settles into the page
+           colour rather than into grey, which keeps the whole screen on one
+           hue — the same idea as the dark theme, upside down. */
+        background-image: radial-gradient(120% 65% at 50% -12%, #ffffff 0%, #eaf4fe 34%, #f4faff 72%);
         background-repeat: no-repeat;
     }
 
@@ -49,8 +49,8 @@
     }
 
     ::selection {
-        background: theme('colors.accent');
-        color: theme('colors.ink');
+        background: theme('colors.brand');
+        color: #ffffff;
     }
 }
 
@@ -99,12 +99,12 @@
     }
 
     .btn-danger {
-        @apply btn bg-[#e5484d] font-semibold text-white;
+        @apply btn bg-[#f04438] font-semibold text-white;
         box-shadow: 0 10px 30px -14px rgba(229, 72, 77, .8);
     }
 
     .btn-danger:hover:not(:disabled) {
-        @apply -translate-y-0.5 bg-[#f0595e];
+        @apply -translate-y-0.5 bg-[#d92d20];
     }
 
     /* The circular icon button from the reference's nav and cards. */
@@ -155,7 +155,7 @@
     .card-3d::after {
         content: '';
         @apply pointer-events-none absolute inset-0 rounded-3xl opacity-0;
-        background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .09) 50%, transparent 62%);
+        background: linear-gradient(105deg, transparent 38%, rgba(11, 37, 69, .06) 50%, transparent 62%);
         transition: opacity .45s ease, transform .7s ease;
         transform: translateX(-30%);
     }
@@ -179,7 +179,7 @@
     }
 
     .badge-delivered {
-        @apply badge border-[#3ddc97]/25 bg-[#3ddc97]/10 text-[#7ff0c0];
+        @apply badge border-[#12b76a]/30 bg-[#12b76a]/10 text-[#039855];
     }
 
     .container-custom {
@@ -197,7 +197,7 @@
     .stage::after {
         content: '';
         @apply pointer-events-none absolute inset-0 -z-10;
-        background-image: radial-gradient(75% 55% at 50% 42%, transparent 0%, rgba(2, 6, 14, .82) 100%);
+        background-image: radial-gradient(75% 55% at 50% 42%, transparent 0%, rgba(244, 250, 255, .88) 100%);
     }
 
     /* A panel floating over the stage — the reference's stat cards. */
@@ -237,7 +237,7 @@
 
 @layer utilities {
     .text-gradient {
-        background-image: linear-gradient(120deg, #ffffff 0%, #62a4f6 100%);
+        background-image: linear-gradient(120deg, #0b2545 0%, #1b7cf5 100%);
         @apply bg-clip-text text-transparent;
     }
 
@@ -251,17 +251,17 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #02060e;
+    background: #f4faff;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #143054;
+    background: #cfe6fd;
     border-radius: 999px;
-    border: 3px solid #02060e;
+    border: 3px solid #f4faff;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #1d4275;
+    background: #9dccfb;
 }
 
 /*
