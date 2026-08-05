@@ -49,7 +49,7 @@ export default {
                     200: '#e3eaf2',
                     300: '#cfe6fd',
                     400: '#98a6b8',
-                    500: '#6b7a90',
+                    500: '#66768c',
                     600: '#55647a',
                     700: '#3d5068',
                     800: '#24384f',
@@ -61,7 +61,15 @@ export default {
                 surface2: '#eaf4fe',   // a panel on a panel
                 line: '#e3eaf2',       // the hairline that separates them
                 accent: '#0a62d6',     // for text and icons, where #1b7cf5 is too light
-                brand: '#1b7cf5',      // for fills, where white sits on top of it
+                /*
+                 * The fill under white text is the deeper blue, not #1B7CF5.
+                 * White on #1B7CF5 measures 4.0:1 — under the 4.5:1 a button
+                 * label at 14px needs, which is a flaw in the palette as drawn
+                 * rather than in how it was applied here. #0A62D6 carries the
+                 * same hue at 5.6:1, and #1B7CF5 stays available as primary-500
+                 * for display type and tints, where 3:1 is the bar.
+                 */
+                brand: '#0a62d6',
                 sun: '#f79009',        // the one warm note, used sparingly
 
                 // Retained so older utility usages keep resolving.
