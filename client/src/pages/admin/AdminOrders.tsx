@@ -4,7 +4,7 @@ import { Trash2, UserPlus, Truck } from 'lucide-react'
 import { getOrders, updateOrderStatus, deleteOrder, formatPrice, getAdminUsers, assignOrder } from '../../api/client'
 import { useLanguage } from '../../i18n/LanguageContext'
 import toast from 'react-hot-toast'
-import { orderTotal } from '../../lib/orderFormat'
+import { orderTotal, orderCode } from '../../lib/orderFormat'
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled']
 const STATUS_LABELS: Record<string, string> = {
@@ -14,6 +14,15 @@ const STATUS_LABELS: Record<string, string> = {
     in_transit: 'Yo\'lda',
     delivered: 'Yetkazildi',
     cancelled: 'Bekor qilindi',
+}
+
+const STATUS_CLASSES: Record<string, string> = {
+    pending: 'badge-pending',
+    confirmed: 'bg-blue-100 text-blue-700',
+    assigned: 'bg-indigo-100 text-indigo-700',
+    in_transit: 'bg-orange-100 text-orange-700',
+    delivered: 'badge-delivered',
+    cancelled: 'bg-red-100 text-red-700',
 }
 
 export default function AdminOrders() {
@@ -68,7 +77,67 @@ export default function AdminOrders() {
                 </select>
             </div>
 
-            <div className="card overflow-hidden">
+            {/* One card per order below md: the owner works from a phone, and
+                the table put the courier picker and the status control off the
+                right-hand edge of every row. */}
+            <div className="space-y-3 md:hidden">
+                {(orders || []).map((order: any) => (
+                    <div key={order._id} className="card p-4">
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                            <div>
+                                <p className="font-mono text-xs text-gray-600">#{orderCode(order._id)}</p>
+                                <p className="text-sm font-medium text-gray-900">{order.userId?.name}</p>
+                                <a href={`tel:${order.userId?.phone}`} className="text-xs text-primary-600">
+                                    {order.userId?.phone}
+                                </a>
+                            </div>
+                            <span className={`badge ${STATUS_CLASSES[order.status] || ''}`}>
+                                {order.status}
+                            </span>
+                        </div>
+
+                        <p className="text-xs text-gray-600">
+                            {(order.items || []).map((i: any) => `${i.nameSnapshot} ×${i.qty}`).join(', ')}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-600">
+                            {order.addressSnapshot?.region}, {order.addressSnapshot?.district}, {order.addressSnapshot?.street} {order.addressSnapshot?.house}
+                        </p>
+
+                        <div className="mt-2 flex items-center justify-between">
+                            <b className="text-gray-900">{formatPrice(orderTotal(order))}</b>
+                            <span className={`text-xs ${order.paymentStatus === 'paid' ? 'text-[#7ff0c0]' : 'text-[#ff9ea1]'}`}>
+                                {order.paymentStatus === 'paid' ? "✓ To'langan" : "To'lanmagan"}
+                            </span>
+                        </div>
+
+                        <div className="mt-3 grid gap-2">
+                            <select
+                                value={order.courierId || ''}
+                                onChange={e => assignMut.mutate({ id: order._id, data: { courierId: e.target.value } })}
+                                disabled={assignMut.isPending}
+                                className="input py-2 text-xs"
+                            >
+                                <option value="">Kuryer tanlang</option>
+                                {couriers.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                            </select>
+                            <select
+                                value={order.status}
+                                onChange={e => statusMut.mutate({ id: order._id, status: e.target.value })}
+                                disabled={statusMut.isPending}
+                                className="input py-2 text-xs"
+                            >
+                                {['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled']
+                                    .map(st => <option key={st} value={st}>{st}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                ))}
+                {!isLoading && (orders || []).length === 0 && (
+                    <p className="card p-6 text-center text-sm text-gray-600">Buyurtma yo'q</p>
+                )}
+            </div>
+
+            <div className="card hidden overflow-hidden md:block">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead className="bg-gray-50 border-b border-gray-100">

@@ -170,6 +170,14 @@ export const getAdminUsers = (params?: Record<string, string | number>) =>
     api.get('/admin/users', { params })
         .then(r => (Array.isArray(r.data) ? r.data : r.data?.items ?? []))
 
+/** Closes the signed-in customer's own account. */
+export const deleteMyAccount = () =>
+    api.delete('/auth/me').then(r => r.data)
+
+/** Issues a temporary password for a customer who cannot get in. */
+export const resetCustomerPassword = (id: string): Promise<{ temporaryPassword: string }> =>
+    api.post(`/admin/users/${id}/reset-password`).then(r => r.data)
+
 export const updateUserRole = (id: string, role: string) =>
     api.patch(`/admin/users/${id}/role`, { role }).then(r => r.data)
 

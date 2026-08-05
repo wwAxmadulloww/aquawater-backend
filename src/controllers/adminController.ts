@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import Order from '../models/Order';
+import bcrypt from 'bcryptjs';
 import User from '../models/User';
 import { pageParams, paged } from '../lib/pagination';
 import Product from '../models/Product';
@@ -208,6 +209,56 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
         res.json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+/**
+ * Sets a temporary password for a customer who cannot get in.
+ *
+ * Self-service recovery needs SMS, which is not wired up yet, so until it is
+ * the only route back into an account is the shop doing it — and doing it
+ * through an audited endpoint rather than by editing the database. The new
+ * password is returned once, to be read out over the phone, and never stored
+ * anywhere else.
+ */
+export const resetUserPassword = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const targetId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(targetId)) {
+            res.status(400).json({ message: 'Invalid user id' });
+            return;
+        }
+
+        const target = await User.findById(targetId);
+        if (!target) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        // Staff accounts are not reset over the phone; that is how an operator
+        // talks their way into an administrator.
+        if (target.role !== 'customer') {
+            res.status(403).json({ message: 'Faqat mijoz parolini tiklash mumkin' });
+            return;
+        }
+
+        // Ambiguous characters left out: this gets read aloud down a phone line.
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const temporary = Array.from(
+            { length: 10 },
+            () => alphabet[Math.floor(Math.random() * alphabet.length)],
+        ).join('');
+
+        // Hashed with the same cost the registration path uses. The model has
+        // no save hook, so this is where it has to happen.
+        target.passwordHash = await bcrypt.hash(temporary, 12);
+        await target.save();
+
+        console.log(`[AUDIT] Password reset for ${targetId} by ${req.user!.role} ${req.user!._id}`);
+        res.json({ temporaryPassword: temporary });
+    } catch (err) {
+        console.error('[Admin] resetUserPassword error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };

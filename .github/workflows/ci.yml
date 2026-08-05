@@ -1,0 +1,43 @@
+name: CI
+
+# Every push and every pull request. The point is that a change which breaks
+# the build or the money arithmetic is caught before anyone deploys it — the
+# repository had no automated check of any kind, so a regression was only ever
+# found by a person opening the site.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Compiles the server and runs the unit tests against the build output —
+      # the code that actually ships, not the sources.
+      - name: Test
+        run: npm test
+
+      - name: Build the client
+        run: npm run client:build
+
+      # A secret committed by accident is how this project's bot was hijacked.
+      - name: Look for committed secrets
+        run: |
+          # Placeholders like mongodb+srv://<user>:<parol>@ are documentation,
+          # not a leak, so angle brackets disqualify a match.
+          if git grep -nE '(mongodb\+srv://[^<>[:space:]]+:[^<>@[:space:]]+@|[0-9]{8,10}:AA[A-Za-z0-9_-]{33})' -- . ':!*.example' ':!.github/*'; then
+            echo "::error::A credential appears to be committed."
+            exit 1
+          fi
+          echo "No credentials found in tracked files."

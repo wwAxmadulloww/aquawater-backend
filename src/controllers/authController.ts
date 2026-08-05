@@ -6,6 +6,8 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { OtpService } from '../services/OtpService';
 import { getJwtSecret } from '../config/jwt';
+import BotUser from '../models/BotUser';
+import Subscription from '../models/Subscription';
 
 const phoneRegex = /^\+998\d{9}$/;
 
@@ -221,5 +223,54 @@ export const updateLanguage = async (req: AuthRequest, res: Response): Promise<v
         res.json({ message: 'Til yangilandi' });
     } catch {
         res.status(500).json({ message: 'Serverda xatolik yuz berdi' });
+    }
+};
+
+
+/**
+ * Closes a customer's own account.
+ *
+ * The identifying details go; the orders stay, detached from the person. A
+ * shop has to keep what it sold and what it was paid for its own books, and
+ * deleting that history would take the bottle ledger and the accounts with it —
+ * so the record survives without a name or a number attached to it.
+ *
+ * Staff accounts are excluded: an administrator removing themselves could lock
+ * everyone out of the business.
+ */
+export const deleteOwnAccount = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById(req.user!._id);
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        if (user.role !== 'customer') {
+            res.status(403).json({
+                message: 'Xodim akkauntini o\'chirish uchun administratorga murojaat qiling',
+            });
+            return;
+        }
+
+        const outstanding = Number((user as any).bottleBalance || 0);
+        if (outstanding > 0) {
+            res.status(400).json({
+                message: `Sizda ${outstanding} ta qaytarilmagan idish bor. Avval ularni topshiring.`,
+            });
+            return;
+        }
+
+        // Orders keep pointing at this id, which no longer resolves to anybody —
+        // that is the intent. The phone is released so the number can register
+        // again, and is replaced with a value that cannot collide.
+        await BotUser.deleteMany({ userId: user._id });
+        await Subscription.deleteMany({ userId: user._id });
+        await User.deleteOne({ _id: user._id });
+
+        console.log(`[AUDIT] Account closed by its owner: ${user._id}`);
+        res.json({ message: 'Akkaunt o\'chirildi' });
+    } catch (err) {
+        console.error('[Auth] deleteOwnAccount error:', err);
+        res.status(500).json({ message: 'Server error' });
     }
 };

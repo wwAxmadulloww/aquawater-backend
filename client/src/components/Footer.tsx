@@ -141,6 +141,12 @@ export default function Footer() {
                         <span>© 2026 AquaWater Uzbekistan</span>
                         <span className="hidden text-gray-600 md:inline">•</span>
                         <span>{t('footer.rights')}</span>
+                        <span className="hidden text-gray-600 md:inline">•</span>
+                        {/* Online trade here needs both documents reachable from
+                            every page, and the site had neither. */}
+                        <Link to="/legal/oferta" className="hover:text-gray-950">Ommaviy oferta</Link>
+                        <span className="hidden text-gray-600 md:inline">•</span>
+                        <Link to="/legal/maxfiylik" className="hover:text-gray-950">Maxfiylik siyosati</Link>
                     </div>
                     {branch?.address && (
                         <span className="text-center md:text-right">{branch.address}</span>

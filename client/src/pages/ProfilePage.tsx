@@ -4,13 +4,22 @@ import { useMutation } from '@tanstack/react-query'
 import { User, Phone, Globe, LogOut, Save } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
-import { api } from '../api/client'
+import { api, deleteMyAccount, describeApiError } from '../api/client'
 import toast from 'react-hot-toast'
 
 export default function ProfilePage() {
     const { user, logout } = useAuth()
     const { t, lang, setLang } = useLanguage()
     const navigate = useNavigate()
+
+    const closeAccount = useMutation({
+        mutationFn: () => deleteMyAccount(),
+        onSuccess: () => {
+            toast.success('Akkaunt o\'chirildi')
+            handleLogout()
+        },
+        onError: (err) => toast.error(describeApiError(err)),
+    })
 
     const saveMutation = useMutation({
         mutationFn: () => api.patch('/auth/language', { language: lang }),
@@ -93,6 +102,23 @@ export default function ProfilePage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Promised in the privacy notice, so it has to exist. The
+                        confirmation is deliberately a typed word: this cannot be
+                        undone and a stray tap should not do it. */}
+                    <button
+                        onClick={() => {
+                            const typed = window.prompt(
+                                'Akkauntni butunlay o\'chirish uchun O\'CHIRISH deb yozing:',
+                            )
+                            if (typed?.trim().toUpperCase() !== 'O\'CHIRISH') return
+                            closeAccount.mutate()
+                        }}
+                        disabled={closeAccount.isPending}
+                        className="mb-3 w-full justify-center rounded-xl border border-[#ff9ea1]/40 py-3 text-sm text-[#ff9ea1] hover:bg-[#ff9ea1]/10"
+                    >
+                        Akkauntni o'chirish
+                    </button>
 
                     <button onClick={handleLogout} className="btn-danger gap-2 w-full justify-center py-3">
                         <LogOut className="w-4 h-4" />

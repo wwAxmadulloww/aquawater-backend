@@ -52,6 +52,7 @@ router.post('/verify-otp', loginLimiter, authController.verifyOtp);
 router.post('/register', loginLimiter, authController.register);
 router.post('/login', loginLimiter, authController.login);
 router.get('/me', auth, authController.getMe);
+router.delete('/me', auth, authController.deleteOwnAccount);
 router.patch('/language', auth, authController.updateLanguage);
 
 export default router;

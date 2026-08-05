@@ -9,5 +9,6 @@ router.get('/stats', auth, adminOnly, adminController.getStats);
 router.get('/users', auth, adminOnly, adminController.getUsers);
 router.patch('/users/:id/role', auth, adminOrSuper, adminController.updateUserRole);
 router.delete('/users/:id', auth, superAdminOnly, adminController.deleteUser);
+router.post('/users/:id/reset-password', auth, adminOrSuper, adminController.resetUserPassword);
 
 export default router;

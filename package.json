@@ -1,7 +1,7 @@
 {
   "name": "aquawater",
   "version": "1.0.0",
-  "description": "AquaWater Uzbekistan — unified API + web client",
+  "description": "AquaWater Uzbekistan \u2014 unified API + web client",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
@@ -10,7 +10,10 @@
     "seed": "ts-node src/seed.ts",
     "client:dev": "npm run dev --prefix client",
     "client:build": "npm run build --prefix client",
-    "postinstall": "npm install --prefix client"
+    "postinstall": "npm install --prefix client",
+    "test": "npm run build && node --experimental-strip-types --test \"tests/unit/*.test.mjs\"",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p client/tsconfig.json"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
