@@ -5,6 +5,7 @@ import { AuthRequest } from '../middleware/auth';
 import { createOrder as createOrderForUser, orderSchema, releaseStockFor } from '../services/OrderService';
 import { BottleService } from '../services/BottleService';
 import { TelegramBotService } from '../services/TelegramBotService';
+import { pageParams, paged } from '../lib/pagination';
 
 // Re-exported because the validation schema is part of this module's public
 // surface for callers that only import the controller.
@@ -58,10 +59,16 @@ export const getOrders = async (req: AuthRequest, res: Response): Promise<void> 
          * how many empties to expect. Without it they were typing a number
          * blind, and a wrong count is what makes the whole ledger untrustworthy.
          */
-        const orders = await Order.find(filter)
-            .sort({ createdAt: -1 })
-            .populate('userId', 'name phone bottleBalance');
-        res.json(orders);
+        const p = pageParams(req);
+        const [orders, total] = await Promise.all([
+            Order.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(p.skip)
+                .limit(p.limit)
+                .populate('userId', 'name phone bottleBalance'),
+            Order.countDocuments(filter),
+        ]);
+        res.json(paged(orders, total, p));
     } catch {
         res.status(500).json({ message: 'Server error' });
     }
@@ -171,6 +178,28 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
             order.emptiesCollected = empties;
         }
 
+        /*
+         * Money is recorded at the door, by the person who took it.
+         *
+         * Cash is assumed paid on delivery because that is what happens, but the
+         * courier can say otherwise — a customer who was short, or asked to be
+         * billed — and the order then stays a debt instead of quietly becoming
+         * revenue. Card methods have no gateway behind them yet, so they are
+         * never marked paid here; somebody has to confirm the money arrived.
+         */
+        if (status === 'delivered' && previousStatus !== 'delivered') {
+            const saidPaid = req.body.paid;
+            const collected = order.paymentMethod === 'cash'
+                ? saidPaid !== false
+                : saidPaid === true;
+
+            if (collected) {
+                order.paymentStatus = 'paid';
+                order.paidAt = new Date();
+                order.cashCollectedBy = req.user!._id as any;
+            }
+        }
+
         await order.save();
 
         /*
@@ -263,6 +292,97 @@ export const assignOrder = async (req: AuthRequest, res: Response): Promise<void
         res.json(order);
     } catch (err) {
         console.error('[Order] assignOrder error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
+/**
+ * Records that a courier's collected cash has reached the office.
+ *
+ * This is the other half of the chain of custody: without it the shop knows a
+ * customer paid but not whether the money was ever handed in, which is the
+ * gap a cash business actually loses money through.
+ */
+export const settleCash = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { courierId, orderIds } = req.body;
+
+        const filter: Record<string, unknown> = {
+            paymentStatus: 'paid',
+            paymentMethod: 'cash',
+            cashSettledAt: null,
+        };
+
+        if (courierId) {
+            if (!mongoose.Types.ObjectId.isValid(courierId)) {
+                res.status(400).json({ message: 'Invalid courierId' });
+                return;
+            }
+            filter.cashCollectedBy = courierId;
+        }
+        if (Array.isArray(orderIds) && orderIds.length > 0) {
+            if (!orderIds.every((id: string) => mongoose.Types.ObjectId.isValid(id))) {
+                res.status(400).json({ message: 'Invalid orderIds' });
+                return;
+            }
+            filter._id = { $in: orderIds };
+        }
+        if (!courierId && !Array.isArray(orderIds)) {
+            res.status(400).json({ message: 'Kuryer yoki buyurtmalar ko\'rsatilmagan' });
+            return;
+        }
+
+        const result = await Order.updateMany(filter, {
+            $set: { cashSettledAt: new Date(), cashSettledBy: req.user!._id },
+        });
+
+        res.json({ settled: result.modifiedCount });
+    } catch (err) {
+        console.error('[Order] settleCash error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+/**
+ * Lets a customer call off their own order while it is still callable off.
+ *
+ * Once a courier is on the road it is too late to do this without a phone call,
+ * so it stops at `confirmed`. Every cancellation used to be a phone call — the
+ * shop had no way for a customer to undo their own mistake.
+ */
+export const cancelOwnOrder = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            res.status(400).json({ message: 'Invalid order id' });
+            return;
+        }
+
+        const order = await Order.findById(req.params.id);
+        if (!order) {
+            res.status(404).json({ message: 'Order not found' });
+            return;
+        }
+        if (String(order.userId) !== String(req.user!._id)) {
+            res.status(403).json({ message: 'Access denied' });
+            return;
+        }
+        if (!['pending', 'confirmed'].includes(order.status)) {
+            res.status(400).json({
+                message: 'Buyurtma yo\'lga chiqqan — bekor qilish uchun operatorga murojaat qiling',
+            });
+            return;
+        }
+
+        order.status = 'cancelled';
+        await order.save();
+
+        // The stock it was holding goes back on the shelf.
+        await releaseStockFor(order);
+
+        res.json(order);
+    } catch (err) {
+        console.error('[Order] cancelOwnOrder error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };

@@ -30,5 +30,7 @@ router.get('/:id', auth, orderController.getOrderById);
 router.patch('/:id/status', auth, orderController.updateOrderStatus);
 router.delete('/:id', auth, adminOnly, orderController.deleteOrder);
 router.patch('/:id/assign', auth, adminOnly, orderController.assignOrder);
+router.patch('/:id/cancel', auth, orderController.cancelOwnOrder);
+router.post('/cash/settle', auth, adminOnly, orderController.settleCash);
 
 export default router;

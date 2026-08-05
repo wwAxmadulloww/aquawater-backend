@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Download, TrendingUp, Package, Truck, Calendar } from 'lucide-react'
-import { getReport, reportExportUrl, formatPrice } from '../../api/client'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Download, TrendingUp, Package, Truck, Calendar, Wallet } from 'lucide-react'
+import { getReport, reportExportUrl, formatPrice, settleCourierCash, describeApiError } from '../../api/client'
+import toast from 'react-hot-toast'
 
 /**
  * Where the money came from, over a chosen range.
@@ -10,8 +11,11 @@ import { getReport, reportExportUrl, formatPrice } from '../../api/client'
  * answer any question an owner actually has — whether this week beat last,
  * which courier is carrying the round, which product pays for the van.
  *
- * Every figure counts delivered orders only. Anything still in flight has not
- * been paid for, and reporting it as revenue would overstate the takings.
+ * Every figure counts money that was actually taken, not deliveries that
+ * happened: a stop marked done whose cash never arrived is not income. What has
+ * been collected but not yet handed in is shown separately — that is the money
+ * currently in couriers' pockets, and it is the figure a cash business is
+ * usually missing.
  */
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -27,7 +31,18 @@ export default function AdminReports() {
         queryFn: () => getReport(range),
     })
 
+    const qc = useQueryClient()
     const totals = data?.totals
+    const cash = data?.cash
+
+    const settle = useMutation({
+        mutationFn: (courierId: string) => settleCourierCash(courierId),
+        onSuccess: (r: any) => {
+            toast.success(`${r?.settled ?? 0} ta buyurtma kassaga qabul qilindi`)
+            qc.invalidateQueries({ queryKey: ['report'] })
+        },
+        onError: (err) => toast.error(describeApiError(err)),
+    })
     const maxDay = Math.max(1, ...(data?.days || []).map((d: any) => d.revenue))
 
     return (
@@ -60,6 +75,52 @@ export default function AdminReports() {
                     </a>
                 </div>
             </div>
+
+            {/* Money taken at the door that has not reached the office. Kept
+                outside the date range: cash still out is owed today, whichever
+                week it was collected in. */}
+            {cash && (
+                <div className="card p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-accent">
+                                <Wallet className="h-5 w-5" />
+                            </span>
+                            <div>
+                                <p className="eyebrow">Kuryerlarda turgan naqd pul</p>
+                                <p className="text-xl font-bold text-gray-950">{formatPrice(cash.total || 0)}</p>
+                            </div>
+                        </div>
+                        {(cash.byCourier || []).length === 0 && (
+                            <p className="text-xs text-gray-600">Topshirilmagan pul yo'q</p>
+                        )}
+                    </div>
+
+                    {(cash.byCourier || []).length > 0 && (
+                        <ul className="mt-4 divide-y divide-line border-t border-line pt-2 text-sm">
+                            {cash.byCourier.map((c: any) => (
+                                <li key={c.courierId || 'none'} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                                    <span className="text-gray-900">
+                                        {c.name || 'Noma\'lum'}
+                                        <span className="ml-2 text-xs text-gray-600">{c.orders} ta buyurtma</span>
+                                    </span>
+                                    <span className="flex items-center gap-3">
+                                        <b className="text-gray-950">{formatPrice(c.amount || 0)}</b>
+                                        <button
+                                            onClick={() => settle.mutate(c.courierId)}
+                                            disabled={settle.isPending || !c.courierId}
+                                            className="btn-secondary px-3 py-1.5 text-xs"
+                                        >
+                                            Kassaga qabul qilindi
+                                        </button>
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
+
 
             {isLoading ? (
                 <div className="card h-40 animate-pulse" />

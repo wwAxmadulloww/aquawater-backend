@@ -2,6 +2,7 @@ import { Response } from 'express';
 import mongoose from 'mongoose';
 import Order from '../models/Order';
 import User from '../models/User';
+import { pageParams, paged } from '../lib/pagination';
 import Product from '../models/Product';
 import { AuthRequest } from '../middleware/auth';
 
@@ -98,10 +99,14 @@ export const getStats = async (_req: AuthRequest, res: Response): Promise<void> 
     }
 };
 
-export const getUsers = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getUsers = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const users = await User.find().select('-passwordHash').sort({ createdAt: -1 });
-        res.json(users);
+        const p = pageParams(req);
+        const [users, total] = await Promise.all([
+            User.find().select('-passwordHash').sort({ createdAt: -1 }).skip(p.skip).limit(p.limit),
+            User.countDocuments(),
+        ]);
+        res.json(paged(users, total, p));
     } catch {
         res.status(500).json({ message: 'Server error' });
     }

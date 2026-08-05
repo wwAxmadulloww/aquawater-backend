@@ -58,4 +58,7 @@ const ProductSchema = new Schema<IProduct>(
     { timestamps: true }
 );
 
+// The storefront asks for what is on sale, cheapest first.
+ProductSchema.index({ inStock: 1, price: 1 });
+
 export default mongoose.model<IProduct>('Product', ProductSchema);

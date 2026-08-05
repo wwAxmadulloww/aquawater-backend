@@ -31,7 +31,7 @@ export default function AdminOrders() {
 
     const { data: users } = useQuery({
         queryKey: ['admin-users'],
-        queryFn: getAdminUsers,
+        queryFn: () => getAdminUsers(),
     })
 
     const couriers = users?.filter((u: any) => u.role === 'courier') || []

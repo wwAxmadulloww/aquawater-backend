@@ -109,6 +109,8 @@ export const en = {
 
     // Orders
     'orders.title': 'My Orders',
+    'orders.cancel': 'Cancel',
+    'orders.cancelled': 'Order cancelled',
     'orders.empty': 'No orders yet',
     'orders.status.pending': 'Pending',
     'orders.status.confirmed': 'Confirmed',

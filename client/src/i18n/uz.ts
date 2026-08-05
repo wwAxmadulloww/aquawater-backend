@@ -109,6 +109,8 @@ export const uz = {
 
     // Orders
     'orders.title': 'Mening buyurtmalarim',
+    'orders.cancel': 'Bekor qilish',
+    'orders.cancelled': 'Buyurtma bekor qilindi',
     'orders.empty': 'Hali buyurtma yo\'q',
     'orders.status.pending': 'Kutilmoqda',
     'orders.status.confirmed': 'Tasdiqlandi',

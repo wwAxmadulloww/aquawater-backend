@@ -124,14 +124,36 @@ export const stocktakeProduct = (id: string, stockQty: number | null) =>
 export const createOrder = (data: unknown) =>
     api.post('/orders', data).then(r => r.data)
 
-export const getOrders = (params?: Record<string, string>) =>
+/**
+ * A page of orders.
+ *
+ * These endpoints answer with `{ items, total, page, pages }` now that they
+ * are bounded. Callers that only want the rows unwrap `items`; the array
+ * fallback keeps a client running against an older deployment from rendering
+ * nothing at all.
+ */
+export const getOrdersPage = (params?: Record<string, string | number>) =>
     api.get('/orders', { params }).then(r => r.data)
+
+export const getOrders = (params?: Record<string, string | number>) =>
+    getOrdersPage(params).then((d: any) => (Array.isArray(d) ? d : d?.items ?? []))
 
 export const getOrder = (id: string) =>
     api.get(`/orders/${id}`).then(r => r.data)
 
-export const updateOrderStatus = (id: string, status: string, extra?: { emptiesCollected?: number }) =>
-    api.patch(`/orders/${id}/status`, { status, ...extra }).then(r => r.data)
+export const updateOrderStatus = (
+    id: string,
+    status: string,
+    extra?: { emptiesCollected?: number; paid?: boolean },
+) => api.patch(`/orders/${id}/status`, { status, ...extra }).then(r => r.data)
+
+/** A customer calling off their own order, while it is still callable off. */
+export const cancelMyOrder = (id: string) =>
+    api.patch(`/orders/${id}/cancel`).then(r => r.data)
+
+/** Records that a courier's collected cash has reached the office. */
+export const settleCourierCash = (courierId: string) =>
+    api.post('/orders/cash/settle', { courierId }).then(r => r.data)
 
 export const assignOrder = (id: string, data: { courierId?: string }) =>
     api.patch(`/orders/${id}/assign`, data).then(r => r.data)
@@ -144,8 +166,9 @@ export const deleteOrder = (id: string) =>
 export const getAdminStats = () =>
     api.get('/admin/stats').then(r => r.data)
 
-export const getAdminUsers = () =>
-    api.get('/admin/users').then(r => r.data)
+export const getAdminUsers = (params?: Record<string, string | number>) =>
+    api.get('/admin/users', { params })
+        .then(r => (Array.isArray(r.data) ? r.data : r.data?.items ?? []))
 
 export const updateUserRole = (id: string, role: string) =>
     api.patch(`/admin/users/${id}/role`, { role }).then(r => r.data)

@@ -45,6 +45,27 @@ export interface IOrder extends Document {
      */
     bottlesIssued?: number;
     status: 'pending' | 'confirmed' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled';
+
+    /*
+     * Money, tracked separately from delivery.
+     *
+     * "Delivered" and "paid for" were the same fact, which for a cash business
+     * is the one thing that must never be assumed: a courier could mark a stop
+     * done, keep the notes, and the day's revenue report would still show the
+     * sale. The shop had no way to tell what it had actually banked.
+     *
+     * `paymentStatus` is what the customer owes; the cash fields are the chain
+     * of custody for the notes themselves — who took them at the door, and
+     * whether they have since reached the office.
+     */
+    paymentStatus: 'unpaid' | 'paid' | 'refunded';
+    paidAt?: Date;
+    /** The courier who took the cash at the door. */
+    cashCollectedBy?: mongoose.Types.ObjectId;
+    /** Set when that cash is handed in and counted at the office. */
+    cashSettledAt?: Date;
+    cashSettledBy?: mongoose.Types.ObjectId;
+
     createdAt: Date;
 }
 
@@ -79,8 +100,35 @@ const OrderSchema = new Schema<IOrder>(
         emptiesCollected: { type: Number, default: 0, min: 0 },
         bottlesIssued: { type: Number, min: 0 },
         status: { type: String, enum: ['pending', 'confirmed', 'assigned', 'in_transit', 'delivered', 'cancelled'], default: 'pending' },
+
+        paymentStatus: { type: String, enum: ['unpaid', 'paid', 'refunded'], default: 'unpaid' },
+        paidAt: { type: Date },
+        cashCollectedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        cashSettledAt: { type: Date },
+        cashSettledBy: { type: Schema.Types.ObjectId, ref: 'User' },
     },
     { timestamps: true }
 );
+
+/*
+ * The queries this collection actually serves, in the shape they arrive.
+ *
+ * There were no indexes at all: every customer opening their order list, every
+ * courier loading their round and every report scanned the whole collection.
+ * At twenty orders that is invisible and at a hundred thousand it is the
+ * difference between a page and a timeout — the kind of thing that is free to
+ * fix now and an outage to discover later.
+ *
+ * Each one is compound and ends in `createdAt` because every list is sorted
+ * newest-first, which lets Mongo satisfy the filter and the sort from the same
+ * index instead of sorting the matches in memory.
+ */
+OrderSchema.index({ userId: 1, createdAt: -1 });
+OrderSchema.index({ courierId: 1, createdAt: -1 });
+OrderSchema.index({ status: 1, createdAt: -1 });
+// Reports match on status and group by date.
+OrderSchema.index({ status: 1, deliveryDate: 1 });
+// The cash-in-hand screen: collected at the door, not yet handed in.
+OrderSchema.index({ paymentStatus: 1, cashSettledAt: 1 });
 
 export default mongoose.model<IOrder>('Order', OrderSchema);

@@ -109,6 +109,8 @@ export const ru = {
 
     // Orders
     'orders.title': 'Мои заказы',
+    'orders.cancel': 'Отменить',
+    'orders.cancelled': 'Заказ отменён',
     'orders.empty': 'Заказов пока нет',
     'orders.status.pending': 'Ожидает',
     'orders.status.confirmed': 'Подтверждён',

@@ -87,7 +87,7 @@ export default function AdminUsers() {
 
     const { data: users, isLoading } = useQuery({
         queryKey: ['admin-users'],
-        queryFn: getAdminUsers,
+        queryFn: () => getAdminUsers(),
     })
 
     const { mutate: deleteMutate } = useMutation({

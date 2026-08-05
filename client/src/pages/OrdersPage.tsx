@@ -1,11 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Package, Clock, Droplets } from 'lucide-react'
 import { useLanguage } from '../i18n/LanguageContext'
 import { useAuth } from '../context/AuthContext'
 import { orderCode, paymentKey, orderTotal, orderBottles } from '../lib/orderFormat'
-import { getOrders, getMyBottles, formatPrice } from '../api/client'
+import { getOrders, getMyBottles, formatPrice, cancelMyOrder, describeApiError } from '../api/client'
+import toast from 'react-hot-toast'
 
 const STATUS_CLASSES: Record<string, string> = {
     pending: 'badge-pending',
@@ -30,6 +31,22 @@ export default function OrdersPage() {
      * page. This is the screen a customer opens after buying, and it was the one
      * place that said nothing at all about the bottles they are holding.
      */
+    const qc = useQueryClient()
+
+    /*
+     * A customer can call off their own order until it is on the road. Every
+     * cancellation used to be a phone call to the shop, for something the
+     * person who made the mistake could undo themselves.
+     */
+    const cancel = useMutation({
+        mutationFn: (id: string) => cancelMyOrder(id),
+        onSuccess: () => {
+            toast.success(t('orders.cancelled'))
+            qc.invalidateQueries({ queryKey: ['my-orders', user?._id] })
+        },
+        onError: (err) => toast.error(describeApiError(err)),
+    })
+
     const { data: bottles } = useQuery({
         queryKey: ['my-bottles', user?._id],
         queryFn: getMyBottles,
@@ -140,6 +157,15 @@ export default function OrdersPage() {
                                     <div className="text-right flex-shrink-0">
                                         <p className="font-bold text-primary-700">{formatPrice(total)}</p>
                                         <p className="text-xs text-gray-600">{t(paymentKey(order.paymentMethod) as any)}</p>
+                                        {['pending', 'confirmed'].includes(order.status) && (
+                                            <button
+                                                onClick={() => cancel.mutate(order._id)}
+                                                disabled={cancel.isPending}
+                                                className="mt-2 text-xs text-[#ff9ea1] underline underline-offset-2 hover:opacity-80"
+                                            >
+                                                {t('orders.cancel')}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             )

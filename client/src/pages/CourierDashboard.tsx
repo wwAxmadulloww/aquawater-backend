@@ -11,6 +11,12 @@ export default function CourierDashboard() {
     const { t } = useLanguage()
     // Per-order, because a courier works through several stops in one session.
     const [empties, setEmpties] = useState<Record<string, number | ''>>({})
+    /*
+     * Per order, because a courier works a round and one customer being short
+     * must not carry over to the next stop. Defaults to taken: that is what
+     * happens at almost every door, and the exception is the one worth a tap.
+     */
+    const [unpaid, setUnpaid] = useState<Record<string, boolean>>({})
     const { user } = useAuth()
     const qc = useQueryClient()
 
@@ -21,8 +27,14 @@ export default function CourierDashboard() {
     })
 
     const statusMut = useMutation({
-        mutationFn: ({ id, status, emptiesCollected }: { id: string; status: string; emptiesCollected?: number }) =>
-            updateOrderStatus(id, status, emptiesCollected === undefined ? undefined : { emptiesCollected }),
+        mutationFn: ({ id, status, emptiesCollected, paid }: {
+            id: string; status: string; emptiesCollected?: number; paid?: boolean;
+        }) => updateOrderStatus(
+            id, status,
+            emptiesCollected === undefined && paid === undefined
+                ? undefined
+                : { ...(emptiesCollected === undefined ? {} : { emptiesCollected }), ...(paid === undefined ? {} : { paid }) },
+        ),
         onSuccess: () => { toast.success('Status yangilandi'); qc.invalidateQueries({ queryKey: ['courier-orders', user?._id] }) },
         onError: () => toast.error('Xatolik yuz berdi')
     })
@@ -147,6 +159,17 @@ export default function CourierDashboard() {
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-2">
+                                        {order.status !== 'delivered' && (
+                                            <label className="flex items-center gap-1.5 text-xs text-gray-600">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!unpaid[order._id]}
+                                                    onChange={e => setUnpaid(p => ({ ...p, [order._id]: e.target.checked }))}
+                                                    className="h-3.5 w-3.5 accent-orange-500"
+                                                />
+                                                Pul olinmadi
+                                            </label>
+                                        )}
                                         {['assigned', 'confirmed'].includes(order.status) && (
                                             <button
                                                 onClick={() => statusMut.mutate({ id: order._id, status: 'in_transit' })}
@@ -191,6 +214,7 @@ export default function CourierDashboard() {
                                                         id: order._id,
                                                         status: 'delivered',
                                                         emptiesCollected: Number(empties[order._id] || 0),
+                                                        paid: !unpaid[order._id],
                                                     })}
                                                     disabled={statusMut.isPending}
                                                     className="btn-primary py-2.5 px-5 text-sm gap-2 whitespace-nowrap"
