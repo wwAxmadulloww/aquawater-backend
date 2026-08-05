@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, MapPin, Phone, Package, Calendar } from 'lucide-react'
+import { CheckCircle2, MapPin, Phone, Package, Calendar, Truck } from 'lucide-react'
 import { getOrders, updateOrderStatus, formatPrice } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useLanguage } from '../i18n/LanguageContext'
@@ -39,12 +39,47 @@ export default function CourierDashboard() {
         onError: () => toast.error('Xatolik yuz berdi')
     })
 
+    /*
+     * The round, summarised.
+     *
+     * A courier had a list of stops and no sense of the day: how much was left,
+     * and — the figure that actually causes arguments — how much of the shop's
+     * money was in their pocket. Both are derived from the orders they already
+     * receive, so neither costs a request.
+     */
+    const mine = (orders || []).filter((o: any) => o.status !== 'cancelled')
+    const remaining = mine.filter((o: any) => o.status !== 'delivered').length
+
+    // Taken at the door, not yet handed in. Anything already settled has been
+    // counted at the office and is no longer the courier's to answer for.
+    const cashToHand = mine
+        .filter((o: any) => o.paymentStatus === 'paid' && o.paymentMethod === 'cash' && !o.cashSettledAt)
+        .reduce((sum: number, o: any) => sum + orderTotal(o), 0)
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Kuryer paneli</h1>
-                <p className="text-gray-500 mt-1">Sizga biriktirilgan yetkazib berish buyurtmalari ro'yxati</p>
+            <div className="mb-6">
+                <p className="eyebrow">Kuryer</p>
+                <h1 className="mt-2 text-2xl font-bold text-gray-900">{user?.name || 'Kuryer paneli'}</h1>
+                <p className="text-gray-500 mt-1">
+                    {isLoading
+                        ? 'Yuklanmoqda...'
+                        : `Bugungi marshrut — ${remaining} ta manzil qoldi`}
+                </p>
             </div>
+
+            {!isLoading && mine.length > 0 && (
+                <div className="mb-8 grid grid-cols-2 gap-3 sm:max-w-md">
+                    <div className="card p-4">
+                        <p className="text-2xl font-bold text-gray-900">{mine.length}</p>
+                        <p className="mt-1 text-xs text-gray-600">jami manzil</p>
+                    </div>
+                    <div className="card p-4">
+                        <p className="text-2xl font-bold text-gray-900">{formatPrice(cashToHand)}</p>
+                        <p className="mt-1 text-xs text-gray-600">kassaga topshiriladi</p>
+                    </div>
+                </div>
+            )}
 
             <div className="space-y-4">
                 {isLoading ? (
@@ -95,26 +130,28 @@ export default function CourierDashboard() {
                                         <Calendar className="w-4 h-4 text-gray-600 flex-shrink-0" />
                                         <span>{order.deliveryDate} ({order.deliveryTimeSlot})</span>
                                     </div>
-                                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                                        <Phone className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                                        <a href={`tel:${order.userId?.phone}`} className="text-primary-600 hover:underline">{order.userId?.phone}</a>
-                                        <span>({order.userId?.name})</span>
-                                    </div>
+                                    <p className="text-sm text-gray-600">{order.userId?.name}</p>
+                                    <a
+                                        href={`tel:${order.userId?.phone}`}
+                                        className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-line px-4
+                                                   text-sm font-semibold text-accent transition-colors hover:bg-accent/10"
+                                    >
+                                        <Phone className="w-4 h-4" />
+                                        {order.userId?.phone}
+                                    </a>
                                 </div>
 
-                                <div className="space-y-1 mb-4 text-sm text-gray-600 border-t border-gray-50 pt-4">
+                                <ul className="mb-4 space-y-2 rounded-2xl bg-gray-50 px-4 py-3">
                                     {order.items.map((i: any, idx: number) => (
-                                        <div key={idx} className="flex justify-between">
-                                            <span>
-                                                {i.nameSnapshot}
-                                                {(i.depositSnapshot || 0) > 0 && (
-                                                    <span className="ml-1.5 text-[10px] text-gray-500">📦</span>
-                                                )}
+                                        <li key={idx} className="flex items-center gap-3 text-sm">
+                                            <span className="font-semibold text-gray-900">{i.qty}×</span>
+                                            <span className="flex-1 text-gray-900">{i.nameSnapshot}</span>
+                                            <span className="text-xs text-gray-600">
+                                                {(i.depositSnapshot || 0) > 0 ? 'sotib olindi' : 'qaytariladi'}
                                             </span>
-                                            <span className="font-medium text-gray-900">×{i.qty}</span>
-                                        </div>
+                                        </li>
                                     ))}
-                                </div>
+                                </ul>
 
                                 {/*
                                   * What to expect at the door, before the count is typed. The
@@ -148,84 +185,93 @@ export default function CourierDashboard() {
                                     )
                                 })()}
 
-                                {/* Stacks on a phone. Side by side, the delivered button and
-                                    the empties box overflowed a 375px screen and sat on top of
-                                    the amount to collect — on the one device a courier uses. */}
-                                <div className="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4
-                                                sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                        <p className="text-xs text-gray-500 mb-0.5">To'lov holati: <span className="font-medium text-gray-700">{t(paymentKey(order.paymentMethod) as any)}</span></p>
-                                        <p className="font-bold text-gray-900 text-lg">{formatPrice(orderTotal(order))}</p>
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        {order.status !== 'delivered' && (
-                                            <label className="flex items-center gap-1.5 text-xs text-gray-600">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={!!unpaid[order._id]}
-                                                    onChange={e => setUnpaid(p => ({ ...p, [order._id]: e.target.checked }))}
-                                                    className="h-3.5 w-3.5 accent-orange-500"
-                                                />
-                                                Pul olinmadi
-                                            </label>
-                                        )}
-                                        {['assigned', 'confirmed'].includes(order.status) && (
-                                            <button
-                                                onClick={() => statusMut.mutate({ id: order._id, status: 'in_transit' })}
-                                                disabled={statusMut.isPending}
-                                                className="btn-primary py-2.5 px-5 text-sm gap-2 whitespace-nowrap bg-orange-600 hover:bg-orange-700"
-                                            >
-                                                Yo'lga chiqdim
-                                            </button>
-                                        )}
-                                        {/*
-                                          * `confirmed` counts too. Assigning a courier sets the
-                                          * status to `assigned`, but an admin setting it back to
-                                          * `confirmed` afterwards left the courier holding an
-                                          * order with no buttons at all — so the delivery could
-                                          * never be marked done and the empties never came back.
-                                          */}
-                                        {['assigned', 'confirmed', 'in_transit'].includes(order.status) && (
-                                            <>
-                                                {/*
-                                                  * The empties count is captured here rather than on a
-                                                  * separate screen because this is the only moment the
-                                                  * courier is standing at the door and knows the answer.
-                                                  * Defaults to 0 so the tap still works when they took
-                                                  * nothing back.
-                                                  */}
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    max={200}
-                                                    inputMode="numeric"
-                                                    value={empties[order._id] ?? ''}
-                                                    onChange={e => setEmpties(prev => ({
-                                                        ...prev,
-                                                        [order._id]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value)),
-                                                    }))}
-                                                    placeholder={t('courier.empties')}
-                                                    title={t('courier.empties')}
-                                                    className="input w-24 py-2.5 text-sm"
-                                                />
-                                                <button
-                                                    onClick={() => statusMut.mutate({
-                                                        id: order._id,
-                                                        status: 'delivered',
-                                                        emptiesCollected: Number(empties[order._id] || 0),
-                                                        paid: !unpaid[order._id],
-                                                    })}
-                                                    disabled={statusMut.isPending}
-                                                    className="btn-primary py-2.5 px-5 text-sm gap-2 whitespace-nowrap"
-                                                >
-                                                    <CheckCircle2 className="w-4 h-4" />
-                                                    Yetkazildi
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
+                                {/*
+                                  * The amount to collect gets a box of its own. It was a line of
+                                  * metadata beside the payment method, which is the wrong weight
+                                  * for the one number the courier is at the door to take — and it
+                                  * now says so plainly when there is nothing left to collect.
+                                  */}
+                                <div className="mt-5 flex items-center justify-between gap-4
+                                                rounded-2xl border border-line px-4 py-3.5">
+                                    <span className="text-xs text-gray-600">
+                                        Olinadigan summa
+                                        <span className="ml-1.5 text-gray-500">
+                                            ({t(paymentKey(order.paymentMethod) as any)})
+                                        </span>
+                                    </span>
+                                    <span className={`text-xl font-bold ${order.paymentStatus === 'paid' ? 'text-[#7ff0c0]' : 'text-gray-900'}`}>
+                                        {order.paymentStatus === 'paid' ? "To'langan" : formatPrice(orderTotal(order))}
+                                    </span>
                                 </div>
+
+                                {['assigned', 'confirmed', 'in_transit'].includes(order.status) && (
+                                    <>
+                                        {/*
+                                          * The empties count is captured here rather than on a
+                                          * separate screen because this is the only moment the
+                                          * courier is standing at the door and knows the answer.
+                                          * Defaults to 0 so the tap still works when they took
+                                          * nothing back.
+                                          */}
+                                        <label className="mt-4 block">
+                                            <span className="text-xs font-medium text-gray-900">
+                                                {t('courier.empties')}
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                max={200}
+                                                inputMode="numeric"
+                                                value={empties[order._id] ?? ''}
+                                                onChange={e => setEmpties(prev => ({
+                                                    ...prev,
+                                                    [order._id]: e.target.value === '' ? '' : Math.max(0, Number(e.target.value)),
+                                                }))}
+                                                placeholder="0"
+                                                className="input mt-1.5 w-full py-2.5 text-sm"
+                                            />
+                                        </label>
+
+                                        {/* The exception, at the size of a decision rather than a
+                                            footnote: it is what turns a delivery into a debt. */}
+                                        <label className="mt-3 flex min-h-[44px] w-full items-center gap-3
+                                                          text-sm text-gray-900">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!unpaid[order._id]}
+                                                onChange={e => setUnpaid(p => ({ ...p, [order._id]: e.target.checked }))}
+                                                className="h-5 w-5 accent-[#ff9ea1]"
+                                            />
+                                            Pul olinmadi
+                                        </label>
+
+                                        <div className="mt-4 grid gap-3">
+                                            {['assigned', 'confirmed'].includes(order.status) && (
+                                                <button
+                                                    onClick={() => statusMut.mutate({ id: order._id, status: 'in_transit' })}
+                                                    disabled={statusMut.isPending}
+                                                    className="btn-secondary w-full justify-center gap-2 py-3 text-sm"
+                                                >
+                                                    <Truck className="w-4 h-4" />
+                                                    Yo'lga chiqdim
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => statusMut.mutate({
+                                                    id: order._id,
+                                                    status: 'delivered',
+                                                    emptiesCollected: Number(empties[order._id] || 0),
+                                                    paid: !unpaid[order._id],
+                                                })}
+                                                disabled={statusMut.isPending}
+                                                className="btn-primary w-full justify-center gap-2 py-3 text-sm"
+                                            >
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                Yetkazildi
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         ))}
                     </div>
