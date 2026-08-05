@@ -1,3 +1,4 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /*
  * The money chain: order -> delivered -> cash taken -> handed in -> revenue.
  * Plus the two failure modes that matter: a stop marked done with no money,
@@ -7,18 +8,19 @@ const B = (process.env.BASE_URL || 'https://aquawater-backend.vercel.app') + '/a
 const R = []; const rec = (n, ok, d) => { R.push({ n, ok }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${d ? '  — ' + d : ''}`) };
 const c = async (m, p, o = {}) => {
   const r = await fetch(B + p, { method: m, headers: { 'Content-Type': 'application/json', ...(o.token ? { Authorization: 'Bearer ' + o.token } : {}) }, ...(o.body ? { body: JSON.stringify(o.body) } : {}) });
+
   const t = await r.text(); let j; try { j = JSON.parse(t) } catch { j = t } return { s: r.status, j };
 };
 const PW = process.env.STAFF_PW;
 const admin = (await c('POST', '/auth/login', { body: { phone: '+998900000004', password: PW } })).j.token;
+const bottle = await makeTestBottle(admin);
 const courier = (await c('POST', '/auth/login', { body: { phone: '+998900000002', password: PW } })).j.token;
-const users = (await c('GET', '/admin/users', { token: admin })).j;
-const list = Array.isArray(users) ? users : users.items;
+const users = rows((await c('GET', '/admin/users', { token: admin })).j);
+const list = rows(users);
 const courierId = list.find(u => u.phone === '+998900000002')._id;
 
 const phone = '+9989' + String(Math.floor(10000000 + Math.random() * 89999999));
 const cust = (await c('POST', '/auth/register', { body: { phone, name: 'E2E Money', password: 'E2E-test-abc123' } })).j.token;
-const bottle = (await c('GET', '/products')).j.find(p => p.name === '19L Suv idishi');
 const addr = { region: 'Toshkent shahri', city: 'T', district: 'E2E-TEST', street: 'E2E-TEST', house: '1' };
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
@@ -90,3 +92,5 @@ const failed = R.filter(x => !x.ok);
 console.log(`\naccount: ${phone}`);
 console.log(`\n=== ${R.length - failed.length}/${R.length} passed`);
 failed.forEach(f => console.log('  FAIL ' + f.n));
+
+await removeTestBottle(admin, bottle?._id);

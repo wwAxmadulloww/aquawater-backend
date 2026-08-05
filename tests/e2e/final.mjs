@@ -1,8 +1,10 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /* Full acceptance pass against production. */
 const B='https://aquawater-backend.vercel.app/api';
 const PW=process.env.STAFF_PW;
 const R=[]; const rec=(n,ok,d)=>{R.push({n,ok});console.log(`${ok?'PASS':'FAIL'}  ${n}${d?'  — '+d:''}`)};
 const c=async(m,p,o={})=>{const r=await fetch(B+p,{method:m,headers:{'Content-Type':'application/json',...(o.token?{Authorization:'Bearer '+o.token}:{})},...(o.body?{body:JSON.stringify(o.body)}:{})});const t=await r.text();let j;try{j=JSON.parse(t)}catch{j=t};return{s:r.status,j}};
+
 
 const admin=(await c('POST','/auth/login',{body:{phone:'+998900000004',password:PW}})).j.token;
 const courier=(await c('POST','/auth/login',{body:{phone:'+998900000002',password:PW}})).j.token;
@@ -71,7 +73,7 @@ rec('deleting a pending order returns its stock', afterDelete===6, `${afterOrder
 // a delivered order's stock must NOT come back
 const o2=await c('POST','/orders',{token:cust,body:{items:[{productId:pid,qty:2}],
   addressSnapshot:addr('Toshkent shahri'),deliveryDate:day(1),deliveryTimeSlot:'09:00–11:00',paymentMethod:'cash'}});
-const users=(await c('GET','/admin/users',{token:admin})).j;
+const users=rows((await c('GET','/admin/users',{token:admin})).j);
 const cid=(Array.isArray(users)?users:users.users||[]).find(u=>u.phone==='+998900000002')?._id;
 await c('PATCH',`/orders/${o2.j._id}/assign`,{token:admin,body:{courierId:cid}});
 await c('PATCH',`/orders/${o2.j._id}/status`,{token:admin,body:{status:'assigned'}});

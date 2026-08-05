@@ -1,3 +1,4 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /*
  * The hop the fix was actually about: a standing order that says "I am keeping
  * the container" must create a weekly order that charges for it and leaves the
@@ -9,12 +10,13 @@ const B='https://aquawater-backend.vercel.app/api';
 const R=[];const rec=(n,ok,d)=>{R.push({n,ok});console.log(`${ok?'PASS':'FAIL'}  ${n}${d?'  — '+d:''}`)};
 const c=async(m,p,o={})=>{const r=await fetch(B+p,{method:m,headers:{'Content-Type':'application/json',...(o.token?{Authorization:'Bearer '+o.token}:{})},...(o.body?{body:JSON.stringify(o.body)}:{})});const t=await r.text();let j;try{j=JSON.parse(t)}catch{j=t};return{s:r.status,j}};
 
+
 const admin=(await c('POST','/auth/login',{body:{phone:'+998900000004',password:process.env.STAFF_PW}})).j.token;
 const phone='+9989'+String(Math.floor(10000000+Math.random()*89999999));
 const reg=await c('POST','/auth/register',{body:{phone,name:'E2E Sched',password:'E2E-test-abc123'}});
 const cust=reg.j.token, custId=reg.j.user?._id||reg.j.user?.id;
 
-const bottle=(await c('GET','/products')).j.find(p=>p.name==='19L Suv idishi');
+const bottle = await makeTestBottle(admin);
 const addr={region:'Toshkent shahri',city:'Toshkent',district:'E2E-TEST',street:'E2E-TEST',house:'1'};
 
 const made=await c('POST','/subscriptions',{token:cust,body:{
@@ -44,7 +46,7 @@ rec('and charged for the container', (order?.items?.[0]?.depositSnapshot||0)>0,
     'deposit '+order?.items?.[0]?.depositSnapshot);
 
 // Deliver it and confirm nothing lands on the ledger.
-const uresp=(await c('GET','/admin/users',{token:admin})).j;
+const uresp=rows((await c('GET','/admin/users',{token:admin})).j);
 const users=Array.isArray(uresp)?uresp:(uresp.users||[]);
 const courierId=users.find(u=>u.phone==='+998900000002')?._id;
 const courier=(await c('POST','/auth/login',{body:{phone:'+998900000002',password:process.env.STAFF_PW}})).j.token;
@@ -61,3 +63,5 @@ const failed=R.filter(x=>!x.ok);
 console.log(`\naccount: ${phone}`);
 console.log(`\n=== ${R.length-failed.length}/${R.length} passed`);
 failed.forEach(f=>console.log('  FAIL '+f.n));
+
+await removeTestBottle(admin, bottle?._id);

@@ -1,3 +1,4 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /*
  * The container loop, as a customer and a courier actually live it.
  *
@@ -14,6 +15,7 @@ const c = async (m, p, o = {}) => {
         headers: { 'Content-Type': 'application/json', ...(o.token ? { Authorization: 'Bearer ' + o.token } : {}) },
         ...(o.body ? { body: JSON.stringify(o.body) } : {}),
     });
+
     const t = await r.text(); let j; try { j = JSON.parse(t) } catch { j = t }
     return { s: r.status, j };
 };
@@ -21,13 +23,13 @@ const c = async (m, p, o = {}) => {
 const PW = process.env.STAFF_PW;
 const admin = (await c('POST', '/auth/login', { body: { phone: '+998900000004', password: PW } })).j.token;
 const courier = (await c('POST', '/auth/login', { body: { phone: '+998900000002', password: PW } })).j.token;
-const users = (await c('GET', '/admin/users', { token: admin })).j;
+const users = rows((await c('GET', '/admin/users', { token: admin })).j);
 const courierId = (Array.isArray(users) ? users : users.users).find(u => u.phone === '+998900000002')._id;
 
 const phone = '+9989' + String(Math.floor(10000000 + Math.random() * 89999999));
 const cust = (await c('POST', '/auth/register', { body: { phone, name: 'E2E Loop', password: 'E2E-test-abc123' } })).j.token;
 
-const bottle = (await c('GET', '/products')).j.find(p => p.name === '19L Suv idishi');
+const bottle = await makeTestBottle(admin);
 const addr = { region: 'Toshkent shahri', city: 'Toshkent', district: 'E2E-TEST', street: 'E2E-TEST', house: '1' };
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
@@ -63,7 +65,7 @@ console.log('\n── the courier is told what to expect ──');
 const o2 = await place([{ productId: bottle._id, qty: 2, returnBottle: true }]);
 await c('PATCH', `/orders/${o2.j._id}/assign`, { token: admin, body: { courierId } });
 
-const round = (await c('GET', '/orders', { token: courier })).j.find(x => String(x._id) === String(o2.j._id));
+const round = rows((await c('GET', '/orders', { token: courier })).j).find(x => String(x._id) === String(o2.j._id));
 rec('the card knows how many containers this stop carries', round?.bottlesIssued === 2,
     'bottlesIssued ' + round?.bottlesIssued);
 rec('and how many the customer is already holding', Number(round?.userId?.bottleBalance) === 3,
@@ -92,3 +94,5 @@ const failed = R.filter(x => !x.ok);
 console.log(`\naccount: ${phone}`);
 console.log(`\n=== ${R.length - failed.length}/${R.length} passed`);
 failed.forEach(f => console.log('  FAIL ' + f.n));
+
+await removeTestBottle(admin, bottle?._id);

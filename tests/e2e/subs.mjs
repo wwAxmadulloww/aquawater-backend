@@ -1,3 +1,4 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /*
  * The container choice as it travels: basket -> order -> standing order ->
  * next week's order -> the ledger -> every screen that shows a total.
@@ -14,6 +15,7 @@ const c = async (m, p, o = {}) => {
         headers: { 'Content-Type': 'application/json', ...(o.token ? { Authorization: 'Bearer ' + o.token } : {}) },
         ...(o.body ? { body: JSON.stringify(o.body) } : {}),
     });
+
     const t = await r.text(); let j; try { j = JSON.parse(t) } catch { j = t }
     return { s: r.status, j };
 };
@@ -28,7 +30,7 @@ const cust = reg.j.token;
 const custId = reg.j.user?._id || reg.j.user?.id;
 
 const products = (await c('GET', '/products')).j;
-const bottle = products.find(p => p.name === '19L Suv idishi');
+const bottle = await makeTestBottle(admin);
 const addr = { region: 'Toshkent shahri', city: 'Toshkent', district: 'E2E-TEST', street: 'E2E-TEST', house: '1' };
 
 console.log('\n── the standing order remembers the choice ──');
@@ -94,8 +96,8 @@ const expected = goods + (o.deliveryFee || 0);
 // The office quotes the total off this list. It carries the raw items, so the
 // container charge has to survive into them or every screen built on it is out.
 const adminList = (await c('GET', '/orders', { token: admin })).j;
-const rows = Array.isArray(adminList) ? adminList : (adminList?.orders || []);
-const row = (rows || []).find(x => String(x._id) === String(o._id));
+const orderRows = rows(adminList);
+const row = (orderRows || []).find(x => String(x._id) === String(o._id));
 const rowTotal = (row?.items || []).reduce(
     (s, i) => s + ((i.priceSnapshot || 0) + (i.depositSnapshot || 0)) * i.qty, 0) + (row?.deliveryFee || 0);
 rec('the admin list carries the container charge', rowTotal === expected,
@@ -110,8 +112,8 @@ rec('the report counts the container money as revenue', Number(revenue) > 0,
 
 console.log('\n── and the bottle never lands on their ledger ──');
 
-const uresp = (await c('GET', '/admin/users', { token: admin })).j;
-const users = uresp?.users || uresp;
+const uresp = rows((await c('GET', '/admin/users', { token: admin })).j);
+const users = rows(uresp);
 const courierId = (users || []).find(u => u.phone === '+998900000002')?._id;
 await c('PATCH', `/orders/${o._id}/assign`, { token: admin, body: { courierId } });
 await c('PATCH', `/orders/${o._id}/status`, { token: admin, body: { status: 'confirmed' } });
@@ -125,3 +127,5 @@ const failed = R.filter(x => !x.ok);
 console.log(`\naccount: ${phone}`);
 console.log(`\n=== ${R.length - failed.length}/${R.length} passed`);
 failed.forEach(f => console.log('  FAIL ' + f.n));
+
+await removeTestBottle(admin, bottle?._id);

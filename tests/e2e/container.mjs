@@ -1,13 +1,17 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /* The container choice, end to end on production. */
 const A='https://aquawater-backend.vercel.app/api';
 const R=[]; const rec=(n,ok,d)=>{R.push({n,ok});console.log(`${ok?'PASS':'FAIL'}  ${n}${d?'  — '+d:''}`)};
 const c=async(m,p,o={})=>{const r=await fetch(A+p,{method:m,headers:{'Content-Type':'application/json',...(o.token?{Authorization:'Bearer '+o.token}:{})},...(o.body?{body:JSON.stringify(o.body)}:{})});const t=await r.text();let j;try{j=JSON.parse(t)}catch{j=t};return{s:r.status,j}};
 
+
+const PW=process.env.STAFF_PW;
+const admin=(await c('POST','/auth/login',{body:{phone:'+998900000004',password:PW}})).j.token;
+const p19 = await makeTestBottle(admin);
 const mk=async n=>{const phone='+9989'+Math.floor(10000000+Math.random()*89999999);
   const r=await c('POST','/auth/register',{body:{phone,name:n,password:'E2E-test-abc123'}});return {t:r.j.token,id:r.j.user._id,phone};};
 const cust=await mk('E2E Container');
 
-const p19=(await c('GET','/products')).j.find(x=>x.name==='19L Suv idishi');
 rec('product exposes its container price', p19.depositPrice===35000, 'idish narxi '+p19.depositPrice);
 
 const addr={region:'Toshkent shahri',city:'Toshkent',district:'E2E-TEST',street:'E2E-TEST',house:'9'};
@@ -40,8 +44,6 @@ rec('client-supplied prices are ignored',
   `deposit ${cheat.j.items?.[0]?.depositSnapshot}, price ${cheat.j.items?.[0]?.priceSnapshot}`);
 
 // Deliver both, then check the ledger counts only the returned line
-const PW=process.env.STAFF_PW;
-const admin=(await c('POST','/auth/login',{body:{phone:'+998900000004',password:PW}})).j.token;
 if(!admin){ console.log('\n(no admin — run mkstaff first)'); } else {
   for (const o of [ret.j, keep.j]) {
     await c('PATCH',`/orders/${o._id}/status`,{token:admin,body:{status:'assigned'}});
@@ -56,3 +58,5 @@ console.log('\naccount: '+cust.phone);
 const F=R.filter(r=>!r.ok);
 console.log(`\n=== ${R.length-F.length}/${R.length} passed`);
 F.forEach(f=>console.log('  FAIL '+f.n));
+
+await removeTestBottle(admin, p19?._id);

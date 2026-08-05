@@ -1,7 +1,9 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /* Full order lifecycle against production: order -> deliver -> bottle ledger. */
 const B='https://aquawater-backend.vercel.app/api';
 const R=[];const rec=(n,ok,d)=>{R.push({n,ok});console.log(`${ok?'PASS':'FAIL'}  ${n}${d?'  — '+d:''}`)};
 const c=async(m,p,o={})=>{const r=await fetch(B+p,{method:m,headers:{'Content-Type':'application/json',...(o.token?{Authorization:'Bearer '+o.token}:{})},...(o.body?{body:JSON.stringify(o.body)}:{})});const t=await r.text();let j;try{j=JSON.parse(t)}catch{j=t};return{s:r.status,j}};
+
 
 const PW=process.env.STAFF_PW;
 const admin=(await c('POST','/auth/login',{body:{phone:'+998900000004',password:PW}})).j.token;
@@ -14,7 +16,7 @@ const cust=reg.j.token;
 const custId=reg.j.user?._id || reg.j.user?.id;
 
 const products=(await c('GET','/products')).j;
-const bottle=products.find(p=>p.name==='19L Suv idishi');
+const bottle = await makeTestBottle(admin);
 rec('19L bottle is marked returnable', bottle?.returnable===true);
 rec('19L bottle has a stock count', Number.isInteger(bottle?.stockQty), 'stock '+bottle?.stockQty);
 rec('product image is same-origin', String(bottle?.imageUrl).startsWith('/products/'), bottle?.imageUrl);
@@ -37,7 +39,7 @@ const stockAfter=(await c('GET','/products/'+bottle._id)).j.stockQty;
 rec('stock decremented by the ordered quantity', stockAfter===bottle.stockQty-3, `${bottle.stockQty} -> ${stockAfter}`);
 
 // assign then deliver with empties
-const uresp = (await c('GET','/admin/users',{token:admin})).j;
+const uresp = rows((await c('GET','/admin/users',{token:admin})).j);
 const ulist = Array.isArray(uresp) ? uresp : (uresp.users || []);
 const courierId = ulist.find(u=>u.phone==='+998900000002')?._id;
 rec('courier account found for assignment', !!courierId);
@@ -92,3 +94,5 @@ console.log('\naccount: '+phone);
 const F=R.filter(r=>!r.ok);
 console.log(`\n=== ${R.length-F.length}/${R.length} passed`);
 F.forEach(f=>console.log('  FAIL '+f.n));
+
+await removeTestBottle(admin, bottle?._id);

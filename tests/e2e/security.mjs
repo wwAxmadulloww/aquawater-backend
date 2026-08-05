@@ -1,9 +1,11 @@
+import { makeTestBottle, removeTestBottle, rows } from './lib.mjs';
 /* Security review, executed against production. */
 const B='https://aquawater-backend.vercel.app';
 const A=B+'/api';
 const PW=process.env.STAFF_PW;
 const R=[]; const rec=(n,ok,d)=>{R.push({n,ok});console.log(`${ok?'PASS':'FAIL'}  ${n}${d?'  — '+d:''}`)};
 const c=async(m,p,o={})=>{const r=await fetch(A+p,{method:m,headers:{'Content-Type':'application/json',...(o.h||{}),...(o.token?{Authorization:'Bearer '+o.token}:{})},...(o.body?{body:JSON.stringify(o.body)}:{})});const t=await r.text();let j;try{j=JSON.parse(t)}catch{j=t};return{s:r.status,j,raw:t,h:r.headers};};
+
 
 const admin=(await c('POST','/auth/login',{body:{phone:'+998900000004',password:PW}})).j.token;
 const courier=(await c('POST','/auth/login',{body:{phone:'+998900000002',password:PW}})).j.token;
@@ -54,7 +56,7 @@ rec('cron rejects a secret in the URL', (await c('POST','/cron/run?key=whatever'
 
 console.log('\n── subscription cap ──');
 const products=(await c('GET','/products')).j;
-const p19=products.find(x=>x.name==='19L Suv idishi');
+const p19 = await makeTestBottle(admin);
 const addr={region:'Toshkent shahri',city:'Toshkent',district:'E2E-TEST',street:'E2E-TEST',house:'1'};
 let capped=false, made=0;
 for(let i=0;i<13;i++){
@@ -86,3 +88,5 @@ rec('goods and fee are separable for every screen', goods>0 && o.j.deliveryFee>0
 const F=R.filter(r=>!r.ok);
 console.log(`\n=== ${R.length-F.length}/${R.length} passed`);
 F.forEach(f=>console.log('  FAIL '+f.n));
+
+await removeTestBottle(admin, p19?._id);

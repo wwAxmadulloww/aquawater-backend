@@ -3,6 +3,9 @@ const B = (process.env.BASE_URL || 'https://aquawater-backend.vercel.app') + '/a
 const R = []; const rec = (n, ok, d) => { R.push({ n, ok }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${d ? '  — ' + d : ''}`) };
 const c = async (m, p, o = {}) => {
   const r = await fetch(B + p, { method: m, headers: { 'Content-Type': 'application/json', ...(o.token ? { Authorization: 'Bearer ' + o.token } : {}) }, ...(o.body ? { body: JSON.stringify(o.body) } : {}) });
+
+/** Lists are paged; older deployments answered with a bare array. */
+const rows = (d) => (Array.isArray(d) ? d : (d?.items ?? d?.users ?? d?.orders ?? []));
   const t = await r.text(); let j; try { j = JSON.parse(t) } catch { j = t } return { s: r.status, j };
 };
 const PW = process.env.STAFF_PW;
