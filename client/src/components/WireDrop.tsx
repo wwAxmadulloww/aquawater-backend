@@ -272,10 +272,17 @@ export default function WireDrop({ className = '' }: { className?: string }) {
                 const a = cam.fade
 
                 // Water: pale at the surface, deeper toward the base.
+                /*
+                 * The pale end stops well short of the page colour. A first pass
+                 * ran from near-white, which looked right on a desktop where the
+                 * whole drop is in view but washed out on a phone: there the
+                 * object fills the screen and it is mostly the top of the
+                 * gradient that shows, so the body dissolved into the canvas.
+                 */
                 const fill = ctx.createLinearGradient(0, top, 0, bottom)
-                fill.addColorStop(0, `rgba(214,238,255,${(0.92 * a).toFixed(3)})`)
-                fill.addColorStop(0.45, `rgba(126,201,247,${(0.88 * a).toFixed(3)})`)
-                fill.addColorStop(1, `rgba(27,124,245,${(0.9 * a).toFixed(3)})`)
+                fill.addColorStop(0, `rgba(173,220,252,${(0.95 * a).toFixed(3)})`)
+                fill.addColorStop(0.42, `rgba(96,180,246,${(0.93 * a).toFixed(3)})`)
+                fill.addColorStop(1, `rgba(20,109,225,${(0.95 * a).toFixed(3)})`)
                 ctx.fillStyle = fill
                 ctx.fill(body)
 
@@ -286,7 +293,7 @@ export default function WireDrop({ className = '' }: { className?: string }) {
                 const w = right - left, h = bottom - top
                 const gx = left + w * 0.34, gy = top + h * 0.3
                 const glow = ctx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(w, h) * 0.42)
-                glow.addColorStop(0, `rgba(255,255,255,${(0.85 * a).toFixed(3)})`)
+                glow.addColorStop(0, `rgba(255,255,255,${(0.7 * a).toFixed(3)})`)
                 glow.addColorStop(1, 'rgba(255,255,255,0)')
                 ctx.fillStyle = glow
                 ctx.fillRect(left, top, w, h)
