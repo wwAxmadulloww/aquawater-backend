@@ -97,11 +97,11 @@ export default function HomePage() {
                 <div className="container-custom relative z-10 flex min-h-[42rem] flex-col justify-center
                                 pb-32 pt-28 md:min-h-[50rem] md:pb-40 md:pt-36">
 
-                    <div className="grid gap-6 lg:grid-cols-[minmax(0,42rem)_1fr] lg:items-center lg:gap-10">
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,42rem)_1fr] lg:items-center lg:gap-10 xl:grid-cols-[minmax(0,48rem)_1fr]">
 
-                        <div className="hero-card animate-rise p-6 sm:p-11 md:p-14">
+                        <div className="hero-card animate-rise p-6 sm:p-11 md:p-14 xl:p-16">
                             <p className="eyebrow text-gray-800">
-                                <Zap className="h-3 w-3 text-accent" />
+                                <Zap className="h-3 w-3 text-[#0a5bbf]" />
                                 {t('home.hero.city')}
                             </p>
 
@@ -120,12 +120,12 @@ export default function HomePage() {
                              */}
                             <h1
                                 className="display text-gradient mt-6 w-max"
-                                style={{ fontSize: 'clamp(2.35rem, 6vw, 4.9rem)' }}
+                                style={{ fontSize: 'clamp(2.35rem, 6.4vw, 5.4rem)' }}
                             >
                                 AquaWater
                             </h1>
 
-                            <p className="mt-5 max-w-lg text-base leading-relaxed text-gray-700 md:text-lg">
+                            <p className="mt-5 max-w-xl text-base leading-relaxed text-gray-800 md:text-lg xl:text-xl">
                                 {t('home.hero.subtitle')}
                             </p>
 

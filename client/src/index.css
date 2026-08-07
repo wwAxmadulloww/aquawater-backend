@@ -88,18 +88,20 @@
     /*
      * The quiet control: outlined, transparent, reads as a second option.
      *
-     * The edge is gray-500 and not the hairline the panels use, because on a
+     * The edge is gray-600 and not the hairline the panels use, because on a
      * button the border *is* the affordance — there is no fill and no shadow
      * saying it can be pressed. #e3eaf2 measures 1.15:1 on the page canvas and
-     * 1.03:1 on the hero's frosted card: an edge nobody can see. gray-500
-     * measures 4.84 and 4.07, clear of the 3:1 a control boundary needs.
+     * 1.03:1 on the hero's frosted panel: an edge nobody can see. gray-600
+     * measures 5.72 on the page canvas, 6.02 on a white card and 3.09 on that
+     * panel — clear of the 3:1 a control boundary needs on all three. gray-500
+     * was enough while the panel was 80% white; at 64% it falls to 2.62.
      */
     .btn-secondary {
-        @apply btn border border-gray-500 bg-transparent text-gray-900;
+        @apply btn border border-gray-600 bg-transparent text-gray-900;
     }
 
     .btn-secondary:hover:not(:disabled) {
-        @apply border-gray-700 bg-gray-200;
+        @apply border-gray-800 bg-gray-200;
     }
 
     .btn-ghost {
@@ -119,8 +121,8 @@
     /* Same reasoning as .btn-secondary: the ring is the only thing saying "button". */
     .btn-round {
         @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-               border border-gray-500 text-gray-900 transition-colors duration-200
-               hover:border-gray-700 hover:bg-gray-200;
+               border border-gray-600 text-gray-900 transition-colors duration-200
+               hover:border-gray-800 hover:bg-gray-200;
     }
 
     /* Inputs are wells cut into the surface, not raised objects. */
@@ -220,17 +222,18 @@
     /*
      * The frosted panel the hero copy sits in — the reference's glass card.
      *
-     * 74% white is not a look, it is a floor. The glass never sees a raw pixel:
+     * 64% white is not a look, it is a floor. The glass never sees a raw pixel:
      * backdrop-blur-2xl means its backdrop is the photograph blurred, whose
      * darkest value under the panel is #07658b rather than the #034a6a of the
-     * sharp image. At 74% that composites to #bfd7e1 — gray-700 body copy at
-     * 5.5:1 and the display type's palest stop at 3.26:1. It still holds if a
-     * browser drops backdrop-filter and the sharp photo shows through: 5.18
-     * and 3.07. Thinning it further breaks the wordmark first.
+     * sharp image. At 64% that composites to #a6c8d5, and every mark on it was
+     * re-picked to survive there: gray-800 body copy at 6.7:1 and the display
+     * type's palest stop at 3.36:1. Each still holds if a browser drops
+     * backdrop-filter and the sharp photo shows through — 6.15 and 3.07 — which
+     * is what sets the floor. Thinning it further breaks the wordmark first.
      */
     .hero-card {
         @apply relative rounded-[2.25rem] border border-white/70 backdrop-blur-2xl;
-        background-color: rgba(255, 255, 255, .74);
+        background-color: rgba(255, 255, 255, .64);
         box-shadow:
             0 2px 10px rgba(6, 38, 64, .12),
             0 44px 90px -34px rgba(6, 38, 64, .55);
@@ -238,7 +241,7 @@
 
     /* A smaller panel floating over the water — the reference's side cards. */
     .glass {
-        @apply relative rounded-3xl border border-white/70 bg-surface/80 backdrop-blur-xl;
+        @apply relative rounded-3xl border border-white/70 bg-surface/70 backdrop-blur-xl;
         box-shadow:
             0 2px 8px rgba(6, 38, 64, .12),
             0 30px 60px -28px rgba(6, 38, 64, .5);
@@ -267,12 +270,13 @@
     .text-gradient {
         /* Deep water into open water, and it has to stay legible the whole way:
            the tail of this gradient is still the company's name. The stops are
-           picked against the frosted card at its worst — #cddbe1, the composite
-           over the darkest pixel of the photograph — where they measure 7.26,
-           3.97 and 3.45:1, all clear of the 3:1 large text needs. The lighter
-           blues this used to end on (#1B7CF5, #1B93D8) measure 2.82 and 2.39
-           there: decorative colours, not legible ones. */
-        background-image: linear-gradient(118deg, #0b3e85 0%, #0a62d6 55%, #127a9c 100%);
+           picked against the frosted panel at its worst — #a4becb, the 64% fill
+           composited over the sharp photograph's darkest pixel — where they
+           measure 5.28, 3.31 and 3.07:1, all clear of the 3:1 large text needs.
+           Every lighter blue this has ended on failed there: #1B93D8 at 1.9,
+           #127A9C at 2.51, #0A62D6 at 2.89. The panel got thinner, so the
+           letters had to get deeper. */
+        background-image: linear-gradient(118deg, #0b3e85 0%, #0a5bbf 55%, #0d6b8f 100%);
         @apply bg-clip-text text-transparent;
     }
 
