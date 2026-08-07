@@ -211,7 +211,7 @@ export default function LoginPage() {
                     </form>
                 </div>
 
-                <p className="mt-12 text-center text-[10px] font-bold uppercase tracking-[0.35em] text-white/35">
+                <p className="mt-12 text-center text-[10px] font-bold uppercase tracking-[0.35em] text-gray-500">
                     © {new Date().getFullYear()} AquaWater Uzbekistan
                 </p>
             </div>

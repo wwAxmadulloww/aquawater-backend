@@ -27,7 +27,7 @@ const COMPANY = {
 
 function Missing({ what }: { what: string }) {
     return (
-        <span className="rounded bg-[#d92d20]/15 px-1.5 py-0.5 text-[#d92d20]">
+        <span className="rounded bg-[#d92d20]/15 px-1.5 py-0.5 text-[#b42318]">
             [{what} — to'ldirilishi kerak]
         </span>
     )
