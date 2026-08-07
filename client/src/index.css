@@ -222,18 +222,22 @@
     /*
      * The frosted panel the hero copy sits in — the reference's glass card.
      *
-     * 64% white is not a look, it is a floor. The glass never sees a raw pixel:
-     * backdrop-blur-2xl means its backdrop is the photograph blurred, whose
-     * darkest value under the panel is #07658b rather than the #034a6a of the
-     * sharp image. At 64% that composites to #a6c8d5, and every mark on it was
-     * re-picked to survive there: gray-800 body copy at 6.7:1 and the display
-     * type's palest stop at 3.36:1. Each still holds if a browser drops
-     * backdrop-filter and the sharp photo shows through — 6.15 and 3.07 — which
-     * is what sets the floor. Thinning it further breaks the wordmark first.
+     * The glass never sees a raw pixel: backdrop-blur-2xl means its backdrop is
+     * the photograph blurred, whose darkest value under the panel is #07658b
+     * rather than the #034a6a of the sharp image. At 60% that composites to
+     * #9cc1d1, and every mark on it clears its bar there — gray-800 body copy
+     * at 6.27:1, the wordmark's palest stop at 3.12:1.
+     *
+     * This is the point where the fallback stops holding. If a browser drops
+     * backdrop-filter the sharp photo shows through instead, and two marks land
+     * just under: the wordmark's tail at 2.82 and the outlined button's edge at
+     * 2.84, against 3:1. Support for backdrop-filter is effectively universal,
+     * so this was chosen deliberately — but 60% is the last stop before the
+     * panel stops working for everyone, not just almost everyone.
      */
     .hero-card {
         @apply relative rounded-[2.25rem] border border-white/70 backdrop-blur-2xl;
-        background-color: rgba(255, 255, 255, .64);
+        background-color: rgba(255, 255, 255, .6);
         box-shadow:
             0 2px 10px rgba(6, 38, 64, .12),
             0 44px 90px -34px rgba(6, 38, 64, .55);
