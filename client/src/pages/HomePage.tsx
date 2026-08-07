@@ -132,7 +132,7 @@ export default function HomePage() {
                          * breakpoints, which is how the reference's headline behaves.
                          */}
                         <h1
-                            className="display mt-6 [text-shadow:0_4px_40px_rgb(0_0_0)]"
+                            className="display text-gradient mt-6"
                             style={{ fontSize: 'clamp(3.4rem, 15vw, 11rem)' }}
                         >
                             AquaWater

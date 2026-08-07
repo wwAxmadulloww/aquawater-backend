@@ -148,6 +148,34 @@ export function zoomFor(width: number, height: number): number {
     return Math.min(width / 2 / HALF_W, height / 2 / HALF_H) * 0.92 * BASE_DISTANCE
 }
 
+
+/**
+ * The outline of the projected body, as a convex hull.
+ *
+ * A surface of revolution with a convex profile — which a teardrop is — has a
+ * convex silhouette from every angle, so the hull of the projected vertices is
+ * exactly its edge. That is what lets the shape be filled like a solid instead
+ * of drawn as a cage of wires: a wireframe reads as a diagram, and this is
+ * meant to read as water.
+ */
+function hullOf(points: [number, number][]): [number, number][] {
+    if (points.length < 3) return points
+    const pts = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+    const cross = (o: number[], a: number[], b: number[]) =>
+        (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+    const half = (src: [number, number][]) => {
+        const out: [number, number][] = []
+        for (const pt of src) {
+            while (out.length >= 2 && cross(out[out.length - 2], out[out.length - 1], pt) <= 0) out.pop()
+            out.push(pt)
+        }
+        out.pop()
+        return out
+    }
+    return [...half(pts), ...half([...pts].reverse())]
+}
+
 export default function WireDrop({ className = '' }: { className?: string }) {
     const wrapRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -196,12 +224,14 @@ export default function WireDrop({ className = '' }: { className?: string }) {
             ctx.clearRect(0, 0, width, height)
 
             const buckets: Path2D[] = Array.from({ length: DEPTH_BUCKETS }, () => new Path2D())
+            const silhouette: [number, number][] = []
 
             for (const line of MESH) {
                 let prevX = 0, prevY = 0, prevDepth = 0, has = false
 
                 for (const point of line) {
                     const [x, y, depth] = projectPoint(point, cam, zoom, cx, cy)
+                    silhouette.push([x, y])
 
                     if (has) {
                         const mid = (depth + prevDepth) / 2
@@ -214,26 +244,69 @@ export default function WireDrop({ className = '' }: { className?: string }) {
                 }
             }
 
-            // Far buckets first, so nearer lines lay over them.
-            for (let b = 0; b < DEPTH_BUCKETS; b++) {
-                const depth = (b + 0.5) / DEPTH_BUCKETS
-                // Fades as the hero leaves, so the object dissolves into the
-                // canvas instead of being clipped by the section edge.
-                /*
-                 * Drawn in the brand blue, not white.
-                 *
-                 * The whole object was white lines on a black canvas; against
-                 * the daylight theme it vanished completely — the hero rendered
-                 * an empty rectangle where the bottle had been. Blue also needs
-                 * more of itself to read on white than white did on black, so
-                 * the near end of the depth ramp is stronger while the far end
-                 * stays faint enough to still say "further away".
-                 */
-                const alpha = (0.10 + depth * 0.85) * cam.fade
-                if (alpha <= 0.01) continue
-                ctx.strokeStyle = `rgba(27,124,245,${alpha.toFixed(3)})`
-                ctx.lineWidth = 0.4 + depth * 0.9
-                ctx.stroke(buckets[b])
+            /*
+             * The body first, then the structure over it.
+             *
+             * Filling the silhouette and lighting it is what turns a cage of
+             * lines into something that looks like a drop of water: a vertical
+             * gradient for the depth of the liquid, a soft highlight where the
+             * light lands, and a rim to give the edge a surface. The wires stay
+             * on top at low opacity, which is what still reads as refraction
+             * through the far wall rather than as a diagram.
+             */
+            const hull = hullOf(silhouette)
+            if (hull.length > 2 && cam.fade > 0.01) {
+                let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity
+                for (const [x, y] of hull) {
+                    if (y < top) top = y
+                    if (y > bottom) bottom = y
+                    if (x < left) left = x
+                    if (x > right) right = x
+                }
+
+                const body = new Path2D()
+                body.moveTo(hull[0][0], hull[0][1])
+                for (let i = 1; i < hull.length; i++) body.lineTo(hull[i][0], hull[i][1])
+                body.closePath()
+
+                const a = cam.fade
+
+                // Water: pale at the surface, deeper toward the base.
+                const fill = ctx.createLinearGradient(0, top, 0, bottom)
+                fill.addColorStop(0, `rgba(214,238,255,${(0.92 * a).toFixed(3)})`)
+                fill.addColorStop(0.45, `rgba(126,201,247,${(0.88 * a).toFixed(3)})`)
+                fill.addColorStop(1, `rgba(27,124,245,${(0.9 * a).toFixed(3)})`)
+                ctx.fillStyle = fill
+                ctx.fill(body)
+
+                ctx.save()
+                ctx.clip(body)
+
+                // The specular: one soft spot upper-left, where the light is.
+                const w = right - left, h = bottom - top
+                const gx = left + w * 0.34, gy = top + h * 0.3
+                const glow = ctx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(w, h) * 0.42)
+                glow.addColorStop(0, `rgba(255,255,255,${(0.85 * a).toFixed(3)})`)
+                glow.addColorStop(1, 'rgba(255,255,255,0)')
+                ctx.fillStyle = glow
+                ctx.fillRect(left, top, w, h)
+
+                // Structure, seen through the body.
+                for (let b = 0; b < DEPTH_BUCKETS; b++) {
+                    const depth = (b + 0.5) / DEPTH_BUCKETS
+                    const alpha = (0.03 + depth * 0.16) * a
+                    if (alpha <= 0.01) continue
+                    ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`
+                    ctx.lineWidth = 0.5 + depth * 0.6
+                    ctx.stroke(buckets[b])
+                }
+
+                ctx.restore()
+
+                // The rim, brighter where the surface turns away from the eye.
+                ctx.strokeStyle = `rgba(10,98,214,${(0.5 * a).toFixed(3)})`
+                ctx.lineWidth = 1.4
+                ctx.stroke(body)
             }
 
             raf = requestAnimationFrame(draw)

@@ -237,7 +237,11 @@
 
 @layer utilities {
     .text-gradient {
-        background-image: linear-gradient(120deg, #0b2545 0%, #1b7cf5 100%);
+        /* Deep water into open water. It stops at #1B93D8 rather than running on
+           into the aqua: the tail of the gradient is still the company's name,
+           and #35C8F0 on this canvas measures 1.9:1 — a decorative colour, not a
+           legible one. Every stop here clears the 3:1 large text needs. */
+        background-image: linear-gradient(118deg, #0b3e85 0%, #1b7cf5 55%, #1b93d8 100%);
         @apply bg-clip-text text-transparent;
     }
 
