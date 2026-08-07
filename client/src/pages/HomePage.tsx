@@ -122,7 +122,7 @@ export default function HomePage() {
                             {t('home.hero.city')}
                         </p>
 
-                        <p className="mt-5 max-w-sm text-sm leading-relaxed text-gray-700 [text-shadow:0_2px_12px_rgb(0_0_0)] md:text-base">
+                        <p className="mt-5 max-w-sm text-sm leading-relaxed text-gray-700 md:text-base">
                             {t('home.hero.subtitle')}
                         </p>
 
