@@ -131,8 +131,17 @@ export default function HomePage() {
                          * to the container edge at every width without a stack of
                          * breakpoints, which is how the reference's headline behaves.
                          */}
+                        {/*
+                          * `w-max` matters now that the letters carry a gradient:
+                          * background-clip paints inside the element's box, so the
+                          * part of the word running past a narrower column had
+                          * nothing to clip against and rendered invisible — the
+                          * headline read "AQUAWA". Sizing the box to the glyphs
+                          * keeps the bleed the design intends and gives the
+                          * gradient something to fill.
+                          */}
                         <h1
-                            className="display text-gradient mt-6"
+                            className="display text-gradient mt-6 w-max max-w-[100vw]"
                             style={{ fontSize: 'clamp(3.4rem, 15vw, 11rem)' }}
                         >
                             AquaWater
