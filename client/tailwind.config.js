@@ -13,9 +13,11 @@
  * classes keeps meaning what it meant (strongest text, most recessed surface)
  * and follows automatically.
  *
- * Contrast was checked against white for the shades that carry text. The two
- * that matter most by usage are gray-600 (146 uses, secondary text) at 6.2:1
- * and gray-500 (55 uses) at 4.6:1 — both clear of 4.5:1.
+ * Contrast is checked against the CANVAS, not against white. Most text sits on
+ * #F4FAFF or on the sunk #EAF4FE rather than on a white card, and a grey tuned
+ * to 4.6:1 on white came out at 4.4:1 where it actually lands. The two shades
+ * that carry text clear 4.5:1 on all three surfaces: gray-600 (146 uses) and
+ * gray-500 (55 uses).
  */
 export default {
     content: [
@@ -49,7 +51,7 @@ export default {
                     200: '#e3eaf2',
                     300: '#cfe6fd',
                     400: '#98a6b8',
-                    500: '#66768c',
+                    500: '#616f85',
                     600: '#55647a',
                     700: '#3d5068',
                     800: '#24384f',
