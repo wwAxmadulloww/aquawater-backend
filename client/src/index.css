@@ -192,21 +192,31 @@
      * The stage: the field the hero object stands in. The vignette pulls the
      * eye to the centre.
      */
+    /*
+     * The hero sits on a wash a shade deeper than the page, so the section has
+     * an edge without a band across it: a pool of blue behind the object, and a
+     * settle back to the canvas colour before the content below begins.
+     */
     .stage {
         @apply relative isolate overflow-hidden text-gray-950;
+        background-image:
+            radial-gradient(80% 60% at 50% 34%, #dbebfc 0%, rgba(219, 235, 252, 0) 100%),
+            linear-gradient(180deg, #e9f3fe 0%, #f4faff 78%);
     }
 
+    /* Softens the corners so the wash has no visible boundary. */
     .stage::after {
         content: '';
         @apply pointer-events-none absolute inset-0 -z-10;
-        background-image: radial-gradient(75% 55% at 50% 42%, transparent 0%, rgba(244, 250, 255, .88) 100%);
+        background-image: radial-gradient(78% 58% at 50% 42%, transparent 0%, rgba(244, 250, 255, .55) 100%);
     }
 
     /* A panel floating over the stage — the reference's stat cards. */
     .glass {
         @apply relative rounded-3xl border border-line bg-surface/80 backdrop-blur-xl;
         box-shadow:
-            0 24px 60px -22px rgba(1, 4, 12, 1);
+            0 1px 2px rgba(11, 37, 69, .04),
+            0 18px 40px -18px rgba(11, 37, 69, .18);
     }
 
     .pill {
