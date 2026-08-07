@@ -187,6 +187,7 @@ export const en = {
     'home.hero.hours': 'Opening hours',
     'home.hero.branchCount': 'branches',
     'home.hero.everywhere': 'Across Tashkent',
+    'home.hero.scroll': 'Scroll',
     'home.all': 'All',
 
     // Footer

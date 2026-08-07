@@ -187,6 +187,7 @@ export const ru = {
     'home.hero.hours': 'Часы работы',
     'home.hero.branchCount': 'филиалов',
     'home.hero.everywhere': 'По Ташкенту',
+    'home.hero.scroll': 'Вниз',
     'home.all': 'Все',
 
     // Footer

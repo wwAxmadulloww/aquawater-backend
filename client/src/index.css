@@ -85,13 +85,21 @@
         @apply translate-y-0;
     }
 
-    /* The quiet control: outlined, transparent, reads as a second option. */
+    /*
+     * The quiet control: outlined, transparent, reads as a second option.
+     *
+     * The edge is gray-500 and not the hairline the panels use, because on a
+     * button the border *is* the affordance — there is no fill and no shadow
+     * saying it can be pressed. #e3eaf2 measures 1.15:1 on the page canvas and
+     * 1.03:1 on the hero's frosted card: an edge nobody can see. gray-500
+     * measures 4.84 and 4.07, clear of the 3:1 a control boundary needs.
+     */
     .btn-secondary {
-        @apply btn border border-line bg-transparent text-gray-900;
+        @apply btn border border-gray-500 bg-transparent text-gray-900;
     }
 
     .btn-secondary:hover:not(:disabled) {
-        @apply border-gray-500 bg-gray-200;
+        @apply border-gray-700 bg-gray-200;
     }
 
     .btn-ghost {
@@ -108,10 +116,11 @@
     }
 
     /* The circular icon button from the reference's nav and cards. */
+    /* Same reasoning as .btn-secondary: the ring is the only thing saying "button". */
     .btn-round {
         @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full
-               border border-line text-gray-900 transition-colors duration-200
-               hover:border-gray-500 hover:bg-gray-200;
+               border border-gray-500 text-gray-900 transition-colors duration-200
+               hover:border-gray-700 hover:bg-gray-200;
     }
 
     /* Inputs are wells cut into the surface, not raised objects. */
@@ -189,34 +198,47 @@
     }
 
     /*
-     * The stage: the field the hero object stands in. The vignette pulls the
-     * eye to the centre.
-     */
-    /*
-     * The hero sits on a wash a shade deeper than the page, so the section has
-     * an edge without a band across it: a pool of blue behind the object, and a
-     * settle back to the canvas colour before the content below begins.
+     * The stage: the field the hero stands in. It is now a full-bleed
+     * photograph of water, so the stage itself paints nothing but the colour
+     * that sits under the photo while it loads.
      */
     .stage {
         @apply relative isolate overflow-hidden text-gray-950;
-        background-image:
-            radial-gradient(80% 60% at 50% 34%, #dbebfc 0%, rgba(219, 235, 252, 0) 100%),
-            linear-gradient(180deg, #e9f3fe 0%, #f4faff 78%);
+        background-color: #0d3f57;
     }
 
-    /* Softens the corners so the wash has no visible boundary. */
+    /*
+     * The hero is dark and the page below it is not. Without this the join is a
+     * hard horizontal cut; with it the water dissolves into the canvas colour.
+     */
     .stage::after {
         content: '';
-        @apply pointer-events-none absolute inset-0 -z-10;
-        background-image: radial-gradient(78% 58% at 50% 42%, transparent 0%, rgba(244, 250, 255, .55) 100%);
+        @apply pointer-events-none absolute inset-x-0 bottom-0 z-0 h-32 md:h-44;
+        background-image: linear-gradient(180deg, rgba(244, 250, 255, 0) 0%, #f4faff 100%);
     }
 
-    /* A panel floating over the stage — the reference's stat cards. */
-    .glass {
-        @apply relative rounded-3xl border border-line bg-surface/80 backdrop-blur-xl;
+    /*
+     * The frosted panel the hero copy sits in — the reference's glass card.
+     *
+     * 80% white is not a look, it is a floor: measured against the darkest
+     * pixel of the photograph beneath it the composite lands at #cddbe1, which
+     * is what makes gray-700 body copy clear 4.5:1 and the display type clear
+     * 3:1. Thinning the fill breaks the text, not just the taste.
+     */
+    .hero-card {
+        @apply relative rounded-[2rem] border border-white/70 backdrop-blur-2xl;
+        background-color: rgba(255, 255, 255, .8);
         box-shadow:
-            0 1px 2px rgba(11, 37, 69, .04),
-            0 18px 40px -18px rgba(11, 37, 69, .18);
+            0 2px 10px rgba(6, 38, 64, .12),
+            0 44px 90px -34px rgba(6, 38, 64, .55);
+    }
+
+    /* A smaller panel floating over the water — the reference's side cards. */
+    .glass {
+        @apply relative rounded-3xl border border-white/70 bg-surface/80 backdrop-blur-xl;
+        box-shadow:
+            0 2px 8px rgba(6, 38, 64, .12),
+            0 30px 60px -28px rgba(6, 38, 64, .5);
     }
 
     .pill {
@@ -236,23 +258,30 @@
     .display {
         @apply font-display font-extrabold uppercase leading-[0.86] tracking-[-0.045em] text-gray-950;
     }
-
-    /* The thin-stroke wireframe object. Strokes are drawn, never filled. */
-    .wire {
-        fill: none;
-        stroke: currentColor;
-        vector-effect: non-scaling-stroke;
-    }
 }
 
 @layer utilities {
     .text-gradient {
-        /* Deep water into open water. It stops at #1B93D8 rather than running on
-           into the aqua: the tail of the gradient is still the company's name,
-           and #35C8F0 on this canvas measures 1.9:1 — a decorative colour, not a
-           legible one. Every stop here clears the 3:1 large text needs. */
-        background-image: linear-gradient(118deg, #0b3e85 0%, #1b7cf5 55%, #1b93d8 100%);
+        /* Deep water into open water, and it has to stay legible the whole way:
+           the tail of this gradient is still the company's name. The stops are
+           picked against the frosted card at its worst — #cddbe1, the composite
+           over the darkest pixel of the photograph — where they measure 7.26,
+           3.97 and 3.45:1, all clear of the 3:1 large text needs. The lighter
+           blues this used to end on (#1B7CF5, #1B93D8) measure 2.82 and 2.39
+           there: decorative colours, not legible ones. */
+        background-image: linear-gradient(118deg, #0b3e85 0%, #0a62d6 55%, #127a9c 100%);
         @apply bg-clip-text text-transparent;
+    }
+
+    /* The reference's scroll cue: a bead falling inside the mouse outline. */
+    .animate-scroll-cue {
+        animation: scroll-cue 1.9s cubic-bezier(.4, 0, .2, 1) infinite;
+    }
+
+    @keyframes scroll-cue {
+        0%   { transform: translateY(0);    opacity: 0; }
+        30%  { opacity: 1; }
+        100% { transform: translateY(9px);  opacity: 0; }
     }
 
     .tabular {

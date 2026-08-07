@@ -189,6 +189,7 @@ export const uz = {
     'home.hero.hours': 'Ish vaqti',
     'home.hero.branchCount': 'ta filial',
     'home.hero.everywhere': "Toshkent bo'ylab",
+    'home.hero.scroll': 'Pastga',
     'home.all': 'Barchasi',
 
     // Footer

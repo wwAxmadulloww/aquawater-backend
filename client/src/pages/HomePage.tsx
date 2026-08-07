@@ -9,15 +9,15 @@ import { useLanguage } from '../i18n/LanguageContext'
 import { getProducts, api, formatPrice, getTrustFigures } from '../api/client'
 import ProductCard from '../components/ProductCard'
 import BranchMap from '../components/BranchMap'
-import WireDrop from '../components/WireDrop'
+import WaterSurface from '../components/WaterSurface'
 import Reveal3D from '../components/Reveal3D'
 import { useViewportProgress } from '../hooks/useScrollMotion'
 
 /*
- * The page is one continuous black field. There is no light section and no
- * photograph: the reference builds everything from a single wireframe object,
- * very large type, and small panels that float clear of the canvas — and the
- * moment a second surface colour appears, that read breaks.
+ * The hero is a photograph of water that reacts to the cursor; everything
+ * below it is the light canvas the rest of the site runs on. The two are
+ * joined by a fade rather than a cut, so the page still reads as one field
+ * even though it changes surface once.
  */
 
 const HOW_STEPS = ['step1', 'step2', 'step3'] as const
@@ -79,89 +79,109 @@ export default function HomePage() {
         <div className="overflow-x-hidden">
 
             {/* ── Hero ─────────────────────────────────────────────────────── */}
+            {/*
+             * The reference is a photograph of a water surface with the copy on
+             * a frosted panel over it, and floating cards in the margin. What a
+             * still cannot do — and what the design is really promising — is
+             * move: here the surface answers the cursor.
+             *
+             * What the reference carries that a shop does not: a campaign date
+             * badge, a vertical slogan rail, social icons that would link
+             * nowhere, and filler copy. Those are gone. The panel, the water,
+             * the side cards and the scroll cue are what remain, and every one
+             * of them now holds something real.
+             */}
             <section className="stage">
-                {/*
-                 * The object is placed rather than laid out: on desktop it fills
-                 * the middle of the field and the text overlaps it, which is what
-                 * gives the composition its depth. On phones it drops behind the
-                 * type at low opacity, because at that width anything else buries
-                 * the words.
-                 */}
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <WireDrop className="h-[70%] w-[150%] max-w-[52rem] -translate-y-24 opacity-[.18] sm:h-[80%] sm:-translate-y-16 sm:opacity-30 md:h-[94%] md:w-auto md:aspect-[13/20] md:translate-y-0 md:opacity-100" />
-                </div>
+                <WaterSurface src="/water-hero.jpg" className="absolute inset-0" />
 
-                <div className="container-custom relative flex min-h-[38rem] flex-col justify-end
-                                pb-14 pt-28 md:min-h-[46rem] md:pb-20 md:pt-36">
+                <div className="container-custom relative z-10 flex min-h-[40rem] flex-col justify-center
+                                pb-32 pt-28 md:min-h-[46rem] md:pb-40 md:pt-36">
 
-                    {/* Floating stat panels, as in the reference's right margin */}
-                    <div className="absolute right-4 top-24 hidden w-52 flex-col gap-4 lg:flex xl:right-6 xl:w-56">
-                        {cheapest !== null && (
-                            <div className="glass animate-rise p-5">
-                                <p className="eyebrow">{t('home.hero.cheapest')}</p>
-                                <p className="tabular mt-2 font-display text-2xl font-bold text-gray-950">
-                                    {formatPrice(cheapest)}
-                                </p>
-                                <p className="mt-1 text-xs text-gray-600">{t('home.hero.cheapestNote')}</p>
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,34rem)_1fr] lg:items-center lg:gap-10">
+
+                        <div className="hero-card animate-rise p-7 sm:p-9 md:p-10">
+                            <p className="eyebrow text-gray-800">
+                                <Zap className="h-3 w-3 text-accent" />
+                                {t('home.hero.city')}
+                            </p>
+
+                            {/*
+                             * `w-max` matters because the letters carry a gradient:
+                             * background-clip paints inside the element's box, so any
+                             * part of the word running past a narrower column has
+                             * nothing to clip against and renders invisible — the
+                             * headline read "AQUAWA". Sizing the box to the glyphs
+                             * gives the gradient something to fill. The ceiling is
+                             * set so the word still fits the panel at every width.
+                             */}
+                            <h1
+                                className="display text-gradient mt-5 w-max"
+                                style={{ fontSize: 'clamp(2.3rem, 5.2vw, 4rem)' }}
+                            >
+                                AquaWater
+                            </h1>
+
+                            <p className="mt-4 text-sm leading-relaxed text-gray-700 md:text-base">
+                                {t('home.hero.subtitle')}
+                            </p>
+
+                            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <Link to="/products" className="btn-primary group px-7 py-3.5 text-sm">
+                                    {t('home.hero.cta')}
+                                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                </Link>
+                                <Link to="/products" className="btn-secondary px-7 py-3.5 text-sm">
+                                    {t('home.hero.secondary')}
+                                </Link>
                             </div>
-                        )}
-                        <div className="glass animate-rise p-5">
-                            <p className="eyebrow">{t('home.hero.hours')}</p>
-                            <p className="tabular mt-2 font-display text-2xl font-bold text-gray-950">
-                                {hours || '08:00 - 22:00'}
-                            </p>
-                            <p className="mt-1 text-xs text-gray-600">
-                                {branchCount ? `${branchCount} ${t('home.hero.branchCount')}` : t('home.hero.everywhere')}
-                            </p>
                         </div>
-                    </div>
 
-                    <div className="relative max-w-3xl animate-rise">
-                        <p className="eyebrow">
-                            <Zap className="h-3 w-3 text-accent" />
-                            {t('home.hero.city')}
-                        </p>
-
-                        <p className="mt-5 max-w-sm text-sm leading-relaxed text-gray-700 md:text-base">
-                            {t('home.hero.subtitle')}
-                        </p>
-
-                        {/*
-                         * The single largest thing on the page. clamp() lets it run
-                         * to the container edge at every width without a stack of
-                         * breakpoints, which is how the reference's headline behaves.
-                         */}
-                        {/*
-                          * `w-max` matters now that the letters carry a gradient:
-                          * background-clip paints inside the element's box, so the
-                          * part of the word running past a narrower column had
-                          * nothing to clip against and rendered invisible — the
-                          * headline read "AQUAWA". Sizing the box to the glyphs
-                          * keeps the bleed the design intends and gives the
-                          * gradient something to fill.
-                          */}
-                        <h1
-                            className="display text-gradient mt-6 w-max max-w-[100vw]"
-                            style={{ fontSize: 'clamp(3.4rem, 15vw, 11rem)' }}
-                        >
-                            AquaWater
-                        </h1>
-
-                        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                            <Link to="/products" className="btn-primary group px-7 py-3.5 text-sm">
-                                {t('home.hero.cta')}
-                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                            </Link>
-                            <Link to="/products" className="btn-secondary px-7 py-3.5 text-sm">
-                                {t('home.hero.secondary')}
-                            </Link>
+                        {/* The reference's floating margin cards, carrying real figures. */}
+                        <div className="hidden w-full max-w-[15rem] flex-col gap-4 justify-self-end lg:flex">
+                            {cheapest !== null && (
+                                <div className="glass animate-rise p-5">
+                                    <p className="eyebrow text-gray-800">{t('home.hero.cheapest')}</p>
+                                    <p className="tabular mt-2 font-display text-2xl font-bold text-gray-950">
+                                        {formatPrice(cheapest)}
+                                    </p>
+                                    <p className="mt-1 text-xs text-gray-700">{t('home.hero.cheapestNote')}</p>
+                                </div>
+                            )}
+                            <div className="glass animate-rise p-5">
+                                <p className="eyebrow text-gray-800">{t('home.hero.hours')}</p>
+                                <p className="tabular mt-2 font-display text-2xl font-bold text-gray-950">
+                                    {hours || '08:00 - 22:00'}
+                                </p>
+                                <p className="mt-1 text-xs text-gray-700">
+                                    {branchCount ? `${branchCount} ${t('home.hero.branchCount')}` : t('home.hero.everywhere')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                {/*
+                 * The reference's scroll cue. It is a button rather than an
+                 * ornament because it actually scrolls — there is no decorative
+                 * control anywhere else on this site and this is not the place
+                 * to start one.
+                 */}
+                <button
+                    type="button"
+                    onClick={() => document.getElementById('after-hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className="absolute inset-x-0 bottom-7 z-10 mx-auto hidden w-max flex-col items-center gap-2 md:flex"
+                >
+                    <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-gray-700">
+                        {t('home.hero.scroll')}
+                    </span>
+                    <span className="flex h-9 w-5 justify-center rounded-full border border-gray-500 pt-1.5">
+                        <span className="animate-scroll-cue h-1.5 w-1.5 rounded-full bg-gray-700" />
+                    </span>
+                </button>
             </section>
 
-            {/* Claims */}
-            <section className="container-custom pb-16 md:pb-24">
+            {/* Claims — and the landing point for the hero's scroll cue. */}
+            <section id="after-hero" className="container-custom scroll-mt-24 pb-16 md:pb-24">
                 <Reveal3D lean={16} depth={160}>
                 <ul className="grid gap-3 sm:grid-cols-3">
                     {CLAIMS.map(c => (

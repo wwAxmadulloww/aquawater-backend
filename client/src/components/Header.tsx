@@ -18,8 +18,15 @@ export default function Header() {
     const navigate = useNavigate()
     const [menuOpen, setMenuOpen] = useState(false)
 
+    /*
+     * The header fill is 82% rather than a lighter frost because it now floats
+     * over the hero photograph. Measured against the darkest pixel of the
+     * photo's top band the composite lands at #c8dde9, which is what holds the
+     * nav at 5.9:1 and the logo mark at 4:1. At the 70% it used to carry — fine
+     * over the old near-white wash — the nav read 3.5:1 over the water.
+     */
     return (
-        <header className="sticky top-0 z-50 border-b border-line/80 bg-ink/70 backdrop-blur-xl">
+        <header className="sticky top-0 z-50 border-b border-white/50 bg-ink/[.82] backdrop-blur-xl">
             <div className="container-custom flex h-16 items-center gap-4">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 mr-4 flex-shrink-0">
@@ -49,7 +56,7 @@ export default function Header() {
                                 onClick={() => setLang(l.code)}
                                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider transition-all ${lang === l.code
                                     ? 'bg-gray-950 text-ink'
-                                    : 'text-gray-600 hover:text-gray-900'
+                                    : 'text-gray-700 hover:text-gray-950'
                                     }`}
                             >
                                 {l.label}
@@ -119,7 +126,7 @@ export default function Header() {
 
 function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
     return (
-        <Link to={to} className="rounded-full px-3 py-2 text-[11px] font-medium uppercase tracking-[0.16em] text-gray-600 transition-colors hover:text-gray-950">
+        <Link to={to} className="rounded-full px-3 py-2 text-[11px] font-medium uppercase tracking-[0.16em] text-gray-700 transition-colors hover:text-gray-950">
             {children}
         </Link>
     )

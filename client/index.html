@@ -34,6 +34,13 @@
       rel="stylesheet"
     />
 
+    <!--
+      The hero photograph is the first thing anyone sees and it is discovered
+      late, inside a lazy-loaded React component. Preloading it here starts the
+      fetch with the HTML instead of after the JS bundle parses.
+    -->
+    <link rel="preload" as="image" href="/water-hero.jpg" fetchpriority="high" />
+
     <title>AquaWater Uzbekistan</title>
   </head>
   <body>
