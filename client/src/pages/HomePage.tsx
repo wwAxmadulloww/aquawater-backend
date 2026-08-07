@@ -94,12 +94,12 @@ export default function HomePage() {
             <section className="stage">
                 <WaterSurface src="/water-hero.jpg" className="absolute inset-0" />
 
-                <div className="container-custom relative z-10 flex min-h-[40rem] flex-col justify-center
-                                pb-32 pt-28 md:min-h-[46rem] md:pb-40 md:pt-36">
+                <div className="container-custom relative z-10 flex min-h-[42rem] flex-col justify-center
+                                pb-32 pt-28 md:min-h-[50rem] md:pb-40 md:pt-36">
 
-                    <div className="grid gap-6 lg:grid-cols-[minmax(0,34rem)_1fr] lg:items-center lg:gap-10">
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,42rem)_1fr] lg:items-center lg:gap-10">
 
-                        <div className="hero-card animate-rise p-7 sm:p-9 md:p-10">
+                        <div className="hero-card animate-rise p-6 sm:p-11 md:p-14">
                             <p className="eyebrow text-gray-800">
                                 <Zap className="h-3 w-3 text-accent" />
                                 {t('home.hero.city')}
@@ -111,26 +111,30 @@ export default function HomePage() {
                              * part of the word running past a narrower column has
                              * nothing to clip against and renders invisible — the
                              * headline read "AQUAWA". Sizing the box to the glyphs
-                             * gives the gradient something to fill. The ceiling is
-                             * set so the word still fits the panel at every width.
+                             * gives the gradient something to fill. Both ends of
+                             * the clamp are set so the word fits the panel's content
+                             * box at every width — measured, because at 2.6rem on a
+                             * 320px phone it came out exactly the width of the box,
+                             * and a fallback font loading first would have pushed it
+                             * straight out of the glass.
                              */}
                             <h1
-                                className="display text-gradient mt-5 w-max"
-                                style={{ fontSize: 'clamp(2.3rem, 5.2vw, 4rem)' }}
+                                className="display text-gradient mt-6 w-max"
+                                style={{ fontSize: 'clamp(2.35rem, 6vw, 4.9rem)' }}
                             >
                                 AquaWater
                             </h1>
 
-                            <p className="mt-4 text-sm leading-relaxed text-gray-700 md:text-base">
+                            <p className="mt-5 max-w-lg text-base leading-relaxed text-gray-700 md:text-lg">
                                 {t('home.hero.subtitle')}
                             </p>
 
-                            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <Link to="/products" className="btn-primary group px-7 py-3.5 text-sm">
+                            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+                                <Link to="/products" className="btn-primary group px-8 py-4 text-[15px]">
                                     {t('home.hero.cta')}
                                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                                 </Link>
-                                <Link to="/products" className="btn-secondary px-7 py-3.5 text-sm">
+                                <Link to="/products" className="btn-secondary px-8 py-4 text-[15px]">
                                     {t('home.hero.secondary')}
                                 </Link>
                             </div>

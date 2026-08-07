@@ -220,14 +220,17 @@
     /*
      * The frosted panel the hero copy sits in — the reference's glass card.
      *
-     * 80% white is not a look, it is a floor: measured against the darkest
-     * pixel of the photograph beneath it the composite lands at #cddbe1, which
-     * is what makes gray-700 body copy clear 4.5:1 and the display type clear
-     * 3:1. Thinning the fill breaks the text, not just the taste.
+     * 74% white is not a look, it is a floor. The glass never sees a raw pixel:
+     * backdrop-blur-2xl means its backdrop is the photograph blurred, whose
+     * darkest value under the panel is #07658b rather than the #034a6a of the
+     * sharp image. At 74% that composites to #bfd7e1 — gray-700 body copy at
+     * 5.5:1 and the display type's palest stop at 3.26:1. It still holds if a
+     * browser drops backdrop-filter and the sharp photo shows through: 5.18
+     * and 3.07. Thinning it further breaks the wordmark first.
      */
     .hero-card {
-        @apply relative rounded-[2rem] border border-white/70 backdrop-blur-2xl;
-        background-color: rgba(255, 255, 255, .8);
+        @apply relative rounded-[2.25rem] border border-white/70 backdrop-blur-2xl;
+        background-color: rgba(255, 255, 255, .74);
         box-shadow:
             0 2px 10px rgba(6, 38, 64, .12),
             0 44px 90px -34px rgba(6, 38, 64, .55);
